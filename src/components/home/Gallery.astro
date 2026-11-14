@@ -1,0 +1,155 @@
+---
+/**
+ * Home §8 — In the room. Real session photos with quiet captions
+ * ("Kampala convocation / 2026"). Each photo sharpens from a blurred
+ * placeholder as it loads (BlurImage, lazy below the fold).
+ * - ≥768px: staggered two-column grid (the second column starts lower; the
+ *   stagger is fixed — scroll never moves it).
+ * - Phones: one swipe row with scroll-snap. The two column wrappers switch to
+ *   display: contents, and `order` restores the original sequence.
+ */
+import { getCollection } from 'astro:content';
+import home from '../../data/home.json';
+import { field } from '../../lib/placeholder';
+import BlurImage from '../BlurImage.astro';
+import SectionHeader from '../SectionHeader.astro';
+
+const photos = (await getCollection('gallery'))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((p, i) => {
+    const alt = field(p.data.alt);
+    return { ...p.data, index: i, altText: alt.placeholder ? `Placeholder photo: ${alt.value}` : alt.value };
+  })
+  .filter((p) => p.image);
+
+const columns = [photos.filter((p) => p.index % 2 === 0), photos.filter((p) => p.index % 2 === 1)];
+const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
+---
+
+<section id="gallery" class="gallery" aria-labelledby="gallery-title">
+  <div class="container-content">
+    <SectionHeader eyebrow={home.gallery.eyebrow} id="gallery-title" title={home.gallery.title} intro={home.gallery.intro} />
+    <p class="gallery__hint">{home.gallery.swipeHint}</p>
+  </div>
+
+  <div class="gallery__wrap">
+    <div class="gallery__track" role="list" aria-label={home.gallery.eyebrow} tabindex="0">
+      {
+        columns.map((col, ci) => (
+          <div class:list={['gallery__col', { 'gallery__col--b': ci === 1 }]}>
+            {col.map((p) => (
+              <figure
+                class="photo"
+                role="listitem"
+                style={`order:${p.index};--i:${ci};--ratio:${p.image!.width} / ${p.image!.height}`}
+                data-reveal
+              >
+                <BlurImage src={p.image!} alt={p.altText} sizes={SIZES} class="photo__img" />
+                <figcaption class="photo__caption">
+                  <span>{p.caption}</span>
+                  <span class="photo__sep" aria-hidden="true">/</span>
+                  <span>{p.year}</span>
+                  {p.placeholder && <span class="placeholder-tag ml-2">Placeholder</span>}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .gallery {
+    padding-block: var(--section-space);
+  }
+  .gallery__hint {
+    margin-top: 1.5rem;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+
+  /* ---------- Phones: swipe row ---------- */
+  .gallery__track {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 0.25rem var(--gutter) 1rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-hairline) transparent;
+  }
+  .gallery__track:focus-visible {
+    outline-offset: -2px;
+  }
+  .gallery__col {
+    display: contents;
+  }
+  .photo {
+    flex: 0 0 80%;
+    margin: 0;
+    scroll-snap-align: start;
+  }
+  .photo :global(.photo__img) {
+    border-radius: 8px;
+    aspect-ratio: 4 / 5; /* one tidy crop for the swipe row */
+  }
+  .photo__caption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.4rem;
+    margin-top: 0.75rem;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .photo__caption span:first-child {
+    color: var(--color-ink);
+  }
+  .photo__sep {
+    color: var(--color-brass);
+  }
+
+  /* ---------- ≥768px: staggered two-column grid ---------- */
+  @media (min-width: 768px) {
+    .gallery__hint {
+      display: none;
+    }
+    .gallery__wrap {
+      width: 100%;
+      max-width: calc(var(--container-content) + 2 * var(--gutter));
+      margin-inline: auto;
+      padding-inline: var(--gutter);
+    }
+    .gallery__track {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: 62rem; /* keeps tall photos from running the section long */
+      margin-inline: 0; /* shares the left edge with the section heading */
+      gap: clamp(1.5rem, 3vw, 3rem);
+      margin-top: clamp(3rem, 2rem + 3vw, 4.5rem);
+      padding: 0;
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+    .gallery__col {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(2.5rem, 4vw, 4rem);
+    }
+    .gallery__col--b {
+      margin-top: clamp(4rem, 9vw, 9rem);
+    }
+    .photo {
+      flex: none;
+    }
+    /* Natural proportions on larger screens. */
+    .photo :global(.photo__img) {
+      aspect-ratio: var(--ratio);
+    }
+  }
+</style>

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "venture-leadership",
+    "order": 1,
+    "title": "Venture Leadership",
+    "line": "Turning ideas into ventures that can stand on their own.",
+    "service": "Entrepreneurship & intrapreneurship programmes",
+    "href": "/speaking",
+    "placeholder": true
+  },
+  {
+    "id": "customer-centric-growth",
+    "order": 2,
+    "title": "Customer-Centric Growth",
+    "line": "Making customer value a culture, not a department.",
+    "service": "Customer-centric excellence training",
+    "href": "/speaking",
+    "placeholder": true
+  },
+  {
+    "id": "process-architecture",
+    "order": 3,
+    "title": "Process Architecture",
+    "line": "Designing the processes that let good people do consistent work.",
+    "service": "Productivity management & process consulting",
+    "href": "/contact?enquiry=consulting",
+    "placeholder": true
+  },
+  {
+    "id": "institutional-design",
+    "order": 4,
+    "title": "Institutional Design",
+    "line": "Building organisations that outlast the people who start them.",
+    "service": "Advisory for founders, family businesses and boards",
+    "href": "/contact?enquiry=consulting",
+    "placeholder": true
+  }
+]

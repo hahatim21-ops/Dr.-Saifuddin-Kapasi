@@ -1,0 +1,159 @@
+---
+import { ClientRouter, fade } from 'astro:transitions';
+import '../styles/global.css';
+// Preload the heading font (the hero/LCP text is set in it).
+import cormorant600 from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-600-normal.woff2?url';
+import site from '../data/site.json';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import PhoneDock from '../components/PhoneDock.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Absolute or root-relative Open Graph image. */
+  ogImage?: string;
+  noindex?: boolean;
+  /** Home page: nav fades in at 1000ms with the hero sequence. */
+  navIntro?: boolean;
+  /** Show the phone "Invite to speak" dock (off on /contact). */
+  dock?: boolean;
+  /** Open Graph type: website (default), article, book or profile. */
+  ogType?: 'website' | 'article' | 'book' | 'profile';
+  /** Alt text for the Open Graph image. */
+  ogImageAlt?: string;
+  /** Structured data (schema.org JSON-LD) for this page. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const {
+  title,
+  description = site.description,
+  ogImage = '/og.jpg',
+  noindex = false,
+  navIntro = false,
+  dock = true,
+  ogType = 'website',
+  ogImageAlt = `${site.name} — ${site.tagline}`,
+  jsonLd,
+} = Astro.props;
+
+const fullTitle = title ? `${title} — ${site.name}` : `${site.name} — ${site.tagline}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogUrl = new URL(ogImage, Astro.site);
+const ogIsDefault = ogImage === '/og.jpg';
+---
+
+<!doctype html>
+<html lang="en-IN" transition:animate={fade({ duration: '250ms' })}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#F6F1E7" />
+    <!-- Hide-before-reveal only applies when JS runs; set before first paint. -->
+    <script is:inline>document.documentElement.classList.add('js');</script>
+    <style is:inline>html{background:#F6F1E7}</style>
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+
+    <link rel="preload" href={cormorant600} as="font" type="font/woff2" crossorigin />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <meta name="author" content={site.name} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogUrl} />
+    {ogIsDefault && <meta property="og:image:width" content="1200" />}
+    {ogIsDefault && <meta property="og:image:height" content="630" />}
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogUrl} />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+
+    <slot name="head" />
+    <ClientRouter fallback="animate" />
+    <noscript>
+      <style>
+        [data-reveal],[data-reveal-word],[data-reveal-words] .rw,[data-motion],[data-arc-fill],[data-draw-x],[data-draw-y]{opacity:1!important;transform:none!important;filter:none!important}
+        [data-draw-path] path,path[data-draw-path]{stroke-dasharray:none!important;stroke-dashoffset:0!important}
+      </style>
+    </noscript>
+  </head>
+  <body>
+    <Nav intro={navIntro} />
+    <slot />
+    <Footer />
+    {dock && <PhoneDock />}
+
+    <script>
+      import Lenis from 'lenis';
+
+      const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const finePointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+      /* ---- Lenis: desktop pointer devices only, never with reduced motion ---- */
+      let lenis: Lenis | null = null;
+      function setupLenis() {
+        if (lenis || reduced() || !finePointer()) return;
+        lenis = new Lenis({
+          autoRaf: true,
+          lerp: 0.12, // gentle inertia; never slows the scroll below native speed
+          anchors: true,
+          smoothWheel: true,
+        });
+        (window as any).__lenis = lenis;
+      }
+
+      /* ---- Reveals: CSS-driven, IntersectionObserver adds .is-in once ---- */
+      let io: IntersectionObserver | null = null;
+      function setupReveals() {
+        io?.disconnect();
+        const targets = document.querySelectorAll<Element>(
+          '[data-reveal]:not(.is-in), [data-reveal-words]:not(.is-in), [data-draw-x]:not(.is-in), [data-draw-y]:not(.is-in), [data-draw-path]:not(.is-in)'
+        );
+        if (reduced() || !('IntersectionObserver' in window)) {
+          targets.forEach((el) => el.classList.add('is-in'));
+          return;
+        }
+        io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add('is-in');
+              io?.unobserve(entry.target); // play once
+            }
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.12 }
+        );
+        targets.forEach((el) => {
+          // [data-reveal-now] plays on load (hero), on the next frame so the start state paints.
+          if (el.hasAttribute('data-reveal-now')) {
+            requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('is-in')));
+          } else {
+            io!.observe(el);
+          }
+        });
+      }
+
+      // View-transition swaps replace <html> attributes: restore the js flag.
+      document.addEventListener('astro:after-swap', () => {
+        document.documentElement.classList.add('js');
+        lenis?.resize(); // the router restores scroll natively; Lenis follows it
+      });
+
+      document.addEventListener('astro:page-load', () => {
+        setupLenis();
+        setupReveals();
+      });
+    </script>
+  </body>
+</html>

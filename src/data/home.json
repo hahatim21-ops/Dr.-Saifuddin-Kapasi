@@ -1,0 +1,107 @@
+{
+  "arc": {
+    "eyebrow": "The Arc",
+    "title": "From Customer Value to Institutional *Legacy*",
+    "intro": "Three decades, three chapters — each one built on the last."
+  },
+  "numbers": {
+    "eyebrow": "In numbers"
+  },
+  "books": {
+    "eyebrow": "Books",
+    "title": "Two books from thirty years of *practice*",
+    "intro": "Practical, hype-free guides for leaders who would rather build than chase scores.",
+    "newRelease": "New release",
+    "readMore": "About the book",
+    "bulk": "Bulk orders for teams · Signed copies",
+    "bulkHref": "/contact?enquiry=books",
+    "excerptEyebrow": "From the book"
+  },
+  "frameworks": {
+    "eyebrow": "Thinking tools",
+    "title": "Clean models, built to be *used*",
+    "intro": "The frameworks behind his books and sessions — drawn simply, so a team can carry them into the next day's work.",
+    "link": "Explore the frameworks",
+    "linkHref": "/frameworks"
+  },
+  "speaking": {
+    "eyebrow": "Speaking & training",
+    "title": "Sessions that change how teams *work*",
+    "intro": "Experiential sessions built on stories, case work and practice — from an eight-hour Productivity War Room for naval officers to a master class for founders.",
+    "labels": { "format": "Format", "duration": "Duration", "audience": "Audience" },
+    "enquire": "Enquire about this programme",
+    "enquireHref": "/contact?enquiry=training",
+    "swipeHint": "Swipe to see all five programmes",
+    "pastAudiencesLabel": "Past audiences",
+    "pastAudiences": [
+      "Indian Navy gazetted officers",
+      "Naval Dockyard officers (SIMSREE MDP)",
+      "Entrepreneurs and professionals, Kampala",
+      "Management students, SIMSREE",
+      "Students, Burhani College"
+    ],
+    "cta": "Invite me to speak",
+    "allLink": "All programmes in detail",
+    "allHref": "/speaking"
+  },
+  "gallery": {
+    "eyebrow": "In the room",
+    "title": "Where the work *happens*",
+    "intro": "Classrooms, convocations and war rooms — a few moments from recent sessions.",
+    "swipeHint": "Swipe for more photos"
+  },
+  "testimonials": {
+    "eyebrow": "What people say",
+    "title": "In the words of those who worked *with* him",
+    "carouselLabel": "Testimonials",
+    "placeholderLabel": "Placeholder — wording and permission to confirm"
+  },
+  "achievements": {
+    "eyebrow": "Achievements & recognition",
+    "title": "Recognition, received with *gratitude*",
+    "intro": "Honours, awards and features — each one a thank-you to the people and institutions behind it.",
+    "wallLabel": "Certificates, awards and features",
+    "placeholderLabel": "Placeholder",
+    "seeAll": "See all achievements",
+    "seeAllHref": "/achievements",
+    "swipeHint": "Swipe for more · tap to view"
+  },
+  "insights": {
+    "eyebrow": "Insights",
+    "title": "Notes from the *field*",
+    "intro": "Short reflections on customers, ventures and the institutions that outlast them.",
+    "all": "All insights",
+    "allHref": "/insights"
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Let's start a *conversation*",
+    "intro": "Invitations to speak or train, advisory work, bulk book orders or a student's question — tell him a little about what you have in mind.",
+    "directTitle": "Prefer to talk?",
+    "call": "Call",
+    "whatsapp": "WhatsApp",
+    "email": "Email",
+    "linkedin": "LinkedIn",
+    "form": {
+      "name": "Your name",
+      "email": "Email",
+      "phone": "Phone or WhatsApp",
+      "organisation": "Organisation",
+      "enquiry": "What would you like to talk about?",
+      "message": "Message",
+      "messageHint": "Dates, audience size and location help if it's an event.",
+      "optional": "optional",
+      "submit": "Send message",
+      "sending": "Sending…",
+      "success": "Thank you — your message is on its way.",
+      "error": "Sorry, the message couldn't be sent. Please try again, or email directly:",
+      "notConnected": "The form isn't connected yet (Web3Forms key needed), so nothing was sent.",
+      "subject": "New enquiry from saifuddinkapasi.in"
+    }
+  },
+  "pillars": {
+    "eyebrow": "Focus areas",
+    "title": "Institutions don't endure by chance. They are *designed.*",
+    "intro": "He helps entrepreneurs, professionals and mission-driven organisations move from short-term performance to long-term institutional strength."
+  }
+}

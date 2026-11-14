@@ -1,0 +1,150 @@
+{
+  "about": {
+    "meta": "The story of Dr. Saifuddin Kapasi — seventeen years leading Credit & Collections at Vodafone, now a management educator, author and advisor in Mumbai.",
+    "eyebrow": "About",
+    "title": "A teacher at *heart*",
+    "intro": "“I believe institutions don't become enduring by chance — they are intentionally designed.”",
+    "placeholder": true,
+    "storyTitle": "The story so far",
+    "story": [
+      "Saifuddin Kapasi spent the first half of his career in consumer finance — at Mafatlal Finance and Standard Chartered — before joining Vodafone in 2001. For seventeen years he led Credit & Collections there, rising to General Manager: a role where customer value and risk had to be managed as one, every month, at scale.",
+      "In 2019 he stepped out of the corporation to build. As Business Head at Vaux Bicycle Industries he worked on risk, process and transformation; in 2023 he founded Inflection Point, his advisory practice for entrepreneurs, professionals and mission-driven organisations.",
+      "Today much of his time is spent teaching — at SIMSREE and Burhani College, two of the institutions where he once studied — and writing. Beyond Satisfaction (2025) and Beyond Ideas — Lead to Impact (2026) turn three decades of practice into methods others can use."
+    ],
+    "valuesTitle": "What he works by",
+    "values": [
+      { "title": "Customers first", "text": "Experience is a culture, not a department — and trust outlasts any score." },
+      { "title": "Process before heroics", "text": "Good systems let ordinary days go well. Connect the input to the output." },
+      { "title": "Calm under pressure", "text": "Quiet, assertive and non-confrontational — even in the toughest rooms." },
+      { "title": "Service and community", "text": "A family tradition of service, and old ties never forgotten." }
+    ],
+    "rootsTitle": "Roots",
+    "roots": "Mumbai born and raised, he studied at Holy Name High School, Burhani College and Jai Hind College before his PGDBM at Sydenham. He presents his books to community leaders, leads sessions for community groups at home and abroad, and counsels students without charge.",
+    "educationTitle": "Education",
+    "education": [
+      { "what": "PGDBM, Financial Management", "where": "Sydenham Institute of Management Studies", "when": "1984 – 85" },
+      { "what": "B.Com, Finance & Accounts", "where": "Jai Hind College", "when": "1981 – 84" },
+      { "what": "HSC, Commerce", "where": "Burhani College of Commerce and Arts", "when": "1979 – 81" },
+      { "what": "SSC", "where": "Holy Name High School", "when": "1968 – 78" }
+    ],
+    "honoursTitle": "Honours",
+    "credentialNote": "The title “Dr.” comes from an honorary doctorate (Cambridge Digital University, 2024); his earned degrees are listed above.",
+    "galleryTitle": "Portraits",
+    "biosTitle": "Bio for organisers",
+    "biosIntro": "Copy the length you need for a programme, poster or introduction.",
+    "bios": [
+      { "label": "Short · about 25 words", "text": "Dr. Saifuddin Kapasi is a Mumbai-based management educator, author of Beyond Satisfaction and Beyond Ideas, and Director of Inflection Point. He led Credit & Collections at Vodafone for seventeen years." },
+      { "label": "Medium · about 75 words", "text": "Dr. Saifuddin Kapasi is a management educator, author and advisor based in Mumbai. After seventeen years leading Credit & Collections at Vodafone India, he now directs Inflection Point, an advisory practice for entrepreneurs and mission-driven organisations, and teaches at SIMSREE and Burhani College. He has led executive programmes for Indian Navy officers and a Growth Mindset Master Class in Kampala. His books are Beyond Satisfaction (2025) and Beyond Ideas — Lead to Impact (2026)." },
+      { "label": "Long · about 200 words", "text": "PLACEHOLDER — a 200-word bio, written or approved by Dr. Kapasi." }
+    ],
+    "copy": "Copy",
+    "copied": "Copied",
+    "cta": "Invite him to speak"
+  },
+  "students": {
+    "meta": "For students: free counselling, mentoring and live projects with Dr. Saifuddin Kapasi, visiting faculty at SIMSREE and Burhani College.",
+    "eyebrow": "Students",
+    "title": "For students, *always* free",
+    "intro": "He came back to teach at the colleges where he studied. If you are a student with a question about your studies, a career or an idea, he is glad to hear from you.",
+    "placeholder": true,
+    "sections": [
+      { "title": "Counselling", "text": "Pro-bono guidance on courses, careers and the choices in between — for students at his colleges and beyond." },
+      { "title": "Mentoring", "text": "For students with a venture idea: how to test it, shape it and decide what to do next, using the Discover · Design · Deliver · Evolve cycle." },
+      { "title": "Live projects", "text": "He guides student teams on real briefs. Most recently, a live project at Burhani College on AI-assisted corporate communication." }
+    ],
+    "coursesTitle": "Subjects he teaches",
+    "courses": [
+      { "where": "SIMSREE (Sydenham Institute), Churchgate", "what": "Intellectual Capital & Patenting · Entrepreneurship Management · Business Aspects of Law · Business Communication" },
+      { "where": "Burhani College, Mumbai", "what": "Corporate Communication & PR · Business Research Methods · Retail Management · Integrated Marketing Communication · Advertising · Agency Management" }
+    ],
+    "reachTitle": "How to reach him",
+    "reach": "Write a few lines about who you are, where you study and what you would like help with. Choose “Students” on the contact form.",
+    "cta": "Write to him",
+    "ctaHref": "/contact?enquiry=students"
+  },
+  "speaking": {
+    "meta": "Invite Dr. Saifuddin Kapasi to speak or train: growth mindset, productivity, customer-centric excellence, business communication and entrepreneurship programmes.",
+    "eyebrow": "Speaking & training",
+    "title": "Sessions built on *practice*",
+    "intro": "Stories, case work and hands-on exercises — never slides read aloud. Every programme is shaped to the room: its people, its problems and its time.",
+    "programmesTitle": "Programmes",
+    "formatsTitle": "Formats",
+    "formats": [
+      { "title": "Keynote", "text": "45–60 minutes for conferences, convocations and leadership forums." },
+      { "title": "Master class", "text": "Half a day of ideas and practice for founders, professionals and teams." },
+      { "title": "Workshop", "text": "A full day, experiential — including the Productivity War Room." },
+      { "title": "Executive programme", "text": "Multi-day Management Development Programmes, such as the ten-day MDP for Naval Dockyard officers." }
+    ],
+    "pastTitle": "Past engagements",
+    "past": [
+      { "when": "Nov 2026", "what": "Growth Mindset Master Class for entrepreneurs and professionals", "where": "Kampala, Uganda" },
+      { "when": "Nov 2026", "what": "Chief Guest, honorary doctorate conferment", "where": "Kennedy University, Kampala" },
+      { "when": "Aug – Sep 2026", "what": "Faculty, ten-day MDP for 30 Naval Dockyard officers", "where": "SIMSREE, Mumbai" },
+      { "when": "2026", "what": "Eight-hour Productivity Management session with a Productivity War Room", "where": "Indian Navy gazetted officers" }
+    ],
+    "kitTitle": "Speaker kit",
+    "kitText": "Bio in three lengths, photographs, programme outlines and technical needs — in one PDF for organisers.",
+    "kitButton": "Download speaker kit (PDF)",
+    "kitPlaceholder": "Speaker kit coming soon",
+    "programmeCta": "Enquire about this programme"
+  },
+  "frameworks": {
+    "meta": "Dr. Saifuddin Kapasi's frameworks: the Beyond Ideas cycle (Discover, Design, Deliver, Evolve) and the productivity lens (Observe, Identify, Eliminate, Progress).",
+    "eyebrow": "Frameworks",
+    "title": "Simple models for *serious* work",
+    "intro": "Each framework is drawn as simply as possible, so it can be remembered on the day it is needed.",
+    "taughtTitle": "Where it's taught"
+  },
+  "achievements": {
+    "meta": "Honours, awards and features for Dr. Saifuddin Kapasi, management educator and author.",
+    "eyebrow": "Achievements",
+    "title": "Honours, awards and *features*",
+    "intro": "Every certificate and award, newest first. Tap any frame to see it in full.",
+    "filterLabel": "Show",
+    "filters": [
+      { "value": "all", "label": "All" },
+      { "value": "award", "label": "Awards" },
+      { "value": "honour", "label": "Honours" },
+      { "value": "feature", "label": "Features" }
+    ],
+    "empty": "Nothing in this group yet."
+  },
+  "insights": {
+    "meta": "Insights and reflections by Dr. Saifuddin Kapasi on customers, ventures and building institutions that endure.",
+    "eyebrow": "Insights",
+    "title": "Notes from the *field*",
+    "intro": "Short reflections on customers, ventures and the institutions that outlast them.",
+    "newsletter": "A newsletter is planned. When it starts, the sign-up will live here — inline, never as a pop-up.",
+    "back": "All insights",
+    "readNext": "Keep reading"
+  },
+  "books": {
+    "synopsis": "About the book",
+    "contents": "Contents",
+    "contentsPlaceholder": "The table of contents will appear here.",
+    "praise": "Praise",
+    "buy": "Get the book",
+    "bulk": "Ordering for a team, a class or an event? Bulk orders and signed copies are available.",
+    "bulkCta": "Ask about bulk orders",
+    "sample": "Read a sample chapter (PDF)",
+    "samplePlaceholder": "Sample chapter coming soon",
+    "other": "The other book"
+  },
+  "contact": {
+    "meta": "Contact Dr. Saifuddin Kapasi to invite him to speak or train, for advisory work, bulk book orders or student questions.",
+    "eyebrow": "Contact",
+    "mapLabel": "South Mumbai on Google Maps",
+    "mapHref": "https://www.google.com/maps/search/?api=1&query=South+Mumbai"
+  },
+  "notFound": {
+    "eyebrow": "Page not found",
+    "title": "This page has *moved on*",
+    "intro": "The page you were looking for isn't here. These might help:",
+    "links": [
+      { "label": "Home", "href": "/" },
+      { "label": "Speaking & training", "href": "/speaking" },
+      { "label": "Books", "href": "/#books" },
+      { "label": "Contact", "href": "/contact" }
+    ]
+  }
+}

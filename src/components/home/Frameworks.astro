@@ -1,0 +1,304 @@
+---
+/**
+ * Home §6 — Thinking tools. Two frameworks, each an SVG diagram that draws
+ * stage by stage beside a numbered list of its stages (CSS only, no JS).
+ * - Phones: the diagram is hidden; the list becomes a vertical stepper with a
+ *   brass rail that draws downward.
+ * - ≥768px: diagram + list side by side (alternating). Pointing at a stage in
+ *   the list highlights its node in the diagram — a bonus, never required:
+ *   every stage's words are always visible in the list.
+ * The prism appears here (one of its two allowed sections).
+ */
+import { getCollection } from 'astro:content';
+import home from '../../data/home.json';
+import FrameworkDiagram from '../FrameworkDiagram.astro';
+import Prism from '../Prism.astro';
+import SectionHeader from '../SectionHeader.astro';
+
+interface Props {
+  /** /frameworks page: no section header or "explore" link (the page has its
+   *  own h1), framework titles become h2, and "Where it's taught" is shown. */
+  standalone?: boolean;
+  taughtLabel?: string;
+}
+const { standalone = false, taughtLabel = "Where it's taught" } = Astro.props;
+const TitleTag = standalone ? 'h2' : 'h3';
+
+const frameworks = (await getCollection('frameworks')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<section
+  id="frameworks"
+  class:list={['frameworks', { 'frameworks--page': standalone }]}
+  {...standalone ? { 'aria-label': 'Frameworks' } : { 'aria-labelledby': 'frameworks-title' }}
+>
+  <div class="container-content">
+    {
+      !standalone && (
+        <div class="frameworks__head">
+          <SectionHeader eyebrow={home.frameworks.eyebrow} id="frameworks-title" title={home.frameworks.title} intro={home.frameworks.intro} />
+          <div class="frameworks__prism">
+            <Prism />
+          </div>
+        </div>
+      )
+    }
+
+    <div class="frameworks__list">
+      {
+        frameworks.map((fw, i) => (
+          <article id={fw.id} class:list={['fw', { 'fw--flip': i % 2 === 1 }]} aria-labelledby={`fw-${fw.id}`}>
+            <div class="fw__figure">
+              <FrameworkDiagram shape={fw.data.shape} stages={fw.data.stages} center={fw.data.center} />
+            </div>
+
+            <div class="fw__text">
+              <p class="fw__source" data-reveal="fade">
+                {fw.data.source}
+              </p>
+              <TitleTag id={`fw-${fw.id}`} class="fw__title" data-reveal>
+                {fw.data.title}
+              </TitleTag>
+              <p class="fw__summary" data-reveal style="--i:1">
+                {fw.data.summary}
+              </p>
+
+              <div class="fw__steps">
+              <ol class="fw__stages" role="list">
+                {fw.data.stages.map((s, si) => (
+                  <li class="fw-stage" data-stage={si} data-reveal style={`--i:${si + 2}`}>
+                    <span class="fw-stage__num" aria-hidden="true">
+                      {String(si + 1).padStart(2, '0')}
+                    </span>
+                    <span class="fw-stage__text">
+                      <span class="fw-stage__name">{s.name}</span>
+                      <span class="fw-stage__line">{s.line}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              </div>
+              {standalone && fw.data.taught && (
+                <p class="fw__taught" data-reveal>
+                  <span class="fw__taught-label">{taughtLabel}:</span> {fw.data.taught}
+                </p>
+              )}
+            </div>
+          </article>
+        ))
+      }
+    </div>
+
+    {
+      !standalone && (
+        <p class="frameworks__more" data-reveal="fade">
+          <a href={home.frameworks.linkHref} class="link-grow-line">
+            {home.frameworks.link} <span aria-hidden="true">→</span>
+          </a>
+        </p>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .frameworks {
+    padding-block: var(--section-space);
+  }
+  .frameworks--page {
+    padding-top: clamp(3rem, 2rem + 4vw, 5rem);
+  }
+  .frameworks--page .frameworks__list {
+    margin-top: 0;
+  }
+  .fw__title {
+    font-size: var(--text-h3);
+  }
+  .frameworks--page .fw__title {
+    font-size: var(--text-h2);
+  }
+  .fw__taught {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-hairline);
+    max-width: 52ch;
+    color: var(--color-stone);
+  }
+  .fw__taught-label {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .frameworks__head {
+    display: grid;
+    gap: 2rem;
+    align-items: end;
+  }
+  .frameworks__prism {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .frameworks__head {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 15rem);
+    }
+    .frameworks__prism {
+      display: block;
+    }
+  }
+
+  .frameworks__list {
+    display: grid;
+    gap: clamp(4rem, 3rem + 5vw, 7rem);
+    margin-top: clamp(3rem, 2rem + 4vw, 5rem);
+  }
+
+  /* ---------- One framework ---------- */
+  .fw {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+  }
+  .fw__figure {
+    display: none; /* phones: the stepper says it all */
+  }
+  @media (min-width: 768px) {
+    .fw {
+      grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+      gap: clamp(2.5rem, 5vw, 5rem);
+    }
+    .fw__figure {
+      display: block;
+      max-width: 30rem;
+      width: 100%;
+      justify-self: center;
+    }
+    .fw--flip .fw__figure {
+      order: 2;
+    }
+  }
+
+  .fw__source {
+    font-size: var(--text-small);
+    font-weight: 600;
+    color: var(--color-stone);
+  }
+  .fw__title {
+    margin-top: 0.5rem;
+  }
+  .fw__summary {
+    margin-top: 1rem;
+    max-width: 52ch;
+    color: var(--color-stone);
+  }
+
+  /* ---------- Stage list / phone stepper ---------- */
+  .fw__steps {
+    position: relative;
+    margin-top: 1.75rem;
+  }
+  .fw__stages {
+    position: relative;
+    display: grid;
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* Phone stepper: a brass segment from each step's circle down to the next
+     one (never past the last), drawing downward as the step reveals. */
+  .fw-stage:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: calc(1.25rem - 0.5px);
+    top: 2.5rem;
+    bottom: -1.25rem;
+    width: 1px;
+    background: var(--color-brass);
+  }
+  :global(html.js) .fw-stage[data-reveal]:not(:last-child)::after {
+    transform: scaleY(0);
+    transform-origin: center top;
+    transition: transform var(--dur-reveal) var(--ease);
+    transition-delay: calc(var(--i, 0) * var(--stagger) + 250ms);
+  }
+  :global(html.js) .fw-stage[data-reveal].is-in:not(:last-child)::after {
+    transform: scaleY(1);
+  }
+  @media (min-width: 768px) {
+    .fw-stage:not(:last-child)::after {
+      display: none; /* the diagram carries the connections */
+    }
+  }
+  .fw-stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+  .fw-stage__num {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--color-brass);
+    border-radius: 999px;
+    background: var(--color-ivory);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    transition:
+      background-color var(--dur-tap) var(--ease),
+      color var(--dur-tap) var(--ease),
+      border-color var(--dur-tap) var(--ease);
+  }
+  .fw-stage__text {
+    display: grid;
+    gap: 0.15rem;
+    padding-top: 0.35rem;
+  }
+  .fw-stage__name {
+    font-weight: 600;
+    font-size: 1.1875rem;
+    transition: color var(--dur-tap) var(--ease);
+  }
+  .fw-stage__line {
+    color: var(--color-stone);
+  }
+
+  /* Pointing at a stage highlights it and its node in the diagram. */
+  @media (hover: hover) {
+    .fw-stage:hover .fw-stage__num {
+      background: var(--color-green);
+      border-color: var(--color-green);
+      color: var(--color-ivory);
+    }
+    .fw-stage:hover .fw-stage__name {
+      color: var(--color-green);
+    }
+    .fw:has(.fw-stage[data-stage='0']:hover) :global(.fw-node-0 .fw-node__dot),
+    .fw:has(.fw-stage[data-stage='1']:hover) :global(.fw-node-1 .fw-node__dot),
+    .fw:has(.fw-stage[data-stage='2']:hover) :global(.fw-node-2 .fw-node__dot),
+    .fw:has(.fw-stage[data-stage='3']:hover) :global(.fw-node-3 .fw-node__dot) {
+      fill: var(--color-green);
+      stroke: var(--color-green);
+    }
+    .fw:has(.fw-stage[data-stage='0']:hover) :global(.fw-node-0 .fw-node__num),
+    .fw:has(.fw-stage[data-stage='1']:hover) :global(.fw-node-1 .fw-node__num),
+    .fw:has(.fw-stage[data-stage='2']:hover) :global(.fw-node-2 .fw-node__num),
+    .fw:has(.fw-stage[data-stage='3']:hover) :global(.fw-node-3 .fw-node__num) {
+      fill: var(--color-ivory);
+    }
+  }
+
+  .frameworks__more {
+    margin-top: clamp(3rem, 2rem + 3vw, 4.5rem);
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .frameworks__more a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+  }
+</style>

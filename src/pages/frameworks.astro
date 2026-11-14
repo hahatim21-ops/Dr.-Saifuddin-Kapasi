@@ -1,0 +1,26 @@
+---
+/** /frameworks — one section per framework: diagram, stages and where it's taught. */
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Frameworks from '../components/home/Frameworks.astro';
+import Prism from '../components/Prism.astro';
+import pages from '../data/pages.json';
+
+const p = pages.frameworks;
+---
+
+<Base title="Frameworks" description={p.meta}>
+  <main id="main">
+    <PageHeader eyebrow={p.eyebrow} title={p.title} intro={p.intro}>
+      <div class="fw-page-prism" aria-hidden="true"><Prism /></div>
+    </PageHeader>
+    <Frameworks standalone taughtLabel={p.taughtTitle} />
+  </main>
+</Base>
+
+<style>
+  .fw-page-prism {
+    width: min(100%, 16rem);
+    margin-top: 2rem;
+  }
+</style>

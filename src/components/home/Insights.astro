@@ -1,0 +1,55 @@
+---
+/**
+ * Home §11 — Insights: a numbered index of the three latest articles
+ * (InsightsList).
+ */
+import { getCollection } from 'astro:content';
+import home from '../../data/home.json';
+import InsightsList from '../InsightsList.astro';
+import SectionHeader from '../SectionHeader.astro';
+
+const t = home.insights;
+const latest = (await getCollection('insights'))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
+---
+
+<section id="insights" class="insights" aria-labelledby="insights-title">
+  <div class="container-content">
+    <div class="insights__head">
+      <SectionHeader eyebrow={t.eyebrow} id="insights-title" title={t.title} intro={t.intro} />
+      <a href={t.allHref} class="insights__all link-grow-line" data-reveal="fade">
+        {t.all} <span aria-hidden="true">→</span>
+      </a>
+    </div>
+
+    <InsightsList articles={latest} />
+  </div>
+</section>
+
+<style>
+  .insights {
+    padding-block: var(--section-space);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .insights__head {
+    display: grid;
+    gap: 1.5rem;
+    align-items: end;
+  }
+  @media (min-width: 768px) {
+    .insights__head {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+  }
+  .insights__all {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+
+</style>

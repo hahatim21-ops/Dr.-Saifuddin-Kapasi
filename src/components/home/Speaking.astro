@@ -1,0 +1,357 @@
+---
+/**
+ * Home §7 — Speaking & training (the site's main goal).
+ * - ≥768px: numbered rows (01)–(05) with hairlines that draw left → right; each
+ *   row is a native <details> that opens to show format, duration and audience
+ *   (keyboard and screen-reader friendly, no JavaScript). The opened content
+ *   fades up 12px — opacity/transform only, the height is never animated.
+ * - Phones: a swipe row of cards with scroll-snap (native horizontal scrolling of
+ *   a list — the page itself never scrolls sideways).
+ * Then a "Past audiences" line and the invitation button.
+ */
+import { getCollection } from 'astro:content';
+import home from '../../data/home.json';
+import site from '../../data/site.json';
+import { field } from '../../lib/placeholder';
+import Icon from '../Icon.astro';
+import SectionHeader from '../SectionHeader.astro';
+
+const t = home.speaking;
+const programmes = (await getCollection('programmes'))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((p, i) => ({
+    id: p.id,
+    num: String(i + 1).padStart(2, '0'),
+    title: p.data.title,
+    summary: p.data.summary,
+    facts: [
+      { label: t.labels.format, ...field(p.data.format) },
+      { label: t.labels.duration, ...field(p.data.duration) },
+      { label: t.labels.audience, ...field(p.data.audience) },
+    ],
+    href: `${t.enquireHref}&programme=${p.id}`,
+  }));
+---
+
+<section id="speaking" class="speaking" aria-labelledby="speaking-title">
+  <div class="container-content">
+    <SectionHeader eyebrow={t.eyebrow} id="speaking-title" title={t.title} intro={t.intro} />
+
+    <!-- ≥768px: opening rows -->
+    <ol class="prog-rows" role="list">
+      {
+        programmes.map((p, i) => (
+          <li class="prog-row">
+            <span class="prog-row__rule" data-draw-x style={`--i:${i}`} aria-hidden="true" />
+            <details class="prog" open={i === 0} data-reveal style={`--i:${i}`}>
+              <summary class="prog__summary">
+                <span class="prog__num" aria-hidden="true">({p.num})</span>
+                <span class="prog__head">
+                  <h3 class="prog__title">{p.title}</h3>
+                  <span class="prog__lede">{p.summary}</span>
+                </span>
+                <span class="prog__toggle" aria-hidden="true">
+                  <Icon name="plus" size={22} />
+                </span>
+              </summary>
+              <div class="prog__body">
+                <dl class="prog__facts">
+                  {p.facts.map((f) => (
+                    <div>
+                      <dt>{f.label}</dt>
+                      <dd>
+                        {f.value}
+                        {f.placeholder && <span class="placeholder-tag ml-2">To confirm</span>}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                <a href={p.href} class="prog__enquire link-grow-line">
+                  {t.enquire} <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </details>
+          </li>
+        ))
+      }
+      <li class="prog-row prog-row--end" aria-hidden="true">
+        <span class="prog-row__rule" data-draw-x style={`--i:${programmes.length}`} />
+      </li>
+    </ol>
+  </div>
+
+  <!-- Phones: swipe cards (full-bleed scroller, aligned to the content gutter) -->
+  <div class="prog-swipe">
+    <p class="prog-swipe__hint container-content">{t.swipeHint}</p>
+    <ul class="prog-swipe__track" role="list" aria-label={t.eyebrow} tabindex="0">
+      {
+        programmes.map((p) => (
+          <li class="prog-card">
+            <p class="prog-card__num" aria-hidden="true">
+              ({p.num})
+            </p>
+            <h3 class="prog-card__title">{p.title}</h3>
+            <p class="prog-card__lede">{p.summary}</p>
+            <dl class="prog-card__facts">
+              {p.facts.map((f) => (
+                <div>
+                  <dt>{f.label}</dt>
+                  <dd>
+                    {f.value}
+                    {f.placeholder && <span class="placeholder-tag ml-1">To confirm</span>}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <a href={p.href} class="prog-card__enquire">
+              {t.enquire} <span aria-hidden="true">→</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <div class="container-content">
+    <div class="speaking__foot" data-reveal>
+      <p class="speaking__past">
+        <span class="speaking__past-label">{t.pastAudiencesLabel}:</span>
+        {t.pastAudiences.map((a) => <span class="speaking__aud">{a}</span>)}
+      </p>
+      <div class="speaking__actions">
+        <a href={site.nav.cta.href} class="btn btn-primary">
+          {t.cta} <Icon name="arrow-right" size={18} class="btn-arrow" />
+        </a>
+        <a href={t.allHref} class="btn btn-secondary">{t.allLink}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .speaking {
+    padding-block: var(--section-space);
+  }
+
+  /* ================= Rows (≥768px) ================= */
+  .prog-rows {
+    display: none;
+    margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 768px) {
+    .prog-rows {
+      display: block;
+    }
+  }
+  .prog-row {
+    position: relative;
+  }
+  .prog-row__rule {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: var(--color-hairline);
+  }
+  .prog-row--end {
+    height: 1px;
+  }
+
+  .prog__summary {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) 2.75rem;
+    align-items: start;
+    column-gap: 1.5rem;
+    padding-block: 2rem;
+    cursor: pointer;
+    list-style: none;
+  }
+  .prog__summary::-webkit-details-marker {
+    display: none;
+  }
+  .prog__summary:focus-visible {
+    outline-offset: 4px;
+  }
+  .prog__num {
+    padding-top: 0.6rem;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+    font-variant-numeric: tabular-nums;
+  }
+  .prog__head {
+    display: grid;
+    gap: 0.35rem;
+  }
+  .prog__title {
+    font-size: var(--text-h3);
+    line-height: 1.15;
+    transition: color var(--dur-tap) var(--ease);
+  }
+  .prog__lede {
+    max-width: 60ch;
+    color: var(--color-stone);
+  }
+  .prog__toggle {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    color: var(--color-green);
+    transition:
+      transform var(--dur-tap) var(--ease),
+      background-color var(--dur-tap) var(--ease),
+      color var(--dur-tap) var(--ease);
+  }
+  .prog[open] .prog__toggle {
+    transform: rotate(45deg);
+    background: var(--color-green);
+    color: var(--color-ivory);
+  }
+  .prog__summary:hover .prog__title {
+    color: var(--color-green);
+  }
+
+  .prog__body {
+    padding: 0 0 2.25rem calc(4.5rem + 1.5rem);
+  }
+  .prog[open] .prog__body {
+    animation: fade-up var(--dur-reveal) var(--ease) both;
+  }
+  .prog__facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin: 0;
+    padding: 1.25rem 0;
+    border-top: 1px solid var(--color-hairline);
+    max-width: 52rem;
+  }
+  .prog__facts dt,
+  .prog-card__facts dt {
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+  .prog__facts dd,
+  .prog-card__facts dd {
+    margin: 0.35rem 0 0;
+  }
+  .prog__enquire {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+
+  /* ================= Swipe cards (phones) ================= */
+  .prog-swipe {
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 768px) {
+    .prog-swipe {
+      display: none;
+    }
+  }
+  .prog-swipe__hint {
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .prog-swipe__track {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0 0;
+    padding: 0.25rem var(--gutter) 1rem;
+    list-style: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-hairline) transparent;
+  }
+  .prog-swipe__track:focus-visible {
+    outline-offset: -2px;
+  }
+  .prog-card {
+    flex: 0 0 min(84%, 22rem);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+    background: var(--color-ivory);
+  }
+  .prog-card__num {
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .prog-card__title {
+    font-size: 1.75rem; /* 28px — serif minimum */
+    line-height: 1.15;
+  }
+  .prog-card__lede {
+    color: var(--color-stone);
+  }
+  .prog-card__facts {
+    display: grid;
+    gap: 0.9rem;
+    margin: 0.25rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-hairline);
+  }
+  .prog-card__enquire {
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-green);
+    text-decoration: none;
+  }
+
+  /* ================= Foot ================= */
+  .speaking__foot {
+    display: grid;
+    gap: 2rem;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+  @media (min-width: 1024px) {
+    .speaking__foot {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+  }
+  .speaking__past {
+    max-width: 60rem;
+    color: var(--color-stone);
+  }
+  .speaking__past-label {
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-right: 0.4rem;
+  }
+  .speaking__aud:not(:last-child)::after {
+    content: '·';
+    margin-inline: 0.5rem;
+  }
+  .speaking__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  @media (max-width: 639.98px) {
+    .speaking__actions > * {
+      flex: 1 1 100%;
+    }
+  }
+</style>

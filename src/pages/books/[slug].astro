@@ -1,0 +1,389 @@
+---
+/**
+ * /books/[slug] — one page per book: cover, synopsis, contents, praise, buy and
+ * bulk-order links, a sample chapter, and the other book.
+ */
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Book3D from '../../islands/Book3D.tsx';
+import BlurImage from '../../components/BlurImage.astro';
+import Eyebrow from '../../components/Eyebrow.astro';
+import Icon from '../../components/Icon.astro';
+import InflectionLine from '../../components/InflectionLine.astro';
+import pages from '../../data/pages.json';
+import home from '../../data/home.json';
+import { bookSchema } from '../../lib/schema';
+
+export async function getStaticPaths() {
+  const books = await getCollection('books');
+  return books.map((book) => ({ params: { slug: book.id }, props: { book } }));
+}
+
+const { book } = Astro.props as { book: CollectionEntry<'books'> };
+const d = book.data;
+const p = pages.books;
+const { Content } = await render(book);
+const others = (await getCollection('books')).filter((b) => b.id !== book.id);
+
+const COVER_WIDTHS = [320, 480, 640, 800];
+const cover = d.cover
+  ? await (async () => {
+      const [avif, webp, fallback] = await Promise.all([
+        getImage({ src: d.cover!, widths: COVER_WIDTHS, format: 'avif' }),
+        getImage({ src: d.cover!, widths: COVER_WIDTHS, format: 'webp' }),
+        getImage({ src: d.cover!, width: 640, format: 'jpg' }),
+      ]);
+      return {
+        avifSrcset: avif.srcSet.attribute,
+        webpSrcset: webp.srcSet.attribute,
+        fallbackSrc: fallback.src,
+        width: d.cover!.width,
+        height: d.cover!.height,
+      };
+    })()
+  : null;
+
+const isLive = (url: string) => url && url !== '#';
+const live = d.buyLinks.filter((l) => isLive(l.url));
+const pending = d.buyLinks.filter((l) => !isLive(l.url));
+const fullTitle = `${d.title} ${d.titleAccent}`;
+const fmt = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
+const coverUrl = cover ? new URL(cover.fallbackSrc, Astro.site).href : undefined;
+const jsonLd = bookSchema(book, pageUrl, coverUrl);
+---
+
+<Base title={fullTitle} description={d.pitch} ogType="book" jsonLd={jsonLd}>
+  <main id="main">
+    <!-- Book hero -->
+    <section class="bk-hero container-content" aria-labelledby="book-title">
+      <div class="bk-hero__cover">
+        {cover && <Book3D client:visible {...cover} alt={d.coverAlt} sizes="(min-width: 768px) 22rem, min(64vw, 17rem)" />}
+      </div>
+      <div class="bk-hero__text">
+        <div data-reveal="fade" data-reveal-now style="--delay:100ms">
+          <Eyebrow>{home.books.eyebrow}</Eyebrow>
+        </div>
+        {
+          d.status === 'new-release' && (
+            <p class="mt-5" data-reveal="fade" data-reveal-now style="--delay:150ms">
+              <span class="pill">{home.books.newRelease}</span>
+            </p>
+          )
+        }
+        <h1 id="book-title" class="bk-hero__title" data-reveal data-reveal-now style="--delay:200ms">
+          {d.title} <span class="bk-hero__accent">{d.titleAccent}</span>
+        </h1>
+        <p class="bk-hero__subtitle" data-reveal data-reveal-now style="--delay:300ms">{d.subtitle}</p>
+        <p class="bk-hero__pitch" data-reveal data-reveal-now style="--delay:400ms">{d.pitch}</p>
+        <dl class="bk-hero__facts" data-reveal data-reveal-now style="--delay:500ms">
+          {d.published && (
+            <div>
+              <dt>Published</dt>
+              <dd>{fmt.format(d.published)}</dd>
+            </div>
+          )}
+          {d.publisher && (
+            <div>
+              <dt>Publisher</dt>
+              <dd>{d.publisher.startsWith('PLACEHOLDER') ? <span class="placeholder-tag">To confirm</span> : d.publisher}</dd>
+            </div>
+          )}
+          {d.isbn && (
+            <div>
+              <dt>ISBN</dt>
+              <dd>{d.isbn}</dd>
+            </div>
+          )}
+        </dl>
+        <div class="bk-hero__actions" data-reveal data-reveal-now style="--delay:600ms">
+          {
+            live.map((l) => (
+              <a href={l.url} class="btn btn-primary" rel="noopener" target="_blank">
+                Buy on {l.label} <Icon name="arrow-right" size={18} class="btn-arrow" />
+              </a>
+            ))
+          }
+          <a href="#bulk" class="btn btn-secondary">{p.bulkCta}</a>
+        </div>
+        {
+          pending.length > 0 && (
+            <p class="mt-3" data-reveal="fade" data-reveal-now style="--delay:600ms">
+              <span class="placeholder-tag">{pending.map((l) => l.label).join(', ')} link to come</span>
+            </p>
+          )
+        }
+      </div>
+    </section>
+
+    <div class="container-content"><InflectionLine variant="divider" /></div>
+
+    <!-- Synopsis + contents -->
+    <section class="page-section container-content" aria-labelledby="synopsis-title">
+      <div class="bk-two">
+        <div>
+          <h2 id="synopsis-title" class="page-section__title" data-reveal>{p.synopsis}</h2>
+          {d.placeholder && <p class="mt-3"><span class="placeholder-tag">Placeholder synopsis</span></p>}
+          <div class="prose-body mt-6" data-reveal style="--i:1"><Content /></div>
+        </div>
+        <div>
+          <h2 class="page-section__title" data-reveal>{p.contents}</h2>
+          <p class="mt-6 text-stone" data-reveal style="--i:1">
+            {p.contentsPlaceholder} <span class="placeholder-tag ml-1">Placeholder</span>
+          </p>
+          <p class="mt-8" data-reveal style="--i:2">
+            <span class="placeholder-tag">{p.samplePlaceholder}</span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Praise -->
+    {
+      d.quote && (
+        <section class="page-section container-content" aria-labelledby="praise-title">
+          <h2 id="praise-title" class="page-section__title" data-reveal>{p.praise}</h2>
+          <figure class="bk-quote" data-reveal style="--i:1">
+            <blockquote>
+              <p>{d.quote.text}</p>
+            </blockquote>
+            <figcaption>
+              — {d.quote.author}
+              {d.quote.role && <span>, {d.quote.role}</span>}
+              {d.quote.placeholder && <span class="placeholder-tag ml-2">Placeholder</span>}
+            </figcaption>
+          </figure>
+        </section>
+      )
+    }
+
+    <!-- Excerpt band -->
+    {
+      d.excerpt && (
+        <section class="on-green bk-excerpt" aria-label={home.books.excerptEyebrow}>
+          <div class="container-content">
+            <Eyebrow>{home.books.excerptEyebrow}</Eyebrow>
+            <blockquote class="bk-excerpt__text" data-reveal>
+              <p>{d.excerpt}</p>
+            </blockquote>
+            {d.placeholder && <span class="placeholder-tag">Placeholder excerpt</span>}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Bulk orders -->
+    <section id="bulk" class="page-section container-content" aria-labelledby="bulk-title">
+      <div class="bk-bulk" data-reveal>
+        <div>
+          <h2 id="bulk-title" class="page-section__title">{home.books.bulk}</h2>
+          <p class="mt-3 text-stone prose-measure">{p.bulk}</p>
+        </div>
+        <a href={home.books.bulkHref} class="btn btn-primary">
+          {p.bulkCta} <Icon name="arrow-right" size={18} class="btn-arrow" />
+        </a>
+      </div>
+    </section>
+
+    <!-- The other book -->
+    {
+      others.length > 0 && (
+        <section class="page-section container-content" aria-labelledby="other-title">
+          <h2 id="other-title" class="page-section__title" data-reveal>{p.other}</h2>
+          {others.map((o) => (
+            <a href={`/books/${o.id}`} class="bk-other" data-reveal style="--i:1">
+              {o.data.cover && (
+                <BlurImage src={o.data.cover} alt="" sizes="8rem" widths={[160, 320]} class="bk-other__cover" />
+              )}
+              <span class="bk-other__text">
+                <span class="bk-other__title">
+                  {o.data.title} <span class="bk-hero__accent">{o.data.titleAccent}</span>
+                </span>
+                <span class="bk-other__pitch">{o.data.pitch}</span>
+              </span>
+              <Icon name="arrow-right" size={22} class="bk-other__arrow" />
+            </a>
+          ))}
+        </section>
+      )
+    }
+  </main>
+</Base>
+
+<style>
+  .bk-hero {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+    padding-top: calc(clamp(6.5rem, 5rem + 5vw, 9rem) + env(safe-area-inset-top));
+    padding-bottom: clamp(3rem, 5vw, 5rem);
+  }
+  .bk-hero__cover {
+    width: min(64vw, 17rem);
+    margin-inline: auto;
+    padding-right: 10px;
+  }
+  @media (min-width: 768px) {
+    .bk-hero {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: clamp(2.5rem, 5vw, 5rem);
+    }
+    .bk-hero__cover {
+      width: min(100%, 22rem);
+    }
+  }
+  .bk-hero__title {
+    margin-top: 1rem;
+    font-size: var(--text-h1);
+    line-height: var(--text-h1--line-height);
+  }
+  .bk-hero__accent {
+    font-style: italic;
+    color: var(--color-green);
+  }
+  .bk-hero__subtitle {
+    margin-top: 0.75rem;
+    color: var(--color-stone);
+    max-width: 52ch;
+  }
+  .bk-hero__pitch {
+    margin-top: 1.25rem;
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+    max-width: 52ch;
+  }
+  .bk-hero__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2.5rem;
+    margin: 1.75rem 0 0;
+  }
+  .bk-hero__facts dt {
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+  .bk-hero__facts dd {
+    margin: 0.25rem 0 0;
+  }
+  .bk-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  @media (max-width: 639.98px) {
+    .bk-hero__actions > * {
+      flex: 1 1 100%;
+    }
+  }
+
+  .bk-two {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 1024px) {
+    .bk-two {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+      gap: 5rem;
+    }
+  }
+
+  .bk-quote {
+    margin: 2rem 0 0;
+    max-width: 48rem;
+  }
+  .bk-quote blockquote {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-style: italic;
+    font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+    line-height: 1.25;
+  }
+  .bk-quote figcaption {
+    margin-top: 1rem;
+    color: var(--color-stone);
+  }
+
+  .bk-excerpt {
+    background: var(--color-green);
+    color: var(--color-ivory);
+    padding-block: clamp(4rem, 3rem + 5vw, 7rem);
+  }
+  .bk-excerpt__text {
+    margin: 1.25rem 0 1.25rem;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: var(--text-h3);
+    line-height: 1.3;
+    max-width: 36ch;
+  }
+  .bk-excerpt .placeholder-tag {
+    color: var(--color-brass-light);
+    border-color: var(--color-brass-light);
+  }
+
+  .bk-bulk {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: clamp(1.75rem, 4vw, 3rem);
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+  }
+
+  .bk-other {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 2rem;
+    padding: 1rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+    color: var(--color-ink);
+    text-decoration: none;
+    max-width: 44rem;
+    transition: border-color var(--dur-tap) var(--ease);
+  }
+  .bk-other:hover {
+    border-color: var(--color-green);
+  }
+  .bk-other :global(.bk-other__cover) {
+    aspect-ratio: 2 / 3;
+    border-radius: 2px;
+  }
+  .bk-other__text {
+    display: grid;
+    gap: 0.35rem;
+  }
+  .bk-other__title {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 1.75rem;
+    line-height: 1.1;
+  }
+  .bk-other__pitch {
+    color: var(--color-stone);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .bk-other :global(.bk-other__arrow) {
+    color: var(--color-brass);
+    transition: transform var(--dur-tap) var(--ease);
+  }
+  @media (hover: hover) {
+    .bk-other:hover :global(.bk-other__arrow) {
+      transform: translateX(4px);
+    }
+  }
+</style>

@@ -1,0 +1,115 @@
+---
+/**
+ * Home §3 — Numbers strip (author-stats row). Four large brass Cormorant
+ * numerals that count up once. 2 × 2 on phones, 4 in a row from 768px.
+ * Figures come from stats.json and stay flagged until he confirms them.
+ */
+import { getCollection } from 'astro:content';
+import NumberTicker from '../../islands/NumberTicker.tsx';
+import Eyebrow from '../Eyebrow.astro';
+import home from '../../data/home.json';
+
+const stats = (await getCollection('stats')).sort((a, b) => a.data.order - b.data.order);
+const unconfirmed = stats.some((s) => s.data.placeholder);
+---
+
+<section class="numbers" aria-labelledby="numbers-title">
+  <div class="container-content">
+    <div class="numbers__head" data-reveal="fade">
+      <Eyebrow as="h2" class="numbers__title"><span id="numbers-title">{home.numbers.eyebrow}</span></Eyebrow>
+      {unconfirmed && <span class="placeholder-tag">Figures to be confirmed</span>}
+    </div>
+
+    <dl class="numbers__grid">
+      {
+        stats.map((s, i) => (
+          <div class="numbers__item" data-reveal style={`--i:${i}`}>
+            <dt class="numbers__label">{s.data.label}</dt>
+            <dd class="numbers__value">
+              <NumberTicker client:visible={{ rootMargin: '300px' }} value={s.data.value} suffix={s.data.suffix} delay={i * 0.07} />
+            </dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<style>
+  .numbers {
+    padding-block: clamp(3.5rem, 2rem + 5vw, 6rem);
+  }
+  .numbers__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+  }
+  /* The eyebrow is the section's label; make it a heading-like landmark name. */
+  .numbers__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 1.75rem;
+    border-top: 1px solid var(--color-hairline);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  @media (min-width: 768px) {
+    .numbers__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .numbers__item {
+    display: flex;
+    flex-direction: column-reverse; /* numeral above its label; dt stays first in the DOM */
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1.75rem 1rem 1.75rem 1.25rem;
+  }
+  /* Hairlines between cells: 2 × 2 on phones … */
+  .numbers__item:nth-child(even) {
+    border-left: 1px solid var(--color-hairline);
+  }
+  .numbers__item:nth-child(n + 3) {
+    border-top: 1px solid var(--color-hairline);
+  }
+  .numbers__item:nth-child(odd) {
+    padding-left: 0;
+  }
+  /* … one row from tablet up. */
+  @media (min-width: 768px) {
+    .numbers__item:nth-child(n) {
+      padding: 2.25rem 1.5rem;
+      border-top: 0;
+      border-left: 1px solid var(--color-hairline);
+    }
+    .numbers__item:first-child {
+      border-left: 0;
+      padding-left: 0;
+    }
+  }
+
+  .numbers__value {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-numeral);
+    line-height: 1;
+    color: var(--color-brass); /* large decorative numerals only */
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .numbers__label {
+    max-width: 20ch;
+    color: var(--color-stone);
+    line-height: 1.4;
+  }
+
+  .numbers :global(.ticker__digits) {
+    display: inline-block;
+    text-align: right;
+  }
+  /* The final value is never hidden: the island hydrates ~300px before the strip
+     scrolls in and resets to 0 off-screen, so a failed script can't leave blanks. */
+</style>

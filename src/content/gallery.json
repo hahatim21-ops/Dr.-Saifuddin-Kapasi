@@ -1,0 +1,8 @@
+[
+  {"id":"kampala-convocation","caption":"Kampala convocation","year":2026,"alt":"PLACEHOLDER — Dr. Kapasi at the Kennedy University convocation in Kampala","order":1,"placeholder":true,"image":"../assets/placeholders/gallery-kampala-convocation.jpg"},
+  {"id":"kampala-masterclass","caption":"Growth Mindset Master Class, Kampala","year":2026,"alt":"PLACEHOLDER — Dr. Kapasi leading a master class in Kampala","order":2,"placeholder":true,"image":"../assets/placeholders/gallery-kampala-masterclass.jpg"},
+  {"id":"naval-dockyard-mdp","caption":"Naval Dockyard MDP, SIMSREE","year":2026,"alt":"PLACEHOLDER — Management Development Programme with Naval Dockyard officers at SIMSREE","order":3,"placeholder":true,"image":"../assets/placeholders/gallery-naval-dockyard-mdp.jpg"},
+  {"id":"book-presentation","caption":"Presenting both books, Kampala","year":2026,"alt":"PLACEHOLDER — Dr. Kapasi presenting his two books","order":4,"placeholder":true,"image":"../assets/placeholders/gallery-book-presentation.jpg"},
+  {"id":"burhani-classroom","caption":"Burhani College classroom","year":2026,"alt":"PLACEHOLDER — Dr. Kapasi teaching at Burhani College","order":5,"placeholder":true,"image":"../assets/placeholders/gallery-burhani-classroom.jpg"},
+  {"id":"productivity-war-room","caption":"Productivity War Room","year":2026,"alt":"PLACEHOLDER — officers working in the Productivity War Room session","order":6,"placeholder":true,"image":"../assets/placeholders/gallery-productivity-war-room.jpg"}
+]

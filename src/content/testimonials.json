@@ -1,0 +1,7 @@
+[
+  { "id": "t1", "quote": "PLACEHOLDER — quote from his manager of about fifteen years at Vodafone, on staying calm and quietly assertive in the toughest situations.", "name": "Sambasivam Hariharan", "role": "Former manager, Vodafone", "permission": false, "placeholder": true },
+  { "id": "t2", "quote": "PLACEHOLDER — quote from a senior Vodafone leader on customer centricity combined with risk management.", "name": "Name to confirm", "role": "Role, Vodafone", "permission": false, "placeholder": true },
+  { "id": "t3", "quote": "PLACEHOLDER — quote from a colleague on his process orientation: connecting input to output.", "name": "Name to confirm", "role": "Role, organisation", "permission": false, "placeholder": true },
+  { "id": "t4", "quote": "PLACEHOLDER — a line from the Beyond Ideas foreword.", "name": "Ishmeet Singh", "role": "Foreword, Beyond Ideas", "permission": false, "placeholder": true },
+  { "id": "t5", "quote": "PLACEHOLDER — a reader's review of Beyond Satisfaction (hype-free, clean visual models, execution-first).", "name": "Reader name", "role": "Reader", "permission": false, "placeholder": true }
+]

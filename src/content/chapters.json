@@ -1,0 +1,30 @@
+[
+  {
+    "id": "customers",
+    "order": 1,
+    "title": "Customers",
+    "years": "1995 – 2019",
+    "summary": "Two decades in consumer finance and telecom, ending with seventeen years leading Credit & Collections at Vodafone — where customer value and risk had to be managed as one.",
+    "placeholder": true
+  },
+  {
+    "id": "ventures",
+    "order": 2,
+    "title": "Ventures",
+    "years": "2019 – now",
+    "summary": "From running a function to building things: business head at Vaux, his own advisory practice, and two books that turn experience into method.",
+    "placeholder": true
+  },
+  {
+    "id": "institutions",
+    "order": 3,
+    "title": "Institutions",
+    "years": "2018 – now",
+    "summary": "Teaching, governance and service — the slower work of building things that outlast the people who start them.",
+    "callout": {
+      "title": "Back where he learned",
+      "text": "He finished school at Burhani College in 1981 and earned his PGDBM at Sydenham Institute in 1985. Today he teaches at both."
+    },
+    "placeholder": true
+  }
+]

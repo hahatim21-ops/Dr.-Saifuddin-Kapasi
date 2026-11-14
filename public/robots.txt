@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /style-test
+
+Sitemap: https://saifuddinkapasi.in/sitemap-index.xml

@@ -1,0 +1,53 @@
+---
+/**
+ * Standard section opening: eyebrow (with the brass glyph), a serif h2 that
+ * reveals word by word (CSS), and an optional intro paragraph.
+ */
+import Eyebrow from './Eyebrow.astro';
+import RevealWords from './RevealWords.astro';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  id: string;
+  intro?: string;
+  class?: string;
+  /** Centre-align (e.g. testimonials). */
+  center?: boolean;
+}
+const { eyebrow, title, id, intro, class: className, center = false } = Astro.props;
+---
+
+<header class:list={['section-header', { 'section-header--center': center }, className]}>
+  <div data-reveal="fade"><Eyebrow>{eyebrow}</Eyebrow></div>
+  <RevealWords as="h2" id={id} text={title} class="section-header__title" />
+  {intro && <p class="section-header__intro" data-reveal style="--delay:240ms">{intro}</p>}
+  <slot />
+</header>
+
+<style>
+  .section-header {
+    max-width: 48rem;
+  }
+  .section-header--center {
+    margin-inline: auto;
+    text-align: center;
+  }
+  .section-header :global(.section-header__title) {
+    margin-top: 1rem;
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .section-header__intro {
+    margin-top: 1.25rem;
+    max-width: var(--container-prose);
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+    color: var(--color-stone);
+  }
+  .section-header--center .section-header__intro {
+    margin-inline: auto;
+  }
+</style>

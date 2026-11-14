@@ -1,0 +1,73 @@
+---
+/**
+ * Home §10 — Achievements & recognition. The top six featured items, newest
+ * first, as a framed wall (3 across ≥1024px, 2 on tablets, a swipe row on
+ * phones). Tap a frame for the viewer. "See all" opens /achievements.
+ */
+import { getCollection } from 'astro:content';
+import home from '../../data/home.json';
+import { toAchievements } from '../../lib/achievements';
+import AchievementLightbox from '../../islands/AchievementLightbox.tsx';
+import SectionHeader from '../SectionHeader.astro';
+
+const t = home.achievements;
+const featured = (await getCollection('achievements'))
+  .filter((a) => a.data.featured)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 6);
+const items = await toAchievements(featured);
+---
+
+<section id="achievements" class="achievements" aria-labelledby="achievements-title">
+  <div class="container-content">
+    <div class="achievements__head">
+      <SectionHeader eyebrow={t.eyebrow} id="achievements-title" title={t.title} intro={t.intro} />
+      <a href={t.seeAllHref} class="achievements__all link-grow-line" data-reveal="fade">
+        {t.seeAll} <span aria-hidden="true">→</span>
+      </a>
+    </div>
+    <p class="achievements__hint">{t.swipeHint}</p>
+
+    <div class="achievements__wall">
+      <AchievementLightbox client:visible={{ rootMargin: '300px' }} items={items} label={t.wallLabel} placeholderLabel={t.placeholderLabel} />
+    </div>
+  </div>
+</section>
+
+<style>
+  .achievements {
+    padding-block: var(--section-space);
+  }
+  .achievements__head {
+    display: grid;
+    gap: 1.5rem;
+    align-items: end;
+  }
+  @media (min-width: 768px) {
+    .achievements__head {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+  }
+  .achievements__all {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .achievements__hint {
+    margin-top: 1.5rem;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  @media (min-width: 768px) {
+    .achievements__hint {
+      display: none;
+    }
+  }
+  .achievements__wall {
+    margin-top: clamp(1rem, 4vw, 4rem);
+  }
+</style>

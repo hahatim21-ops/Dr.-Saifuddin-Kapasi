@@ -1,0 +1,14 @@
+---
+/** /contact — the contact section as the page itself. No phone dock here. */
+import Base from '../layouts/Base.astro';
+import ContactSection from '../components/ContactSection.astro';
+import pages from '../data/pages.json';
+
+const p = pages.contact;
+---
+
+<Base title="Contact" description={p.meta} dock={false}>
+  <main id="main">
+    <ContactSection asPageTitle map={{ href: p.mapHref, label: p.mapLabel }} />
+  </main>
+</Base>

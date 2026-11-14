@@ -1,0 +1,126 @@
+---
+/** /insights/[slug] — one article: title, date, body, then the next articles. */
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Eyebrow from '../../components/Eyebrow.astro';
+import InflectionLine from '../../components/InflectionLine.astro';
+import InsightsList from '../../components/InsightsList.astro';
+import RevealWords from '../../components/RevealWords.astro';
+import pages from '../../data/pages.json';
+import site from '../../data/site.json';
+import { articleSchema } from '../../lib/schema';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('insights');
+  return articles.map((article) => ({ params: { slug: article.id }, props: { article } }));
+}
+
+const { article } = Astro.props as { article: CollectionEntry<'insights'> };
+const d = article.data;
+const p = pages.insights;
+const { Content } = await render(article);
+const fmt = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+const others = (await getCollection('insights'))
+  .filter((a) => a.id !== article.id)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 2);
+// Titles are plain text; escape the asterisk accent syntax used by RevealWords.
+const title = d.title.replace(/\*/g, '');
+const jsonLd = articleSchema(article, new URL(Astro.url.pathname, Astro.site).href);
+---
+
+<Base title={title} description={d.summary} ogType="article" jsonLd={jsonLd}>
+  <main id="main">
+    <article class="art" aria-labelledby="art-title">
+      <header class="art__head container-content">
+        <p data-reveal="fade" data-reveal-now style="--delay:100ms">
+          <a href="/insights" class="art__back link-grow-line">← {p.back}</a>
+        </p>
+        <div class="mt-8" data-reveal="fade" data-reveal-now style="--delay:150ms">
+          <Eyebrow>{p.eyebrow}</Eyebrow>
+        </div>
+        <RevealWords as="h1" id="art-title" now delay={150} text={title} class="art__title" />
+        <p class="art__meta" data-reveal data-reveal-now style="--delay:450ms">
+          <span>{site.name}</span>
+          <span aria-hidden="true">·</span>
+          <time datetime={d.date.toISOString().slice(0, 10)}>{fmt.format(d.date)}</time>
+          {d.placeholder && <span class="placeholder-tag">Placeholder article</span>}
+        </p>
+        <div class="art__line"><InflectionLine variant="divider" drawOnLoad delay={600} /></div>
+      </header>
+
+      <div class="container-content">
+        <p class="art__summary" data-reveal>{d.summary}</p>
+        <div class="prose-body art__body" data-reveal style="--i:1">
+          <Content />
+        </div>
+        {
+          d.sourceUrl && (
+            <p class="art__source">
+              <a href={d.sourceUrl} rel="noopener" target="_blank" class="link-grow-line">
+                First published on LinkedIn ↗
+              </a>
+            </p>
+          )
+        }
+      </div>
+    </article>
+
+    {
+      others.length > 0 && (
+        <section class="page-section container-content art__more" aria-labelledby="more-title">
+          <h2 id="more-title" class="page-section__title" data-reveal>{p.readNext}</h2>
+          <InsightsList articles={others} />
+        </section>
+      )
+    }
+  </main>
+</Base>
+
+<style>
+  .art__head {
+    padding-top: calc(clamp(6.5rem, 5rem + 5vw, 9rem) + env(safe-area-inset-top));
+  }
+  .art__back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .art :global(.art__title) {
+    margin-top: 1rem;
+    max-width: 24ch;
+    font-size: var(--text-h1);
+    line-height: var(--text-h1--line-height);
+  }
+  .art__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    color: var(--color-stone);
+  }
+  .art__line {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+  .art__summary {
+    margin-top: clamp(2rem, 4vw, 3rem);
+    max-width: var(--container-prose);
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+  }
+  .art__body {
+    margin-top: 2rem;
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+  }
+  .art__source {
+    margin-bottom: 3rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .art__more {
+    border-top: 1px solid var(--color-hairline);
+  }
+</style>

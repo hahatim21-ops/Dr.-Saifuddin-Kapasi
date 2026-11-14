@@ -1,0 +1,306 @@
+---
+/**
+ * Home §5 — Books, like a quiet author site. Per book: a large 3D cover (Book3D
+ * island: rises with scroll, tilts under the pointer on desktop), a "New
+ * release" pill, a two-tone serif title, a two-line pitch, one quote, buy
+ * links and the bulk-order line. Then a green band with a short excerpt, where
+ * the prism's spectrum fades in. Phones: cover above text; ≥768px: side by
+ * side, alternating.
+ */
+import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
+import home from '../../data/home.json';
+import Book3D from '../../islands/Book3D.tsx';
+import Icon from '../Icon.astro';
+import Prism from '../Prism.astro';
+import SectionHeader from '../SectionHeader.astro';
+import Eyebrow from '../Eyebrow.astro';
+
+const books = (await getCollection('books')).sort((a, b) => a.data.order - b.data.order);
+const COVER_WIDTHS = [320, 480, 640, 800];
+const COVER_SIZES = '(min-width: 1024px) 22rem, (min-width: 768px) 32vw, min(64vw, 17rem)';
+
+const items = await Promise.all(
+  books.map(async (b) => {
+    const cover = b.data.cover;
+    if (!cover) return { book: b, cover: null };
+    const [avif, webp, fallback] = await Promise.all([
+      getImage({ src: cover, widths: COVER_WIDTHS, format: 'avif' }),
+      getImage({ src: cover, widths: COVER_WIDTHS, format: 'webp' }),
+      getImage({ src: cover, width: 640, format: 'jpg' }),
+    ]);
+    return {
+      book: b,
+      cover: {
+        avifSrcset: avif.srcSet.attribute,
+        webpSrcset: webp.srcSet.attribute,
+        fallbackSrc: fallback.src,
+        width: cover.width,
+        height: cover.height,
+      },
+    };
+  })
+);
+
+const excerptBook = books.find((b) => b.data.excerpt);
+const isLive = (url: string) => url && url !== '#';
+---
+
+<section id="books" class="books" aria-labelledby="books-title">
+  <div class="container-content">
+    <SectionHeader eyebrow={home.books.eyebrow} id="books-title" title={home.books.title} intro={home.books.intro} />
+
+    <div class="books__list">
+      {
+        items.map(({ book, cover }, i) => {
+          const d = book.data;
+          const live = d.buyLinks.filter((l) => isLive(l.url));
+          const pending = d.buyLinks.filter((l) => !isLive(l.url));
+          return (
+            <article class:list={['book', { 'book--flip': i % 2 === 1 }]} aria-labelledby={`book-${book.id}`}>
+              <div class="book__cover">
+                {cover && (
+                  <Book3D
+                    client:visible={{ rootMargin: '300px' }}
+                    {...cover}
+                    alt={d.coverAlt}
+                    sizes={COVER_SIZES}
+                  />
+                )}
+              </div>
+
+              <div class="book__text">
+                {d.status === 'new-release' && (
+                  <p data-reveal="fade">
+                    <span class="pill">{home.books.newRelease}</span>
+                  </p>
+                )}
+                <h3 id={`book-${book.id}`} class="book__title" data-reveal>
+                  {d.title} <span class="book__accent">{d.titleAccent}</span>
+                </h3>
+                <p class="book__subtitle" data-reveal style="--i:1">
+                  {d.subtitle}
+                </p>
+                <p class="book__pitch" data-reveal style="--i:2">
+                  {d.pitch}
+                </p>
+
+                {d.quote && (
+                  <figure class="book__quote" data-reveal style="--i:3">
+                    <blockquote>
+                      <p>{d.quote.text}</p>
+                    </blockquote>
+                    <figcaption>
+                      — {d.quote.author}
+                      {d.quote.role && <span>, {d.quote.role}</span>}
+                      {d.quote.placeholder && <span class="placeholder-tag ml-2">Placeholder</span>}
+                    </figcaption>
+                  </figure>
+                )}
+
+                <div class="book__actions" data-reveal style="--i:4">
+                  {live.map((l) => (
+                    <a href={l.url} class="btn btn-primary" rel="noopener" target="_blank">
+                      Buy on {l.label}
+                      <Icon name="arrow-right" size={18} class="btn-arrow" />
+                    </a>
+                  ))}
+                  <a href={`/books/${book.id}`} class="btn btn-secondary">
+                    {home.books.readMore}
+                  </a>
+                </div>
+                {pending.length > 0 && (
+                  <p class="book__pending" data-reveal style="--i:4">
+                    <span class="placeholder-tag">{pending.map((l) => l.label).join(', ')} link to come</span>
+                  </p>
+                )}
+                <p class="book__bulk" data-reveal style="--i:5">
+                  <a href={home.books.bulkHref} class="link-grow-line">
+                    {home.books.bulk}
+                  </a>
+                </p>
+              </div>
+            </article>
+          );
+        })
+      }
+    </div>
+  </div>
+
+  {
+    excerptBook && (
+      <div class="on-green excerpt">
+        <div class="container-content excerpt__inner">
+          <div class="excerpt__prism" data-reveal="fade">
+            <Prism tone="dark" />
+          </div>
+          <figure class="excerpt__body">
+            <div data-reveal="fade">
+              <Eyebrow>{home.books.excerptEyebrow}</Eyebrow>
+            </div>
+            <blockquote class="excerpt__text" data-reveal style="--i:1">
+              <p>{excerptBook.data.excerpt}</p>
+            </blockquote>
+            <figcaption class="excerpt__source" data-reveal style="--i:2">
+              {excerptBook.data.title} {excerptBook.data.titleAccent}
+              {excerptBook.data.placeholder && <span class="placeholder-tag ml-2">Placeholder excerpt</span>}
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    )
+  }
+</section>
+
+<style>
+  .books {
+    padding-top: var(--section-space);
+  }
+  .books__list {
+    display: grid;
+    gap: clamp(4.5rem, 3rem + 6vw, 8rem);
+    margin-top: clamp(3rem, 2rem + 4vw, 5rem);
+    padding-bottom: var(--section-space);
+  }
+
+  /* ---------- One book ---------- */
+  .book {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  .book__cover {
+    width: min(64vw, 17rem);
+    margin-inline: auto;
+    padding-right: 10px; /* room for the page block */
+  }
+  @media (min-width: 768px) {
+    .book {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: clamp(2.5rem, 5vw, 5rem);
+    }
+    .book__cover {
+      width: min(100%, 22rem);
+    }
+    .book--flip {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    }
+    .book--flip .book__cover {
+      order: 2;
+    }
+  }
+
+  .book__text {
+    max-width: 38rem;
+  }
+  .book__title {
+    margin-top: 1rem;
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+  }
+  .book__accent {
+    color: var(--color-green);
+    font-style: italic;
+  }
+  .book__subtitle {
+    margin-top: 0.5rem;
+    color: var(--color-stone);
+  }
+  .book__pitch {
+    margin-top: 1.25rem;
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+  }
+
+  .book__quote {
+    margin: 1.75rem 0 0;
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--color-brass);
+  }
+  .book__quote blockquote {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.75rem; /* 28px — the serif's minimum */
+    line-height: 1.25;
+  }
+  .book__quote figcaption {
+    margin-top: 0.75rem;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+
+  .book__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  @media (max-width: 639.98px) {
+    .book__actions > * {
+      flex: 1 1 100%;
+    }
+  }
+  .book__pending {
+    margin-top: 0.75rem;
+  }
+  .book__bulk {
+    margin-top: 1.25rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .book__bulk a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+
+  /* ---------- Excerpt band ---------- */
+  .excerpt {
+    background: var(--color-green);
+    color: var(--color-ivory);
+    padding-block: clamp(4rem, 3rem + 5vw, 7rem);
+  }
+  .excerpt__inner {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  .excerpt__prism {
+    width: min(100%, 18rem);
+  }
+  @media (min-width: 768px) {
+    .excerpt__inner {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      gap: clamp(2.5rem, 5vw, 5rem);
+    }
+    .excerpt__prism {
+      width: 100%;
+      max-width: 24rem;
+    }
+  }
+  .excerpt__body {
+    margin: 0;
+  }
+  .excerpt__text {
+    margin: 1.25rem 0 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: var(--text-h3);
+    line-height: 1.3;
+    color: var(--color-ivory);
+    max-width: 34ch;
+    text-wrap: pretty;
+  }
+  .excerpt__source {
+    margin-top: 1.25rem;
+    font-size: var(--text-small);
+    color: var(--color-brass-light);
+  }
+  .excerpt .placeholder-tag {
+    color: var(--color-brass-light);
+    border-color: var(--color-brass-light);
+  }
+</style>

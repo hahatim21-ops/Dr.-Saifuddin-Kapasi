@@ -1,0 +1,456 @@
+---
+/**
+ * Contact (home §12, reused on /contact): a short Web3Forms form with an
+ * enquiry-type picker, plus call / WhatsApp / email / LinkedIn.
+ * - Phones: call and WhatsApp come first, the form below.
+ * - ≥768px: form and details in two columns.
+ * - Progressive: without JavaScript the form posts straight to Web3Forms; with
+ *   it, the message is sent in place with an inline, announced status.
+ * - ?enquiry=speaking (from "Invite me to speak") preselects the type;
+ *   ?programme=… is passed along with the message.
+ * The phone dock hides while this section is on screen (data-dock-stop).
+ */
+import home from '../data/home.json';
+import site from '../data/site.json';
+import Icon from './Icon.astro';
+import SectionHeader from './SectionHeader.astro';
+
+interface Props {
+  /** The page's main heading (/contact) instead of a section h2. */
+  asPageTitle?: boolean;
+  /** Enquiry type selected by default (a ?enquiry= URL value still wins). */
+  defaultEnquiry?: string;
+  /** Optional map link under the location (the /contact page). */
+  map?: { href: string; label: string };
+}
+const { asPageTitle = false, defaultEnquiry = 'speaking', map } = Astro.props;
+
+const t = home.contact;
+const f = t.form;
+const c = site.contact;
+const accessKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
+const tel = `tel:${c.phone.replace(/[^\d+]/g, '')}`;
+// Keep heading order: h1 → h2 on /contact, h2 → h3 inside the home page.
+const DirectTag = asPageTitle ? 'h2' : 'h3';
+---
+
+<section id="contact" class:list={['contact', { 'contact--page': asPageTitle }]} aria-labelledby="contact-title" data-dock-stop>
+  <div class="container-content">
+    {
+      asPageTitle ? (
+        <header class="contact__page-head">
+          <h1 id="contact-title">{t.title.replace(/\*/g, '')}</h1>
+          <p class="contact__intro">{t.intro}</p>
+        </header>
+      ) : (
+        <SectionHeader eyebrow={t.eyebrow} id="contact-title" title={t.title} intro={t.intro} />
+      )
+    }
+
+    <div class="contact__grid">
+      <!-- Direct lines: first on phones -->
+      <aside class="contact__direct" aria-labelledby="contact-direct" data-reveal>
+        <DirectTag id="contact-direct" class="contact__direct-title">{t.directTitle}</DirectTag>
+        <div class="contact__quick">
+          <a href={tel} class="btn btn-primary">
+            <Icon name="phone" /> {t.call}
+          </a>
+          <a href={`https://wa.me/${c.whatsapp}`} class="btn btn-secondary" rel="noopener" target="_blank">
+            <Icon name="whatsapp" /> {t.whatsapp}
+          </a>
+        </div>
+        <ul class="contact__lines" role="list">
+          <li>
+            <a href={`mailto:${c.email}`} class="contact__line">
+              <Icon name="mail" /><span><span class="sr-only">{t.email}: </span>{c.email}</span>
+            </a>
+          </li>
+          <li>
+            <a href={c.linkedin} class="contact__line" rel="noopener" target="_blank">
+              <Icon name="linkedin" /><span>{t.linkedin}</span>
+            </a>
+          </li>
+        </ul>
+        <p class="contact__note">{c.location}<br />{c.responseTime}</p>
+        {map && (
+          <p class="contact__map">
+            <a href={map.href} class="link-grow-line" rel="noopener" target="_blank">{map.label} <span aria-hidden="true">↗</span></a>
+          </p>
+        )}
+        {c.placeholder && <span class="placeholder-tag">Placeholder contact details</span>}
+      </aside>
+
+      <!-- Form -->
+      <form
+        class="cf"
+        action="https://api.web3forms.com/submit"
+        method="POST"
+        data-contact-form
+        data-key={accessKey ? '1' : ''}
+        data-reveal
+        style="--i:1"
+      >
+        <input type="hidden" name="access_key" value={accessKey} />
+        <input type="hidden" name="subject" value={f.subject} />
+        <input type="hidden" name="from_name" value={site.shortName + ' website'} />
+        <input type="hidden" name="programme" value="" data-programme />
+        <input type="checkbox" name="botcheck" class="cf__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+        <fieldset class="cf__types">
+          <legend class="cf__label">{f.enquiry}</legend>
+          <div class="cf__chips">
+            {
+              site.enquiryTypes.map((e) => (
+                <label class="cf__chip">
+                  <input type="radio" name="enquiry" value={e.value} checked={e.value === defaultEnquiry} />
+                  <span>{e.label}</span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+
+        <div class="cf__row">
+          <div class="cf__field">
+            <label for="cf-name" class="cf__label">{f.name}</label>
+            <input id="cf-name" name="name" type="text" autocomplete="name" required class="cf__input" />
+          </div>
+          <div class="cf__field">
+            <label for="cf-email" class="cf__label">{f.email}</label>
+            <input id="cf-email" name="email" type="email" autocomplete="email" inputmode="email" required class="cf__input" />
+          </div>
+        </div>
+        <div class="cf__row">
+          <div class="cf__field">
+            <label for="cf-phone" class="cf__label">{f.phone} <span class="cf__opt">({f.optional})</span></label>
+            <input id="cf-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" class="cf__input" />
+          </div>
+          <div class="cf__field">
+            <label for="cf-org" class="cf__label">{f.organisation} <span class="cf__opt">({f.optional})</span></label>
+            <input id="cf-org" name="organisation" type="text" autocomplete="organization" class="cf__input" />
+          </div>
+        </div>
+        <div class="cf__field">
+          <label for="cf-message" class="cf__label">{f.message}</label>
+          <textarea id="cf-message" name="message" rows="5" required aria-describedby="cf-message-hint" class="cf__input cf__textarea"></textarea>
+          <p id="cf-message-hint" class="cf__hint">{f.messageHint}</p>
+        </div>
+
+        <div class="cf__actions">
+          <button type="submit" class="btn btn-primary cf__submit" data-label={f.submit} data-sending={f.sending}>
+            {f.submit} <Icon name="arrow-right" size={18} class="btn-arrow" />
+          </button>
+          {!accessKey && <span class="placeholder-tag">Form not connected yet</span>}
+        </div>
+        <p
+          class="cf__status"
+          role="status"
+          aria-live="polite"
+          data-status
+          data-success={f.success + ' ' + c.responseTime}
+          data-error={f.error}
+          data-email={c.email}
+          data-not-connected={f.notConnected}
+        >
+        </p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact {
+    padding-block: var(--section-space);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .contact--page {
+    border-top: 0;
+    padding-top: calc(clamp(7rem, 5rem + 6vw, 10rem) + env(safe-area-inset-top));
+  }
+  .contact__map {
+    margin-top: 0.75rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .contact__page-head h1 {
+    font-size: var(--text-h1);
+  }
+  .contact__intro {
+    margin-top: 1.25rem;
+    max-width: var(--container-prose);
+    font-size: var(--text-lead);
+    color: var(--color-stone);
+  }
+
+  .contact__grid {
+    display: grid;
+    gap: 3rem;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+  @media (min-width: 768px) {
+    .contact__grid {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+      gap: clamp(2.5rem, 5vw, 5rem);
+      align-items: start;
+    }
+    .contact__direct {
+      order: 2;
+      position: sticky;
+      top: 7rem;
+    }
+  }
+
+  /* ---------- Direct lines ---------- */
+  .contact__direct-title {
+    font-size: var(--text-h3);
+  }
+  .contact__quick {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+  .contact__lines {
+    display: grid;
+    gap: 0.25rem;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .contact__line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2.75rem;
+    color: var(--color-ink);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .contact__line :global(svg) {
+    flex: none;
+    color: var(--color-green);
+  }
+  .contact__line:hover {
+    color: var(--color-green);
+  }
+  .contact__note {
+    margin-top: 1rem;
+    color: var(--color-stone);
+  }
+  .contact__direct .placeholder-tag {
+    margin-top: 1rem;
+  }
+
+  /* ---------- Form ---------- */
+  .cf {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .cf__honeypot {
+    display: none;
+  }
+  .cf__types {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .cf__label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .cf__opt {
+    font-weight: 400;
+    color: var(--color-stone);
+  }
+  .cf__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .cf__chip {
+    position: relative;
+  }
+  .cf__chip input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+  .cf__chip span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid rgb(28 31 30 / 0.24);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition:
+      background-color var(--dur-tap) var(--ease),
+      color var(--dur-tap) var(--ease),
+      border-color var(--dur-tap) var(--ease);
+  }
+  .cf__chip input:checked + span {
+    background: var(--color-green);
+    border-color: var(--color-green);
+    color: var(--color-ivory);
+  }
+  .cf__chip input:focus-visible + span {
+    outline: 2px solid var(--color-green);
+    outline-offset: 3px;
+  }
+  .cf__chip:hover span {
+    border-color: var(--color-green);
+  }
+
+  .cf__row {
+    display: grid;
+    gap: 1.5rem;
+  }
+  @media (min-width: 640px) {
+    .cf__row {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .cf__input {
+    display: block;
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid rgb(28 31 30 / 0.28);
+    border-radius: 8px;
+    background: #fffdf8;
+    color: var(--color-ink);
+    font: inherit;
+    font-size: 1.125rem; /* 18px — also stops iOS zooming on focus */
+    transition: border-color var(--dur-tap) var(--ease);
+  }
+  .cf__input:hover {
+    border-color: rgb(28 31 30 / 0.45);
+  }
+  .cf__input:focus-visible {
+    outline: 2px solid var(--color-green);
+    outline-offset: 1px;
+    border-color: var(--color-green);
+  }
+  .cf__input[aria-invalid='true'] {
+    border-color: var(--color-error);
+  }
+  .cf__textarea {
+    min-height: 9rem;
+    resize: vertical;
+  }
+  .cf__hint {
+    margin-top: 0.4rem;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .cf__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+  }
+  @media (max-width: 639.98px) {
+    .cf__submit {
+      width: 100%;
+    }
+  }
+  .cf__submit[disabled] {
+    opacity: 0.7;
+    cursor: progress;
+  }
+  .cf__status {
+    min-height: 1.6em;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .cf__status[data-tone='error'] {
+    color: var(--color-error);
+  }
+  .cf__status a {
+    color: inherit;
+  }
+</style>
+
+<script>
+  function setup() {
+    const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+    if (!form || form.dataset.ready) return;
+    form.dataset.ready = '1';
+
+    // Preselect from ?enquiry=… and carry ?programme=… along.
+    const params = new URLSearchParams(location.search);
+    const type = params.get('enquiry');
+    if (type) {
+      const radio = form.querySelector<HTMLInputElement>(`input[name="enquiry"][value="${CSS.escape(type)}"]`);
+      if (radio) radio.checked = true;
+    }
+    const programme = params.get('programme');
+    const progInput = form.querySelector<HTMLInputElement>('[data-programme]');
+    if (programme && progInput) progInput.value = programme;
+
+    const status = form.querySelector<HTMLElement>('[data-status]')!;
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    const say = (text: string, tone: 'ok' | 'error' = 'ok', withEmail = false) => {
+      status.dataset.tone = tone;
+      status.textContent = text + (withEmail ? ' ' : '');
+      if (withEmail) {
+        const a = document.createElement('a');
+        a.href = `mailto:${status.dataset.email}`;
+        a.textContent = status.dataset.email ?? '';
+        status.append(a);
+      }
+    };
+
+    // Mark invalid fields for assistive tech (the browser fires 'invalid' before
+    // blocking a submit, with or without this script's own check).
+    form.addEventListener('invalid', (e) => (e.target as HTMLElement).setAttribute('aria-invalid', 'true'), true);
+    form.addEventListener('input', (e) => {
+      const el = e.target as HTMLInputElement;
+      if (el.hasAttribute('aria-invalid') && el.checkValidity()) el.setAttribute('aria-invalid', 'false');
+    });
+    const markInvalid = () =>
+      form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('.cf__input').forEach((el) => {
+        el.setAttribute('aria-invalid', String(!el.checkValidity()));
+      });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      markInvalid();
+      if (!form.reportValidity()) return;
+
+      if (!form.dataset.key) {
+        say(status.dataset.notConnected ?? '', 'error');
+        return;
+      }
+
+      const label = button.innerHTML;
+      button.disabled = true;
+      button.textContent = button.dataset.sending ?? '…';
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: new FormData(form),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success !== false) {
+          form.reset();
+          form.querySelectorAll('.cf__input').forEach((el) => el.removeAttribute('aria-invalid'));
+          say(status.dataset.success ?? '');
+        } else {
+          say(status.dataset.error ?? '', 'error', true);
+        }
+      } catch {
+        say(status.dataset.error ?? '', 'error', true);
+      } finally {
+        button.disabled = false;
+        button.innerHTML = label;
+      }
+    });
+  }
+  document.addEventListener('astro:page-load', setup);
+</script>

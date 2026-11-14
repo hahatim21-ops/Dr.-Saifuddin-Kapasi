@@ -1,0 +1,13 @@
+[
+  { "id": "mafatlal", "chapter": "customers", "years": "1995 – 1999", "startYear": 1995, "role": "General Manager", "organisation": "Mafatlal Finance Co." },
+  { "id": "standard-chartered", "chapter": "customers", "years": "1999 – 2001", "startYear": 1999, "role": "Regional Manager", "organisation": "Standard Chartered Finance (formerly Esanda Finanz)" },
+  { "id": "vodafone", "chapter": "customers", "years": "2001 – 2019", "startYear": 2001, "role": "Head, then General Manager — Credit & Collections", "organisation": "Vodafone India / Vodafone Idea", "note": "17 years and 3 months; General Manager from March 2017." },
+  { "id": "simsree", "chapter": "institutions", "years": "2018 – now", "startYear": 2018, "role": "Visiting Faculty", "organisation": "SIMSREE (Sydenham Institute), Churchgate", "note": "Back at the institute where he earned his PGDBM in 1985 — now teaching entrepreneurship, intellectual capital and business communication, and executive programmes for Indian Navy and Naval Dockyard officers.", "current": true },
+  { "id": "vaux", "chapter": "ventures", "years": "2019 – 2026", "startYear": 2019, "role": "Business Head", "organisation": "Vaux Bicycle Industries", "note": "Management consulting, risk management and process transformation." },
+  { "id": "burhani", "chapter": "institutions", "years": "2019 – now", "startYear": 2019, "role": "Visiting Faculty", "organisation": "Burhani College, Mumbai", "note": "Teaching at the college where he completed his HSC in 1981 — corporate communication, research methods, retail and marketing communication.", "current": true },
+  { "id": "ifeel", "chapter": "institutions", "years": "2022", "startYear": 2022, "role": "Chairman, Governing Body", "organisation": "IFEEL Institute" },
+  { "id": "inflection-point", "chapter": "ventures", "years": "2023 – now", "startYear": 2023, "role": "Director", "organisation": "Inflection Point, South Mumbai", "note": "His advisory practice — Pioneering Possibilities. Redefining Results.", "current": true },
+  { "id": "beyond-satisfaction", "chapter": "ventures", "years": "2025", "startYear": 2025, "role": "Author", "organisation": "Beyond Satisfaction" },
+  { "id": "beyond-ideas", "chapter": "ventures", "years": "2026", "startYear": 2026, "role": "Author", "organisation": "Beyond Ideas — Lead to Impact" },
+  { "id": "kampala", "chapter": "institutions", "years": "2026", "startYear": 2026, "role": "Chief Guest", "organisation": "Kennedy University, Kampala", "note": "Conferred an honorary doctorate on behalf of the university, and led a Growth Mindset Master Class for entrepreneurs and professionals." }
+]

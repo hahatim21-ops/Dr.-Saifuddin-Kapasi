@@ -1,0 +1,231 @@
+---
+/**
+ * /style-test — Stage 1 review page. Not linked, not in the sitemap, noindex.
+ * Shows tokens, type, colours, a heading reveal, the inflection line and the prism.
+ */
+import Base from '../layouts/Base.astro';
+import Eyebrow from '../components/Eyebrow.astro';
+import InflectionLine from '../components/InflectionLine.astro';
+import Prism from '../components/Prism.astro';
+import TextReveal from '../islands/TextReveal.tsx';
+
+const colours = [
+  { name: 'Ivory paper', token: 'ivory', hex: '#F6F1E7', use: 'Page background (with 3% paper grain)', contrast: '—', dark: false },
+  { name: 'Ink', token: 'ink', hex: '#1C1F1E', use: 'Headings and body text', contrast: '14.8 : 1 on ivory', dark: true },
+  { name: 'Institution green', token: 'green', hex: '#1F3D33', use: 'Nav, footer, buttons, bands', contrast: '10.5 : 1 on ivory', dark: true },
+  { name: 'Stone', token: 'stone', hex: '#6B665C', use: 'Captions, dates, eyebrows', contrast: '5.1 : 1 on ivory', dark: true },
+  { name: 'Brass', token: 'brass', hex: '#B08D57', use: 'Rules, icons, large numerals — never text', contrast: '2.75 : 1 — decorative only', dark: false },
+  { name: 'Light brass', token: 'brass-light', hex: '#D4B483', use: 'Small text on green', contrast: '6.0 : 1 on green', dark: false },
+];
+
+const motion = [
+  ['Easing', 'cubic-bezier(0.22, 1, 0.36, 1)', 'everywhere'],
+  ['Hover / tap', '180ms', '150–200ms'],
+  ['Reveal', '600ms', '500–700ms'],
+  ['Hero line, count-ups', '1200ms', 'max 1.2s'],
+  ['Stagger', '70ms (words & frames 80ms)', '60–80ms'],
+  ['Travel', '12 / 16 / 24px', '12–24px'],
+  ['Scale', '0.98 tap · 1.04 settle', '0.98–1.04'],
+  ['Blur', '8px → 0', 'max 8px'],
+  ['Tilt', '6°', 'max 6°'],
+];
+---
+
+<Base title="Style test" noindex>
+  <main id="main" class="pb-24">
+    <!-- Intro + hero-scale sample with the hero load sequence timing -->
+    <header class="container-content pt-28 sm:pt-36">
+      <div data-reveal="fade" data-reveal-now style="--delay:100ms">
+        <Eyebrow>Stage 1 · Style test</Eyebrow>
+      </div>
+      <TextReveal
+        client:load
+        as="h1"
+        trigger="load"
+        delay={0.1}
+        text="Saifuddin Kapasi is an architect of *enduring* institutions."
+        className="mt-6 max-w-[15ch] text-[length:var(--text-hero)] leading-[var(--text-hero--line-height)] font-semibold tracking-[-0.015em]"
+      />
+      <div class="mt-8 max-w-[34rem] space-y-1 text-stone" data-reveal data-reveal-now style="--delay:400ms">
+        <p><span class="font-semibold text-ink">Currently:</span> Director, Inflection Point · Visiting Faculty, SIMSREE and Burhani College.</p>
+        <p><span class="font-semibold text-ink">Previously:</span> 17 years leading Credit &amp; Collections at Vodafone.</p>
+      </div>
+      <div class="mt-10 max-w-[40rem]">
+        <InflectionLine variant="hero" drawOnLoad delay={800} />
+      </div>
+      <div class="mt-10 flex flex-col gap-3 sm:flex-row" data-reveal="fade" data-reveal-now style="--delay:1000ms">
+        <a class="btn btn-primary" href="#reveal">Invite me to speak <span class="btn-arrow" aria-hidden="true">→</span></a>
+        <a class="btn btn-secondary" href="#prism">Explore the books</a>
+      </div>
+      <p class="mt-6 text-small text-stone">
+        The block above replays the hero load sequence: name at 100ms (80ms per word), lines at 400ms, inflection line at 800ms over 1.2s, buttons at 1000ms.
+        <button type="button" class="link-grow ml-1 min-h-11 cursor-pointer font-semibold text-green" onclick="location.reload()">Replay</button>
+      </p>
+    </header>
+
+    <div class="container-content mt-20"><InflectionLine variant="divider" /></div>
+
+    <!-- Colours -->
+    <section class="container-content mt-16" aria-labelledby="colours">
+      <Eyebrow>Tokens</Eyebrow>
+      <h2 id="colours" class="mt-4">Colour</h2>
+      <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          colours.map((c, i) => (
+            <li class="overflow-hidden rounded-card border border-hairline bg-ivory" data-reveal style={`--i:${i}`}>
+              <div class="h-24" style={`background:${c.hex}`} />
+              <div class="p-5">
+                <p class="font-semibold">{c.name}</p>
+                <p class="text-small text-stone">{c.hex} · <code>{c.token}</code></p>
+                <p class="mt-2 text-small">{c.use}</p>
+                <p class="mt-1 text-small text-stone">{c.contrast}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="on-green mt-6 rounded-card bg-green p-6 text-ivory sm:p-8">
+        <p class="eyebrow">
+          <InflectionLine variant="glyph" /><span>On green</span>
+        </p>
+        <p class="mt-3 max-w-[60ch]">Ivory body text on institution green (10.5 : 1). Small accent text uses <span class="text-brass-light font-semibold">light brass (6.0 : 1)</span>.</p>
+      </div>
+      <p class="mt-6 text-small text-stone">The page background carries a ≈3% paper grain tile — look closely at any empty ivory area.</p>
+    </section>
+
+    <!-- Type -->
+    <section class="container-content mt-24" aria-labelledby="type">
+      <Eyebrow>Tokens</Eyebrow>
+      <h2 id="type" class="mt-4">Typography</h2>
+      <div class="mt-10 divide-y divide-hairline border-y border-hairline">
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">Hero · Cormorant 600<br />40px → 88px</p>
+          <p class="font-serif text-[length:var(--text-hero)] leading-[var(--text-hero--line-height)] font-semibold">Architect of <em class="accent">enduring</em></p>
+        </div>
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">H1 · 36px → 64px</p>
+          <p class="font-serif text-h1 font-semibold">From Customer Value to Institutional Legacy</p>
+        </div>
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">H2 · 32px → 52px</p>
+          <p class="font-serif text-h2 font-semibold">Beyond <span class="text-green">Satisfaction</span></p>
+        </div>
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">H3 · 28px → 36px (minimum serif size)</p>
+          <p class="font-serif text-h3 font-semibold">Growth Mindset Master Class</p>
+        </div>
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">Bold 700 · Italic 600</p>
+          <p class="font-serif text-h3"><span class="font-bold">Ideas are easy.</span> <em class="font-semibold">Impact is earned.</em></p>
+        </div>
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">Numerals · brass</p>
+          <p class="font-serif text-numeral font-semibold text-brass">30+ <span class="ml-4">17</span> <span class="ml-4">2</span></p>
+        </div>
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">Lead · Source Sans 3 400</p>
+          <p class="prose-measure text-lead">I believe institutions don’t become enduring by chance — they are intentionally designed.</p>
+        </div>
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">Body · 18px / 1.6<br />68ch measure</p>
+          <div class="prose-measure space-y-4">
+            <p>He spent seventeen years leading Credit &amp; Collections at Vodafone, then moved into teaching, consulting and writing. Today he runs Inflection Point and teaches at SIMSREE and Burhani College — two of the colleges where he once studied.</p>
+            <p><strong class="font-semibold">Semibold 600</strong> for emphasis, and an <a class="link-grow-line text-green font-semibold" href="#type">underline that grows on hover</a>.</p>
+          </div>
+        </div>
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">Small · 16px</p>
+          <p class="text-small text-stone">Kampala convocation / 2026</p>
+        </div>
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">Eyebrow</p>
+          <Eyebrow>Speaking &amp; training</Eyebrow>
+        </div>
+        <div class="grid gap-2 py-6 md:grid-cols-[12rem_1fr] md:items-baseline">
+          <p class="text-small text-stone">Placeholder marker</p>
+          <p>Unconfirmed figure <span class="placeholder-tag">Placeholder</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Heading reveal -->
+    <section id="reveal" class="container-content mt-24" aria-labelledby="reveal-demo">
+      <Eyebrow>Motion</Eyebrow>
+      <TextReveal client:visible id="reveal-demo" as="h2" text="Because businesses may grow. But institutions *endure.*" className="mt-4 max-w-[20ch]" />
+      <p class="mt-4 prose-measure text-stone">Section headings reveal word by word when scrolled into view: blur 8px → 0, up 12px, 80ms apart, 600ms each. Plays once — scrolling back up does not replay it.</p>
+
+      <h3 class="mt-16">CSS reveals &amp; hairlines</h3>
+      <ol class="mt-6">
+        {
+          ['Venture Leadership', 'Customer-Centric Growth', 'Process Architecture', 'Institutional Design'].map((t, i) => (
+            <li class="group relative">
+              <span class="absolute inset-x-0 top-0 h-px bg-hairline" data-draw-x style={`--i:${i}`} />
+              <a href="#reveal" class="flex min-h-16 items-center gap-6 py-5 no-underline" data-reveal style={`--i:${i}`}>
+                <span class="w-10 text-small text-stone tabular-nums">({String(i + 1).padStart(2, '0')})</span>
+                <span class="flex-1 font-serif text-h3 font-semibold">{t}</span>
+                <span class="text-brass transition-transform duration-[180ms] group-hover:translate-x-1" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))
+        }
+        <li class="h-px bg-hairline" data-draw-x style="--i:4"></li>
+      </ol>
+
+      <h3 class="mt-16">Motion tokens</h3>
+      <div class="mt-6 overflow-x-auto">
+        <table class="w-full min-w-[32rem] text-left">
+          <thead class="text-small text-stone">
+            <tr class="border-b border-hairline"><th class="py-3 font-semibold">Token</th><th class="py-3 font-semibold">Value</th><th class="py-3 font-semibold">Brief limit</th></tr>
+          </thead>
+          <tbody>
+            {motion.map(([k, v, l]) => (
+              <tr class="border-b border-hairline"><td class="py-3 pr-4">{k}</td><td class="py-3 pr-4"><code class="text-small">{v}</code></td><td class="py-3 text-stone">{l}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Inflection line + prism -->
+    <section class="container-content mt-24" aria-labelledby="motif">
+      <Eyebrow>Signature motif</Eyebrow>
+      <h2 id="motif" class="mt-4">The inflection line</h2>
+      <p class="mt-4 prose-measure text-stone">Flat, then rising. It draws itself once in the hero (above), and returns as a section divider that draws when it scrolls into view:</p>
+      <div class="mt-10"><InflectionLine variant="divider" /></div>
+      <div class="mt-10 flex items-center gap-4 text-small text-stone">
+        <InflectionLine variant="glyph" /> 24px glyph that precedes every eyebrow label.
+      </div>
+
+      <div id="prism" class="mt-24 grid items-center gap-10 md:grid-cols-2">
+        <div>
+          <h2>The prism</h2>
+          <p class="mt-4 prose-measure text-stone">One beam in, a spectrum out — ideas becoming impact. Used only on the Books and Frameworks sections. The beam draws, then the seven rays fade in 70ms apart.</p>
+        </div>
+        <div class="mx-auto w-full max-w-md"><Prism /></div>
+      </div>
+    </section>
+
+    <!-- Surfaces -->
+    <section class="container-content mt-24" aria-labelledby="surfaces">
+      <Eyebrow>Tokens</Eyebrow>
+      <h2 id="surfaces" class="mt-4">Surfaces</h2>
+      <div class="mt-10 grid gap-8 sm:grid-cols-3">
+        <div class="rounded-card border border-hairline p-6">
+          <p class="font-semibold">Hairline card</p>
+          <p class="text-small text-stone">8px corners · 1px rgba(28,31,30,.12) · no shadow</p>
+        </div>
+        <div class="rounded-card bg-ivory-deep p-6 shadow-frame transition-[transform,box-shadow] duration-[180ms] hover:-translate-y-1 hover:shadow-frame-lift">
+          <p class="font-semibold">Certificate frame</p>
+          <p class="text-small text-stone">Soft shadow, lifts 4px on hover</p>
+        </div>
+        <div class="flex items-center gap-5 p-2">
+          <div class="aspect-[2/3] w-24 rounded-[3px] bg-green shadow-book"></div>
+          <div>
+            <p class="font-semibold">Book shadow</p>
+            <p class="text-small text-stone">Books only</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</Base>

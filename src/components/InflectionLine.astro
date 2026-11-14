@@ -1,0 +1,71 @@
+---
+/**
+ * The inflection line — a thin brass line that runs flat, then curves upward.
+ * variant="hero"    large, draws itself once (1.2s) — used in the hero only.
+ * variant="divider" full-width section divider; draws once when scrolled into view.
+ * variant="glyph"   24px mark that precedes every eyebrow label (static).
+ */
+interface Props {
+  variant?: 'hero' | 'divider' | 'glyph';
+  /** Draw the stroke in (hero/divider). */
+  draw?: boolean;
+  /** Start drawing immediately on load instead of on scroll-in (hero). */
+  drawOnLoad?: boolean;
+  /** Delay before drawing, in ms (hero: 800). */
+  delay?: number;
+  class?: string;
+}
+
+const { variant = 'divider', draw = variant !== 'glyph', drawOnLoad = false, delay = 0, class: className = '' } = Astro.props;
+
+const shapes = {
+  hero: { viewBox: '0 0 640 96', d: 'M2 90 H330 C 430 90, 505 79, 638 5', w: 640, h: 96 },
+  divider: { viewBox: '0 0 1200 48', d: 'M0 46 H860 C 1000 46, 1080 40, 1200 2', w: 1200, h: 48 },
+  glyph: { viewBox: '0 0 24 12', d: 'M0 11 H11.5 C 16 11, 19 9.5, 24 1', w: 24, h: 12 },
+} as const;
+const s = shapes[variant];
+
+const drawAttrs = draw
+  ? {
+      'data-draw-path': '',
+      ...(drawOnLoad ? { 'data-reveal-now': '' } : {}),
+      style: `--draw-delay:${delay}ms`,
+    }
+  : {};
+---
+
+<svg
+  class:list={['inflection-line', `inflection-line--${variant}`, className]}
+  viewBox={s.viewBox}
+  width={variant === 'glyph' ? 24 : undefined}
+  height={variant === 'glyph' ? 12 : undefined}
+  preserveAspectRatio={variant === 'divider' ? 'none' : 'xMidYMid meet'}
+  fill="none"
+  aria-hidden="true"
+  focusable="false"
+  {...drawAttrs}
+>
+  <path
+    d={s.d}
+    pathLength="1"
+    stroke="currentColor"
+    stroke-width={variant === 'glyph' ? 1.5 : 1.25}
+    stroke-linecap="round"
+    vector-effect="non-scaling-stroke"></path>
+</svg>
+
+<style>
+  .inflection-line {
+    color: var(--color-brass);
+    flex: none;
+    overflow: visible;
+  }
+  .inflection-line--hero {
+    width: 100%;
+    height: auto;
+  }
+  .inflection-line--divider {
+    width: 100%;
+    height: clamp(28px, 3vw, 48px);
+  }
+</style>

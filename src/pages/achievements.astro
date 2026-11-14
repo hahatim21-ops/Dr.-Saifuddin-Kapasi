@@ -1,0 +1,32 @@
+---
+/** /achievements — every certificate, award and feature, newest first, with filters. */
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import AchievementLightbox from '../islands/AchievementLightbox.tsx';
+import pages from '../data/pages.json';
+import home from '../data/home.json';
+import { toAchievements } from '../lib/achievements';
+
+const p = pages.achievements;
+const all = (await getCollection('achievements')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const items = await toAchievements(all);
+---
+
+<Base title="Achievements" description={p.meta}>
+  <main id="main">
+    <PageHeader eyebrow={p.eyebrow} title={p.title} intro={p.intro} />
+    <section class="page-section container-content" aria-label={home.achievements.wallLabel}>
+      <AchievementLightbox
+        client:visible
+        items={items}
+        label={home.achievements.wallLabel}
+        placeholderLabel={home.achievements.placeholderLabel}
+        swipeOnPhones={false}
+        filters={p.filters}
+        filterLabel={p.filterLabel}
+        emptyLabel={p.empty}
+      />
+    </section>
+  </main>
+</Base>

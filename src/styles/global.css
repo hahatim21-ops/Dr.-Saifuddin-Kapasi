@@ -1,0 +1,924 @@
+/* ==========================================================================
+   Global styles + design tokens — "The Inflection"
+   One file holds every colour, type, spacing and motion token (BRIEF §5, §5b).
+   ========================================================================== */
+
+/* Fonts — self-hosted via Fontsource, Latin subset only, only the weights we use. */
+@import '@fontsource/cormorant-garamond/latin-600.css';
+@import '@fontsource/cormorant-garamond/latin-700.css';
+@import '@fontsource/cormorant-garamond/latin-600-italic.css';
+@import '@fontsource/source-sans-3/latin-400.css';
+@import '@fontsource/source-sans-3/latin-600.css';
+
+@import 'tailwindcss';
+
+/* --------------------------------------------------------------------------
+   Theme tokens (exposed as Tailwind utilities: bg-ivory, text-ink, font-serif…)
+   The default Tailwind palette is cleared so only brand colours can be used.
+   -------------------------------------------------------------------------- */
+@theme static {
+  --color-*: initial;
+  --color-ivory: #f6f1e7;
+  --color-ivory-deep: #efe8da; /* a half-step darker paper for cards/placeholders */
+  --color-ink: #1c1f1e;
+  --color-green: #1f3d33; /* institution green */
+  --color-green-deep: #18312a; /* hover / pressed state of green */
+  --color-stone: #6b665c; /* secondary text, 5.1:1 on ivory */
+  --color-brass: #b08d57; /* rules, icons, large numerals ONLY — never text */
+  --color-brass-light: #d4b483; /* small text on green, 6.0:1 */
+  --color-hairline: rgb(28 31 30 / 0.12);
+  --color-error: #a3402c; /* form errors only — 5.3:1 on ivory */
+  --color-hairline-on-green: rgb(246 241 231 / 0.16);
+  --color-white: #fff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Spectrum — used ONLY inside the prism motif and the Beyond Ideas section. */
+  --color-spectrum-1: #c8553d;
+  --color-spectrum-2: #e08e45;
+  --color-spectrum-3: #e9c46a;
+  --color-spectrum-4: #7fae6a;
+  --color-spectrum-5: #4f8fa8;
+  --color-spectrum-6: #5b6bb5;
+  --color-spectrum-7: #8a5fa8;
+
+  --font-serif: 'Cormorant Garamond', 'Cormorant Garamond Fallback', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Source Sans 3', 'Source Sans 3 Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Fluid type. Serif sizes never go below 28px (Cormorant thins out when small). */
+  --text-body: 1.125rem; /* 18px minimum */
+  --text-body--line-height: 1.6;
+  --text-lead: clamp(1.1875rem, 1.12rem + 0.3vw, 1.375rem);
+  --text-lead--line-height: 1.55;
+  --text-small: 1rem; /* captions, form hints; never below 16px */
+  --text-small--line-height: 1.5;
+  --text-eyebrow: 0.875rem;
+  --text-eyebrow--line-height: 1.3;
+  --text-h3: clamp(1.75rem, 1.6rem + 0.6vw, 2.25rem); /* 28 → 36 */
+  --text-h3--line-height: 1.2;
+  --text-h2: clamp(2rem, 1.62rem + 1.6vw, 3.25rem); /* 32 → 52 */
+  --text-h2--line-height: 1.1;
+  --text-h1: clamp(2.25rem, 1.7rem + 2.4vw, 4rem); /* 36 → 64 */
+  --text-h1--line-height: 1.06;
+  --text-hero: clamp(2.5rem, 1.257rem + 5.304vw, 5.5rem); /* 40 @375 → 88 @1280+ */
+  --text-hero--line-height: 1.02;
+  --text-numeral: clamp(3rem, 2.3rem + 3vw, 5rem); /* numbers strip */
+  --text-numeral--line-height: 1;
+
+  --tracking-eyebrow: 0.16em;
+
+  --radius-card: 8px;
+
+  --shadow-book: 0 1px 2px rgb(28 31 30 / 0.08), 0 12px 24px -8px rgb(28 31 30 / 0.18), 0 32px 64px -24px rgb(28 31 30 / 0.22);
+  --shadow-frame: 0 1px 2px rgb(28 31 30 / 0.06), 0 10px 24px -12px rgb(28 31 30 / 0.2);
+  --shadow-frame-lift: 0 2px 4px rgb(28 31 30 / 0.06), 0 18px 32px -14px rgb(28 31 30 / 0.26);
+
+  /* Breakpoints = Tailwind defaults (640/768/1024/1280/1536), restated for clarity. */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+
+  --container-content: 75rem; /* 1200px max content width */
+  --container-prose: 68ch; /* 60–72 characters per line */
+
+  /* ---- Motion tokens (BRIEF §5b). Mirrored in src/lib/motion.ts for islands. ---- */
+  --ease-inflect: cubic-bezier(0.22, 1, 0.36, 1);
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  --default-transition-duration: 180ms;
+  --animate-fade-up: fade-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+:root {
+  /* Motion tokens as plain custom properties for hand-written CSS. */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-tap: 180ms; /* hovers & taps: 150–200ms */
+  --dur-fade: 200ms; /* lightbox fade */
+  --dur-reveal: 600ms; /* reveals: 500–700ms */
+  --dur-line: 1200ms; /* hero line & count-ups: max 1.2s */
+  --stagger: 70ms; /* 60–80ms */
+  --stagger-frames: 80ms; /* achievement frames */
+  --move-sm: 12px;
+  --move-md: 16px;
+  --move-lg: 24px;
+  --blur-max: 8px;
+  --scale-in: 1.04;
+  --tilt-max: 6deg;
+
+  --gutter: clamp(1.25rem, 0.9rem + 1.6vw, 2.5rem);
+  --section-space: clamp(5rem, 3.5rem + 6vw, 9rem);
+
+  /* Paper grain: tiny SVG noise tile, alpha baked in (≈3% ink on ivory). */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .12 0 0 0 0 .118 0 0 0 1.2 -.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.09'/%3E%3C/svg%3E");
+
+  color-scheme: light;
+}
+
+/* Metric-matched fallbacks so the swap to web fonts barely shifts layout (CLS). */
+@font-face {
+  font-family: 'Cormorant Garamond Fallback';
+  src: local('Georgia'), local('Times New Roman');
+  size-adjust: 88%;
+  ascent-override: 104%;
+  descent-override: 32%;
+}
+@font-face {
+  font-family: 'Source Sans 3 Fallback';
+  src: local('Arial'), local('Helvetica');
+  size-adjust: 94%;
+  ascent-override: 104%;
+  descent-override: 29%;
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+@layer base {
+  html {
+    background-color: var(--color-ivory);
+    background-image: var(--grain);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: transparent;
+    font-size: var(--text-body);
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    color: var(--color-ink);
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  h1 {
+    font-size: var(--text-h1);
+    line-height: var(--text-h1--line-height);
+  }
+  h2 {
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+  }
+  h3 {
+    font-size: var(--text-h3);
+    line-height: var(--text-h3--line-height);
+  }
+  /* h4–h6 are small: set them in the sans, never in Cormorant. */
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: var(--text-body);
+    line-height: 1.4;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  em.accent,
+  .accent {
+    font-style: italic;
+    color: var(--color-green);
+  }
+
+  a {
+    color: inherit;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  ::selection {
+    background: var(--color-green);
+    color: var(--color-ivory);
+  }
+
+  /* Visible, consistent focus everywhere (2px green ring, offset). */
+  :focus-visible {
+    outline: 2px solid var(--color-green);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  .on-green :focus-visible {
+    outline-color: var(--color-brass-light);
+  }
+
+  img,
+  svg,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+  img {
+    height: auto;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Components (small, reusable, token-driven)
+   -------------------------------------------------------------------------- */
+@layer components {
+  .container-content {
+    width: 100%;
+    max-width: calc(var(--container-content) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
+  }
+
+  .prose-measure {
+    max-width: var(--container-prose);
+  }
+
+  /* Eyebrow label: small uppercase, letter-spaced, stone, after a brass glyph. */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: var(--text-eyebrow);
+    line-height: var(--text-eyebrow--line-height);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+  .on-green .eyebrow {
+    color: var(--color-brass-light);
+  }
+
+  .hairline {
+    border: 0;
+    height: 1px;
+    background: var(--color-hairline);
+  }
+
+  /* Buttons — 48px tall (touch target ≥ 44px). */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 3rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 1.0625rem;
+    line-height: 1.2;
+    text-decoration: none;
+    transition:
+      background-color var(--dur-tap) var(--ease),
+      color var(--dur-tap) var(--ease),
+      border-color var(--dur-tap) var(--ease),
+      transform var(--dur-tap) var(--ease);
+  }
+  .btn:active {
+    transform: scale(0.98);
+  }
+  .btn svg {
+    flex: none;
+  }
+  .btn-primary {
+    background: var(--color-green);
+    color: var(--color-ivory);
+  }
+  .btn-primary:hover {
+    background: var(--color-green-deep);
+  }
+  .btn-secondary {
+    border: 1px solid rgb(28 31 30 / 0.28);
+    color: var(--color-ink);
+  }
+  .btn-secondary:hover {
+    border-color: var(--color-green);
+    color: var(--color-green);
+  }
+  .btn .btn-arrow {
+    transition: transform var(--dur-tap) var(--ease);
+  }
+  @media (hover: hover) {
+    .btn:hover .btn-arrow {
+      transform: translateX(4px);
+    }
+  }
+
+  /* Text link with an underline that grows from the left on hover/focus. */
+  .link-grow {
+    text-decoration: none;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 100% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    padding-bottom: 2px;
+  }
+  .link-grow-line {
+    position: relative;
+    text-decoration: none;
+  }
+  .link-grow-line::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-reveal) var(--ease);
+  }
+  .link-grow-line:hover::after,
+  .link-grow-line:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  /* 3D book (Book3D island): cover, spine highlight, page block, soft shadow.
+     The only other place soft shadows are allowed is certificate frames. */
+  .book3d {
+    perspective: 1400px;
+    width: 100%;
+  }
+  .book3d__body {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 180ms var(--ease);
+  }
+  .book3d__cover {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 2px 6px 6px 2px;
+    box-shadow: var(--shadow-book);
+  }
+  .book3d__pages {
+    position: absolute;
+    top: 2%;
+    bottom: 2%;
+    right: -9px;
+    width: 18px;
+    border-radius: 0 4px 4px 0;
+    background: repeating-linear-gradient(to right, #fbf8f1 0 1px, #e6decd 1px 2.5px);
+    box-shadow: 0 10px 24px -12px rgb(28 31 30 / 0.35);
+  }
+  .book3d__spine {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 7%;
+    border-radius: 2px 0 0 2px;
+    background: linear-gradient(
+      to right,
+      rgb(0 0 0 / 0.2),
+      rgb(255 255 255 / 0.18) 35%,
+      rgb(0 0 0 / 0.08) 65%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* ---------- Achievements wall (AchievementLightbox island) ---------- */
+  .aw {
+    display: grid;
+    gap: 2.75rem 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 768px) {
+    .aw {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .aw {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  /* Home page on phones: a swipe row, full-bleed inside the content gutter. */
+  @media (max-width: 767.98px) {
+    .aw--swipe {
+      display: flex;
+      gap: 1.25rem;
+      margin-inline: calc(-1 * var(--gutter));
+      padding: 0.5rem var(--gutter) 1.25rem;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--gutter);
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-hairline) transparent;
+    }
+    .aw--swipe .aw__item {
+      flex: 0 0 76%;
+      scroll-snap-align: start;
+    }
+  }
+  .aw__frame {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 1px solid rgb(28 31 30 / 0.16);
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: var(--shadow-frame);
+    cursor: zoom-in;
+    transition: transform var(--dur-tap) var(--ease);
+  }
+  /* Deeper shadow on its own layer, so only opacity animates. */
+  .aw__frame::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 4px;
+    box-shadow: var(--shadow-frame-lift);
+    opacity: 0;
+    transition: opacity var(--dur-tap) var(--ease);
+    pointer-events: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .aw__frame:hover {
+      transform: translateY(-4px);
+    }
+    .aw__frame:hover::after {
+      opacity: 1;
+    }
+  }
+  .aw__frame:focus-visible {
+    outline-offset: 4px;
+  }
+  .aw__matte {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    padding: 7%;
+    background: #fbf8f1;
+    border-radius: 3px;
+  }
+  .aw__matte picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .aw__matte img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .aw__title {
+    margin-top: 1.1rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .aw__meta {
+    margin-top: 0.2rem;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+
+  /* Filters (/achievements) */
+  .aw-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .aw-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid rgb(28 31 30 / 0.24);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition:
+      background-color var(--dur-tap) var(--ease),
+      color var(--dur-tap) var(--ease),
+      border-color var(--dur-tap) var(--ease);
+  }
+  .aw-filter:hover {
+    border-color: var(--color-green);
+  }
+  .aw-filter[aria-pressed='true'] {
+    background: var(--color-green);
+    border-color: var(--color-green);
+    color: var(--color-ivory);
+  }
+  .aw-filter__count {
+    font-weight: 400;
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+  }
+  .aw-empty {
+    color: var(--color-stone);
+  }
+
+  /* ---------- Viewer (native <dialog>) ---------- */
+  .lb {
+    width: min(94vw, 72rem);
+    max-width: none;
+    max-height: 94dvh;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: var(--color-ivory);
+    color: var(--color-ink);
+    opacity: 0;
+    transition:
+      opacity var(--dur-fade) var(--ease),
+      overlay var(--dur-fade) allow-discrete,
+      display var(--dur-fade) allow-discrete;
+  }
+  .lb[open] {
+    opacity: 1;
+  }
+  @starting-style {
+    .lb[open] {
+      opacity: 0;
+    }
+  }
+  .lb::backdrop {
+    background: rgb(28 31 30 / 0.72);
+    opacity: 0;
+    transition:
+      opacity var(--dur-fade) var(--ease),
+      overlay var(--dur-fade) allow-discrete,
+      display var(--dur-fade) allow-discrete;
+  }
+  .lb[open]::backdrop {
+    opacity: 1;
+  }
+  @starting-style {
+    .lb[open]::backdrop {
+      opacity: 0;
+    }
+  }
+  @media (max-width: 639.98px) {
+    .lb {
+      width: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
+      border-radius: 0;
+    }
+  }
+  .lb__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    height: 100%;
+    padding: max(0.75rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    touch-action: pan-y;
+  }
+  .lb__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .lb__count {
+    font-size: var(--text-small);
+    color: var(--color-stone);
+    font-variant-numeric: tabular-nums;
+  }
+  .lb__btn {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    color: var(--color-green);
+    cursor: pointer;
+    transition: border-color var(--dur-tap) var(--ease);
+  }
+  .lb__btn:hover {
+    border-color: var(--color-green);
+  }
+  .lb__figure {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    min-height: 0;
+    margin: 0;
+  }
+  .lb__figure img {
+    max-width: 100%;
+    max-height: min(70dvh, 52rem);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    box-shadow: var(--shadow-frame);
+    animation: fade-in var(--dur-fade) var(--ease);
+  }
+  .lb__figure figcaption {
+    display: grid;
+    gap: 0.15rem;
+    text-align: center;
+  }
+  .lb__title {
+    font-weight: 600;
+  }
+  .lb__meta {
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .lb__nav {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+  html:has(.lb[open]) {
+    overflow: hidden;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: var(--color-green);
+    color: var(--color-ivory);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  /* Long-form text (articles, book synopses, programme notes). */
+  .prose-body {
+    max-width: var(--container-prose);
+  }
+  .prose-body > * + * {
+    margin-top: 1.1em;
+  }
+  .prose-body h2 {
+    margin-top: 2.2em;
+    font-size: var(--text-h3);
+  }
+  .prose-body h3 {
+    margin-top: 1.8em;
+    font-family: var(--font-sans);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .prose-body ul,
+  .prose-body ol {
+    padding-left: 1.25em;
+  }
+  .prose-body ul {
+    list-style: disc;
+  }
+  .prose-body ol {
+    list-style: decimal;
+  }
+  .prose-body li + li {
+    margin-top: 0.4em;
+  }
+  .prose-body li::marker {
+    color: var(--color-brass);
+  }
+  .prose-body a {
+    color: var(--color-green);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .prose-body blockquote {
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--color-brass);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.75rem;
+    line-height: 1.3;
+  }
+  .prose-body strong {
+    font-weight: 600;
+  }
+
+  /* Inner-page sections share one rhythm. */
+  .page-section {
+    padding-block: clamp(3.5rem, 2.5rem + 4vw, 6rem);
+  }
+  .page-section + .page-section {
+    border-top: 1px solid var(--color-hairline);
+  }
+  .page-section__title {
+    font-size: var(--text-h2);
+  }
+
+  /* Placeholder marker — every unconfirmed fact/asset wears this. See TODO.md. */
+  .placeholder-tag {
+    display: inline-block;
+    padding: 0.1rem 0.45rem;
+    border: 1px dashed var(--color-stone);
+    border-radius: 4px;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-stone);
+    vertical-align: middle;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Motion: CSS reveals (no library). An element with [data-reveal] starts
+   hidden and plays once when it enters the viewport (see Base.astro script).
+   Only opacity, transform and filter are animated.
+   -------------------------------------------------------------------------- */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--move-sm), 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Only hide things when JS is running and motion is allowed. */
+html.js [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-y, var(--move-md)), 0);
+  transition:
+    opacity var(--dur-reveal) var(--ease),
+    transform var(--dur-reveal) var(--ease),
+    filter var(--dur-reveal) var(--ease);
+  transition-delay: calc(var(--delay, 0ms) + var(--i, 0) * var(--stagger));
+}
+html.js [data-reveal='blur'] {
+  filter: blur(var(--blur-max));
+}
+html.js [data-reveal='scale'] {
+  transform: scale(var(--scale-in));
+}
+html.js [data-reveal='fade'] {
+  transform: none;
+}
+/* Hero portrait: scale-only settle (never hidden, so it can be the LCP). */
+html.js [data-reveal='settle'] {
+  opacity: 1;
+  transform: scale(var(--scale-in));
+  transition-duration: 700ms;
+}
+html.js [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Hairline that draws left → right (pillars, programme rows). */
+html.js [data-draw-x] {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-reveal) var(--ease);
+  transition-delay: calc(var(--delay, 0ms) + var(--i, 0) * var(--stagger));
+}
+html.js [data-draw-x].is-in {
+  transform: scaleX(1);
+}
+/* Vertical variant (phone framework stepper). */
+html.js [data-draw-y] {
+  transform: scaleY(0);
+  transform-origin: center top;
+  transition: transform var(--dur-line) var(--ease);
+  transition-delay: var(--delay, 0ms);
+}
+html.js [data-draw-y].is-in {
+  transform: scaleY(1);
+}
+
+/* Word-by-word reveal (RevealWords.astro): blur 8px → 0, up 12px, 80ms apart. */
+.reveal-words .rw {
+  display: inline-block;
+}
+html.js [data-reveal-words] .rw {
+  opacity: 0;
+  transform: translate3d(0, var(--move-sm), 0);
+  filter: blur(var(--blur-max));
+  transition:
+    opacity var(--dur-reveal) var(--ease),
+    transform var(--dur-reveal) var(--ease),
+    filter var(--dur-reveal) var(--ease);
+  transition-delay: calc(var(--delay, 0ms) + var(--i, 0) * var(--stagger));
+}
+html.js [data-reveal-words].is-in .rw {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* SVG stroke draw (inflection line, framework diagrams). stroke-dashoffset is
+   paint-only on a tiny SVG — no layout — and is the one deliberate exception to
+   the opacity/transform/filter rule. Paths need pathLength="1". */
+html.js [data-draw-path] path,
+html.js path[data-draw-path] {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+html.js [data-draw-path].is-in path,
+html.js path[data-draw-path].is-in {
+  animation: draw-path var(--draw-dur, var(--dur-line)) var(--ease) var(--draw-delay, 0ms) forwards;
+}
+@keyframes draw-path {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion: everything appears instantly, nothing moves.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-reveal],
+  [data-reveal-word],
+  [data-reveal-words] .rw,
+  [data-motion],
+  [data-arc-fill],
+  [data-draw-y],
+  [data-draw-x] {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  [data-draw-path] path,
+  path[data-draw-path] {
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+/* Lenis (desktop pointer devices only — see Base.astro). */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* Page crossfade timing for browsers using native view transitions. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 250ms;
+  animation-timing-function: var(--ease);
+}
+
+/* Utility: visually hidden but available to screen readers. */
+@utility sr-only-focusable {
+  &:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

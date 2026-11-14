@@ -1,0 +1,57 @@
+{
+  "name": "Dr. Saifuddin Kapasi",
+  "shortName": "Saifuddin Kapasi",
+  "tagline": "Architect of Enduring Institutions",
+  "description": "Mumbai-based management educator, author of Beyond Satisfaction and Beyond Ideas, and Director of Inflection Point. Invite him to speak, train or advise.",
+  "heroSentence": "Saifuddin Kapasi is an architect of *enduring* institutions.",
+  "heroEyebrow": "Educator · Author · Advisor",
+  "credibilityLabel": "Led, taught and trained at",
+  "currently": "Director, Inflection Point · Visiting Faculty, SIMSREE and Burhani College.",
+  "previously": "17 years leading Credit & Collections at Vodafone.",
+  "credibility": ["Vodafone", "SIMSREE", "Burhani College", "Indian Navy executive programmes", "Kennedy University, Kampala"],
+  "signOff": "Ideas are easy. Impact is earned.",
+  "contact": {
+    "email": "PLACEHOLDER@saifuddinkapasi.in",
+    "phone": "+91 00000 00000",
+    "whatsapp": "910000000000",
+    "linkedin": "https://www.linkedin.com/in/saifuddinkapasi/",
+    "location": "South Mumbai, India",
+    "responseTime": "Usually replies within two working days.",
+    "placeholder": true
+  },
+  "enquiryTypes": [
+    { "value": "speaking", "label": "Speaking" },
+    { "value": "training", "label": "Training" },
+    { "value": "consulting", "label": "Consulting" },
+    { "value": "books", "label": "Books & bulk orders" },
+    { "value": "students", "label": "Students" }
+  ],
+  "inflectionPointLine": "Pioneering Possibilities. Redefining Results.",
+  "nav": {
+    "left": [
+      { "label": "About", "href": "/about" },
+      { "label": "Speaking", "href": "/speaking" },
+      { "label": "Books", "href": "/#books" }
+    ],
+    "right": [
+      { "label": "Frameworks", "href": "/frameworks" },
+      { "label": "Insights", "href": "/insights" }
+    ],
+    "tablet": [
+      { "label": "Speaking", "href": "/speaking" },
+      { "label": "Books", "href": "/#books" },
+      { "label": "Insights", "href": "/insights" }
+    ],
+    "menu": [
+      { "label": "About", "href": "/about" },
+      { "label": "Speaking & Training", "href": "/speaking" },
+      { "label": "Books", "href": "/#books" },
+      { "label": "Frameworks", "href": "/frameworks" },
+      { "label": "Achievements", "href": "/achievements" },
+      { "label": "Insights", "href": "/insights" },
+      { "label": "Students", "href": "/students" },
+      { "label": "Contact", "href": "/contact" }
+    ],
+    "cta": { "label": "Invite me to speak", "short": "Invite to speak", "href": "/contact?enquiry=speaking" }
+  }
+}

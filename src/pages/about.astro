@@ -1,0 +1,321 @@
+---
+/**
+ * /about — full story, values, roots, education, honours and bios for organisers.
+ * All copy lives in src/data/pages.json (about) and the honours collection.
+ */
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import BlurImage from '../components/BlurImage.astro';
+import Icon from '../components/Icon.astro';
+import pages from '../data/pages.json';
+import site from '../data/site.json';
+import { heroPortrait } from '../lib/images';
+import { personSchema } from '../lib/schema';
+
+const p = pages.about;
+const honours = await getCollection('honours');
+---
+
+<Base title="About" description={p.meta} ogType="profile" jsonLd={personSchema()}>
+  <main id="main">
+    <PageHeader eyebrow={p.eyebrow} title={p.title} intro={p.intro} placeholder={p.placeholder} />
+
+    <!-- Story -->
+    <section class="page-section container-content" aria-labelledby="story-title">
+      <div class="about-story">
+        <div class="about-story__portrait" data-reveal>
+          <BlurImage
+            src={heroPortrait.src}
+            alt={heroPortrait.alt}
+            sizes="(min-width: 768px) 36vw, calc(100vw - 2.5rem)"
+            widths={[400, 640, 800]}
+            position={heroPortrait.position}
+            class="about-story__img"
+          />
+          {heroPortrait.placeholder && <span class="placeholder-tag mt-3">Placeholder portrait</span>}
+        </div>
+        <div>
+          <h2 id="story-title" class="page-section__title" data-reveal>{p.storyTitle}</h2>
+          <div class="prose-body mt-6">
+            {p.story.map((para, i) => <p data-reveal style={`--i:${i}`}>{para}</p>)}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Values -->
+    <section class="page-section container-content" aria-labelledby="values-title">
+      <h2 id="values-title" class="page-section__title" data-reveal>{p.valuesTitle}</h2>
+      <ol class="about-values" role="list">
+        {
+          p.values.map((v, i) => (
+            <li class="about-value" data-reveal style={`--i:${i}`}>
+              <span class="about-value__num" aria-hidden="true">({String(i + 1).padStart(2, '0')})</span>
+              <h3 class="about-value__title">{v.title}</h3>
+              <p class="about-value__text">{v.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <!-- Roots + education -->
+    <section class="page-section container-content" aria-labelledby="roots-title">
+      <div class="about-two">
+        <div data-reveal>
+          <h2 id="roots-title" class="page-section__title">{p.rootsTitle}</h2>
+          <p class="mt-6 prose-measure">{p.roots}</p>
+        </div>
+        <div data-reveal style="--i:1">
+          <h2 class="page-section__title">{p.educationTitle}</h2>
+          <dl class="about-edu">
+            {
+              p.education.map((e) => (
+                <div class="about-edu__row">
+                  <dt>
+                    <span class="about-edu__what">{e.what}</span>
+                    <span class="about-edu__where">{e.where}</span>
+                  </dt>
+                  <dd>{e.when}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- Honours -->
+    <section class="page-section container-content" aria-labelledby="honours-title">
+      <h2 id="honours-title" class="page-section__title" data-reveal>{p.honoursTitle}</h2>
+      <ul class="about-honours" role="list">
+        {
+          honours.map((h, i) => (
+            <li data-reveal style={`--i:${i}`}>
+              <span class="about-honours__title">{h.data.title}</span>
+              <span class="about-honours__meta">
+                {h.data.issuer} · {h.data.date}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="about-note" data-reveal>{p.credentialNote}</p>
+      <p class="mt-6" data-reveal>
+        <a href="/achievements" class="link-grow-line font-semibold text-green">See certificates and awards <span aria-hidden="true">→</span></a>
+      </p>
+    </section>
+
+    <!-- Bios -->
+    <section class="page-section container-content" aria-labelledby="bios-title">
+      <h2 id="bios-title" class="page-section__title" data-reveal>{p.biosTitle}</h2>
+      <p class="mt-4 text-stone" data-reveal>{p.biosIntro}</p>
+      <div class="about-bios">
+        {
+          p.bios.map((b, i) => (
+            <figure class="about-bio" data-reveal style={`--i:${i}`}>
+              <figcaption class="about-bio__label">{b.label}</figcaption>
+              <blockquote class="about-bio__text" id={`bio-${i}`}>
+                <p>{b.text}</p>
+              </blockquote>
+              <button type="button" class="about-bio__copy" data-copy={`bio-${i}`} data-copied={p.copied}>
+                {p.copy}
+              </button>
+            </figure>
+          ))
+        }
+      </div>
+      <div class="mt-12" data-reveal>
+        <a href={site.nav.cta.href} class="btn btn-primary">
+          {p.cta} <Icon name="arrow-right" size={18} class="btn-arrow" />
+        </a>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .about-story {
+    display: grid;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  @media (min-width: 768px) {
+    .about-story {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: clamp(2.5rem, 5vw, 5rem);
+    }
+  }
+  .about-story__portrait :global(.about-story__img) {
+    aspect-ratio: 4 / 5;
+    border-radius: 8px;
+  }
+
+  .about-values {
+    display: grid;
+    gap: 0;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--color-hairline);
+  }
+  @media (min-width: 768px) {
+    .about-values {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 3rem;
+    }
+  }
+  .about-value {
+    display: grid;
+    grid-template-columns: 3.5rem 1fr;
+    column-gap: 1rem;
+    padding-block: 1.75rem;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .about-value__num {
+    grid-row: span 2;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+    padding-top: 0.5rem;
+  }
+  .about-value__title {
+    font-size: var(--text-h3);
+  }
+  .about-value__text {
+    margin-top: 0.4rem;
+    color: var(--color-stone);
+  }
+
+  .about-two {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 1024px) {
+    .about-two {
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+    }
+  }
+  .about-edu {
+    margin: 1.5rem 0 0;
+  }
+  .about-edu__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .about-edu__row dt {
+    display: grid;
+  }
+  .about-edu__what {
+    font-weight: 600;
+  }
+  .about-edu__where {
+    color: var(--color-stone);
+  }
+  .about-edu__row dd {
+    margin: 0;
+    color: var(--color-stone);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .about-honours {
+    display: grid;
+    gap: 0;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--color-hairline);
+  }
+  .about-honours li {
+    display: grid;
+    gap: 0.15rem;
+    padding-block: 1.1rem;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  @media (min-width: 768px) {
+    .about-honours li {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 2rem;
+    }
+  }
+  .about-honours__title {
+    font-weight: 600;
+  }
+  .about-honours__meta {
+    color: var(--color-stone);
+  }
+  .about-note {
+    margin-top: 1.25rem;
+    max-width: var(--container-prose);
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+
+  .about-bios {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 2rem;
+  }
+  @media (min-width: 1024px) {
+    .about-bios {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: start;
+    }
+  }
+  .about-bio {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 1.5rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+  }
+  .about-bio__label {
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+  .about-bio__text {
+    margin: 0;
+  }
+  .about-bio__copy {
+    align-self: flex-start;
+    min-height: 2.75rem;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    font-weight: 600;
+    color: var(--color-green);
+    cursor: pointer;
+    transition: border-color var(--dur-tap) var(--ease);
+  }
+  .about-bio__copy:hover {
+    border-color: var(--color-green);
+  }
+</style>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+      const label = btn.textContent?.trim() ?? 'Copy';
+      btn.addEventListener('click', async () => {
+        const text = document.getElementById(btn.dataset.copy!)?.innerText.trim() ?? '';
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = btn.dataset.copied ?? 'Copied';
+          setTimeout(() => (btn.textContent = label), 2000);
+        } catch {
+          /* Clipboard unavailable: the text stays selectable. */
+        }
+      });
+    });
+  });
+</script>

@@ -1,0 +1,6 @@
+[
+  { "id": "years-business", "value": 30, "suffix": "+", "label": "years in business", "order": 1, "placeholder": true },
+  { "id": "years-vodafone", "value": 17, "suffix": "", "label": "years leading Credit & Collections", "order": 2, "placeholder": true },
+  { "id": "years-teaching", "value": 7, "suffix": "+", "label": "years of teaching", "order": 3, "placeholder": true },
+  { "id": "books", "value": 2, "suffix": "", "label": "books", "order": 4, "placeholder": true }
+]

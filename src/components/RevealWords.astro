@@ -1,0 +1,59 @@
+---
+/**
+ * CSS-only word-by-word reveal (no JavaScript framework): each word goes from
+ * blur 8px → 0 and up 12px, 80ms apart, 600ms each. Plays once when the block
+ * scrolls into view, or on load with `now` (hero). Wrap one word in *asterisks*
+ * for the italic green accent. Screen readers get the sentence as one string.
+ *
+ * Used where shipping React would be wasteful: the hero name and the footer
+ * sign-off (which is on every page). The TextReveal island does the same job
+ * inside React sections.
+ */
+interface Props {
+  text: string;
+  as?: 'h1' | 'h2' | 'h3' | 'p' | 'div' | 'span';
+  class?: string;
+  /** Delay before the first word, in ms. */
+  delay?: number;
+  /** Gap between words, in ms (60–80). */
+  stagger?: number;
+  /** Play on load instead of on scroll-in. */
+  now?: boolean;
+  /** Class applied to the accent word (defaults to italic green). */
+  accentClass?: string;
+  id?: string;
+}
+
+const { text, as: Tag = 'p', class: className, delay = 0, stagger = 80, now = false, accentClass = 'accent', id } = Astro.props;
+
+const words = text
+  .split(/\s+/)
+  .filter(Boolean)
+  .map((w) => {
+    const m = w.match(/^\*(.+)\*([.,;:!?]*)$/);
+    return m ? { text: m[1], trail: m[2], accent: true } : { text: w, trail: '', accent: false };
+  });
+const plain = text.replace(/\*/g, '');
+---
+
+<Tag
+  class:list={['reveal-words', className]}
+  id={id}
+  data-reveal-words
+  {...now ? { 'data-reveal-now': '' } : {}}
+  style={`--delay:${delay}ms;--stagger:${stagger}ms`}
+>
+  <span class="sr-only">{plain}</span>
+  <span aria-hidden="true">
+    {
+      words.map((w, i) => (
+        <>
+          <span class="rw" style={`--i:${i}`}>
+            {w.accent ? <em class={accentClass}>{w.text}</em> : w.text}
+            {w.trail}
+          </span>{' '}
+        </>
+      ))
+    }
+  </span>
+</Tag>

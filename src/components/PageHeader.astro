@@ -1,0 +1,59 @@
+---
+/**
+ * Inner-page opening: eyebrow, serif h1 that reveals word by word on load,
+ * an intro paragraph, then a brass inflection line that draws in.
+ */
+import Eyebrow from './Eyebrow.astro';
+import InflectionLine from './InflectionLine.astro';
+import RevealWords from './RevealWords.astro';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  intro?: string;
+  /** Mark the page's copy as unconfirmed. */
+  placeholder?: boolean;
+}
+const { eyebrow, title, intro, placeholder = false } = Astro.props;
+---
+
+<header class="page-header container-content">
+  <div data-reveal="fade" data-reveal-now style="--delay:100ms">
+    <Eyebrow>{eyebrow}</Eyebrow>
+  </div>
+  <RevealWords as="h1" now delay={150} text={title} class="page-header__title" />
+  {
+    intro && (
+      <p class="page-header__intro" data-reveal data-reveal-now style="--delay:450ms">
+        {intro}
+      </p>
+    )
+  }
+  {placeholder && <p class="mt-4" data-reveal="fade" data-reveal-now style="--delay:450ms"><span class="placeholder-tag">Draft copy — to approve</span></p>}
+  <slot />
+  <div class="page-header__line">
+    <InflectionLine variant="divider" drawOnLoad delay={700} />
+  </div>
+</header>
+
+<style>
+  .page-header {
+    padding-top: calc(clamp(7rem, 5rem + 6vw, 10rem) + env(safe-area-inset-top));
+  }
+  .page-header :global(.page-header__title) {
+    margin-top: 1.25rem;
+    max-width: 20ch;
+    font-size: var(--text-h1);
+    line-height: var(--text-h1--line-height);
+  }
+  .page-header__intro {
+    margin-top: 1.5rem;
+    max-width: var(--container-prose);
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+    color: var(--color-stone);
+  }
+  .page-header__line {
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+</style>

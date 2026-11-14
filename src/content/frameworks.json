@@ -1,0 +1,61 @@
+[
+  {
+    "id": "beyond-ideas-cycle",
+    "order": 1,
+    "title": "The Beyond Ideas cycle",
+    "source": "From Beyond Ideas — Lead to Impact",
+    "summary": "Four stages that turn an idea into a venture that lasts. The last stage feeds the first: every venture keeps discovering.",
+    "shape": "cycle",
+    "center": "Lead to impact",
+    "stages": [
+      {
+        "name": "Discover",
+        "line": "Find the real problem, and the people who have it."
+      },
+      {
+        "name": "Design",
+        "line": "Shape the solution and the model that will sustain it."
+      },
+      {
+        "name": "Deliver",
+        "line": "Execute with discipline; measure what matters."
+      },
+      {
+        "name": "Evolve",
+        "line": "Learn, adapt and build for the long term."
+      }
+    ],
+    "href": "/frameworks#beyond-ideas-cycle",
+    "placeholder": true,
+    "taught": "Entrepreneurship Management at SIMSREE, the Growth Mindset Master Class (Kampala, 2026), and mentoring for founders."
+  },
+  {
+    "id": "productivity-lens",
+    "order": 2,
+    "title": "The productivity lens",
+    "source": "From his Productivity Management sessions",
+    "summary": "A plain sequence for improving any process — taught to Indian Navy officers through Gemba, Kaizen and a Productivity War Room.",
+    "shape": "rise",
+    "stages": [
+      {
+        "name": "Observe",
+        "line": "Go and see the work as it really happens."
+      },
+      {
+        "name": "Identify",
+        "line": "Name the waste, the delay and the root cause."
+      },
+      {
+        "name": "Eliminate",
+        "line": "Remove what adds no value, one step at a time."
+      },
+      {
+        "name": "Progress",
+        "line": "Lock in the gain, then raise the bar."
+      }
+    ],
+    "href": "/frameworks#productivity-lens",
+    "placeholder": true,
+    "taught": "Productivity Management for Indian Navy gazetted officers, the Naval Dockyard MDP at SIMSREE, and process consulting through Inflection Point."
+  }
+]

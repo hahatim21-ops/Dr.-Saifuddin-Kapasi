@@ -1,0 +1,73 @@
+---
+/**
+ * Line-art prism: a single beam enters, the spectrum fans out.
+ * Used ONLY on the Books and Frameworks sections (BRIEF §5).
+ * The beam draws in, then the seven spectrum rays fade in 70ms apart.
+ */
+interface Props {
+  class?: string;
+  /** Animate when scrolled into view. */
+  animate?: boolean;
+  /** 'dark' for use on the green band (ivory glass, light-brass beam). */
+  tone?: 'light' | 'dark';
+}
+const { class: className = '', animate = true, tone = 'light' } = Astro.props;
+const beam = tone === 'dark' ? 'var(--color-brass-light)' : 'var(--color-stone)';
+const glass = tone === 'dark' ? 'var(--color-ivory)' : 'var(--color-ink)';
+
+const rays = [1, 2, 3, 4, 5, 6, 7];
+// Exit point on the prism's right face; rays fan between these end Ys.
+const exit = { x: 206, y: 92 };
+const endX = 400;
+const endYs = [44, 60, 76, 92, 108, 124, 140];
+---
+
+<svg
+  class:list={['prism', className]}
+  viewBox="0 0 400 180"
+  fill="none"
+  role="img"
+  aria-label="A prism splitting a single beam of light into a spectrum"
+>
+  <!-- incoming beam -->
+  <path
+    d="M0 112 L 150 98"
+    pathLength="1"
+    stroke={beam}
+    stroke-width="1.25"
+    stroke-linecap="round"
+    vector-effect="non-scaling-stroke"
+    {...animate ? { 'data-draw-path': '', style: '--draw-dur:700ms' } : {}}></path>
+  <!-- prism -->
+  <path
+    d="M180 28 L 236 140 L 124 140 Z"
+    stroke={glass}
+    stroke-width="1.25"
+    stroke-linejoin="round"
+    vector-effect="non-scaling-stroke"></path>
+  <!-- inside the glass -->
+  <path d={`M150 98 L ${exit.x} ${exit.y}`} stroke="var(--color-brass)" stroke-width="1" opacity="0.6" vector-effect="non-scaling-stroke"></path>
+  <!-- spectrum -->
+  <g class="prism-rays">
+    {
+      rays.map((n, i) => (
+        <path
+          d={`M${exit.x} ${exit.y} L ${endX} ${endYs[i]}`}
+          stroke={`var(--color-spectrum-${n})`}
+          stroke-width="1.5"
+          stroke-linecap="round"
+          vector-effect="non-scaling-stroke"
+          {...(animate ? { 'data-reveal': 'fade', style: `--i:${i};--delay:600ms` } : {})}
+        />
+      ))
+    }
+  </g>
+</svg>
+
+<style>
+  .prism {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+</style>

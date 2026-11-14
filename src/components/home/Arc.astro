@@ -1,0 +1,58 @@
+---
+/**
+ * Home §2 — The Arc: "From Customer Value to Institutional Legacy".
+ * Chapters from chapters.json, entries from timeline.json; the Timeline island
+ * renders them (server-rendered HTML, hydrated as it nears the viewport).
+ */
+import { getCollection } from 'astro:content';
+import SectionHeader from '../SectionHeader.astro';
+import home from '../../data/home.json';
+import InflectionLine from '../InflectionLine.astro';
+import Timeline, { type ArcChapter } from '../../islands/Timeline.tsx';
+
+const chapterEntries = (await getCollection('chapters')).sort((a, b) => a.data.order - b.data.order);
+const timeline = await getCollection('timeline');
+
+const chapters: ArcChapter[] = chapterEntries.map((c, i) => ({
+  id: c.data.id,
+  number: String(i + 1).padStart(2, '0'),
+  title: c.data.title,
+  years: c.data.years,
+  summary: c.data.summary,
+  callout: c.data.callout,
+  entries: timeline
+    .filter((t) => t.data.chapter === c.data.id)
+    .sort((a, b) => a.data.startYear - b.data.startYear)
+    .map((t) => ({
+      id: t.data.id,
+      years: t.data.years,
+      role: t.data.role,
+      organisation: t.data.organisation,
+      note: t.data.note,
+      current: t.data.current,
+    })),
+}));
+---
+
+<section id="arc" class="arc-section" aria-labelledby="arc-title">
+  <div class="container-content">
+    <InflectionLine variant="divider" />
+    <SectionHeader
+      eyebrow={home.arc.eyebrow}
+      id="arc-title"
+      title={home.arc.title}
+      intro={home.arc.intro}
+      class="mt-14 sm:mt-20"
+    />
+    <div class="mt-14 md:mt-20">
+      <Timeline client:visible={{ rootMargin: '300px' }} chapters={chapters} />
+    </div>
+  </div>
+</section>
+
+<style>
+  .arc-section {
+    padding-block: var(--section-space);
+    padding-top: clamp(2rem, 4vw, 3rem);
+  }
+</style>

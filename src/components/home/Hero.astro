@@ -1,0 +1,245 @@
+---
+/**
+ * Home §1 — Hero. No JavaScript framework; the load sequence is CSS:
+ *   0ms     ivory + grain (page background, no flash)
+ *   100ms   name sentence, word by word (blur 8→0, up 12px, 80ms apart)
+ *   400ms   eyebrow and "Currently / Previously" fade up
+ *   600ms   portrait settles 1.04 → 1 (scale only — never hidden, good for LCP)
+ *   800ms   brass inflection line draws over 1.2s
+ *   1000ms  buttons, credibility line (and the nav, via Base navIntro)
+ * Phones: portrait on top. ≥768px: two columns; the serif sentence overlaps
+ * the portrait's left edge.
+ */
+import site from '../../data/site.json';
+import { heroPortrait } from '../../lib/images';
+import BlurImage from '../BlurImage.astro';
+import Eyebrow from '../Eyebrow.astro';
+import Icon from '../Icon.astro';
+import InflectionLine from '../InflectionLine.astro';
+import RevealWords from '../RevealWords.astro';
+---
+
+<section data-hero class="hero" aria-labelledby="hero-title">
+  <div class="hero__inner container-content">
+    <div class="hero__portrait">
+      <div class="hero__frame">
+        <div class="hero__settle" data-reveal="settle" data-reveal-now style="--delay:600ms">
+          <BlurImage
+            src={heroPortrait.src}
+            alt={heroPortrait.alt}
+            sizes={heroPortrait.sizes}
+            widths={heroPortrait.widths}
+            position={heroPortrait.position}
+            priority
+            class="hero__img"
+          />
+        </div>
+        {heroPortrait.placeholder && <span class="placeholder-tag hero__ph">Placeholder portrait</span>}
+      </div>
+    </div>
+
+    <div class="hero__text">
+      <div data-reveal data-reveal-now style="--delay:400ms">
+        <Eyebrow>{site.heroEyebrow}</Eyebrow>
+      </div>
+
+      <RevealWords as="h1" id="hero-title" now delay={100} text={site.heroSentence} class="hero__title" />
+
+      <dl class="hero__status" data-reveal data-reveal-now style="--delay:400ms">
+        <div>
+          <dt>Currently:</dt>
+          <dd>{site.currently}</dd>
+        </div>
+        <div>
+          <dt>Previously:</dt>
+          <dd>{site.previously}</dd>
+        </div>
+      </dl>
+
+      <div class="hero__line">
+        <InflectionLine variant="hero" drawOnLoad delay={800} />
+      </div>
+
+      <div class="hero__actions" data-reveal data-reveal-now style="--delay:1000ms">
+        <a href={site.nav.cta.href} class="btn btn-primary">
+          {site.nav.cta.label} <Icon name="arrow-right" size={18} class="btn-arrow" />
+        </a>
+        <a href="#books" class="btn btn-secondary">Explore the books</a>
+      </div>
+
+      <div class="hero__cred" data-reveal="fade" data-reveal-now style="--delay:1000ms">
+        <p class="hero__cred-label">{site.credibilityLabel}</p>
+        <ul role="list">
+          {site.credibility.map((name) => <li>{name}</li>)}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    --header-space: 5rem;
+    min-height: 100dvh;
+    padding-top: calc(var(--header-space) + env(safe-area-inset-top));
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+  }
+  @media (min-width: 1024px) {
+    .hero {
+      --header-space: 5.5rem;
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .hero__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  /* ---------- Portrait ---------- */
+  .hero__frame {
+    overflow: hidden; /* the 1.04 → 1 settle happens inside the frame */
+    border-radius: 8px;
+    /* Phones: short enough that the name starts in the first screen. */
+    height: clamp(12rem, 34dvh, 22rem);
+  }
+  .hero__frame {
+    position: relative;
+  }
+  .hero__settle {
+    height: 100%;
+  }
+  .hero__ph {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: var(--color-ivory);
+  }
+  .hero__frame :global(.hero__img) {
+    height: 100%;
+  }
+
+  /* ---------- Text ---------- */
+  .hero__text {
+    position: relative;
+    z-index: 1;
+  }
+  .hero :global(.hero__title) {
+    margin-top: 1.25rem;
+    font-size: var(--text-hero);
+    line-height: var(--text-hero--line-height);
+    letter-spacing: -0.015em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  .hero__status {
+    margin-top: 1.5rem;
+    max-width: 36rem;
+    display: grid;
+    gap: 0.35rem;
+  }
+  .hero__status div {
+    display: block;
+  }
+  .hero__status dt {
+    display: inline;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .hero__status dd {
+    display: inline;
+    margin: 0 0 0 0.3em;
+    color: var(--color-stone);
+  }
+
+  .hero__line {
+    margin-top: 1.5rem;
+    max-width: 26rem;
+  }
+
+  .hero__actions {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .hero__actions {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
+
+  .hero__cred {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-hairline);
+    max-width: 40rem;
+    font-size: var(--text-small);
+    line-height: 1.5;
+    color: var(--color-stone);
+  }
+  .hero__cred-label {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .hero__cred ul {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0.35rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* Separator trails each name, so a wrapped line never starts with a dot. */
+  .hero__cred li:not(:last-child)::after {
+    content: '·';
+    margin-inline: 0.55rem;
+    color: var(--color-stone);
+  }
+
+  /* ---------- Two columns from tablet up ---------- */
+  @media (min-width: 768px) {
+    .hero__inner {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 1.5rem;
+      align-items: center;
+      width: 100%;
+    }
+    .hero__text {
+      grid-column: 1 / 9;
+      grid-row: 1;
+    }
+    .hero__portrait {
+      grid-column: 8 / 13;
+      grid-row: 1;
+    }
+    .hero__frame {
+      height: min(calc(100dvh - var(--header-space) - 6rem), 40rem);
+      min-height: 26rem;
+      aspect-ratio: auto;
+    }
+    /* Only the serif sentence reaches over the portrait edge; everything else
+       keeps clear of it. */
+    .hero__status,
+    .hero__line,
+    .hero__actions,
+    .hero__cred {
+      max-width: min(34rem, 85%);
+    }
+  }
+  /* Desktop: the portrait starts one column earlier, so the last line of the
+     88px sentence reaches ~75px over its left edge. On short laptop screens the
+     sentence also scales with the viewport height so the buttons stay in view. */
+  @media (min-width: 1024px) {
+    .hero__portrait {
+      grid-column: 7 / 13;
+    }
+    .hero :global(.hero__title) {
+      font-size: min(var(--text-hero), 10.6dvh);
+    }
+  }
+</style>

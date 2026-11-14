@@ -1,0 +1,511 @@
+---
+/**
+ * Site navigation (BRIEF §5b "Navigation behaviour", §7 responsive table).
+ * - Top of page: transparent. After 80px: ivory, backdrop blur, hairline.
+ * - Desktop (≥1024px): links split either side of the centred name; hides on
+ *   scroll down, returns on scroll up (never while it holds keyboard focus).
+ * - Tablet (768–1023px): name + 3 links + menu button.
+ * - Phone (<768px): name + menu button; full-screen menu (native <dialog>:
+ *   focus is trapped, Esc closes, focus returns to the button).
+ * Only opacity and transform animate.
+ */
+import site from '../data/site.json';
+import Icon from './Icon.astro';
+import InflectionLine from './InflectionLine.astro';
+
+interface Props {
+  /** Home page: fade the nav in at 1000ms as part of the hero load sequence. */
+  intro?: boolean;
+}
+const { intro = false } = Astro.props;
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isCurrent = (href: string) => {
+  if (href.includes('#')) return false;
+  const base = href.split('?')[0];
+  return base === '/' ? path === '/' : path === base || path.startsWith(base + '/');
+};
+const { left, right, tablet, menu, cta } = site.nav;
+const { contact } = site;
+---
+
+<a href="#main" class="skip-link btn btn-primary">Skip to content</a>
+
+<header class="site-header" data-site-header>
+  <div class="site-header__bg" aria-hidden="true"></div>
+  <nav
+    aria-label="Main"
+    class="site-header__inner container-content"
+    {...intro ? { 'data-reveal': 'fade', 'data-reveal-now': '', style: '--delay:1000ms' } : {}}
+  >
+    <ul class="nav-links nav-links--left" role="list">
+      {
+        left.map((l) => (
+          <li>
+            <a href={l.href} class="nav-link link-grow-line" aria-current={isCurrent(l.href) ? 'page' : undefined}>
+              {l.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <a href="/" class="wordmark" aria-label={`${site.name}, home`}>{site.shortName}</a>
+
+    <div class="nav-end">
+      <ul class="nav-links nav-links--right" role="list">
+        {
+          right.map((l) => (
+            <li>
+              <a href={l.href} class="nav-link link-grow-line" aria-current={isCurrent(l.href) ? 'page' : undefined}>
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <ul class="nav-links nav-links--tablet" role="list">
+        {
+          tablet.map((l) => (
+            <li>
+              <a href={l.href} class="nav-link link-grow-line" aria-current={isCurrent(l.href) ? 'page' : undefined}>
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <a href={cta.href} class="btn btn-primary nav-cta">
+        <span class="xl:hidden">{cta.short}</span><span class="hidden xl:inline">{cta.label}</span>
+      </a>
+      <button
+        type="button"
+        class="menu-btn"
+        aria-haspopup="dialog"
+        aria-expanded="false"
+        aria-controls="site-menu"
+        data-menu-open
+      >
+        <Icon name="menu" size={22} />
+        <span>Menu</span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<dialog id="site-menu" class="site-menu" aria-label="Site menu" data-lenis-prevent>
+  <div class="site-menu__top container-content">
+    <a href="/" class="wordmark">{site.shortName}</a>
+    <button type="button" class="menu-btn" data-menu-close autofocus>
+      <Icon name="close" size={22} />
+      <span>Close</span>
+    </button>
+  </div>
+  <div class="site-menu__body container-content">
+    <nav aria-label="Menu">
+      <ol class="site-menu__list" role="list">
+        {
+          menu.map((l, i) => (
+            <li style={`--i:${i}`}>
+              <a href={l.href} class="site-menu__link" aria-current={isCurrent(l.href) ? 'page' : undefined}>
+                <span class="site-menu__num" aria-hidden="true">({String(i + 1).padStart(2, '0')})</span>
+                <span class="site-menu__label">{l.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+    <div class="site-menu__foot" style={`--i:${menu.length}`}>
+      <InflectionLine variant="divider" draw={false} />
+      <a href={cta.href} class="btn btn-primary w-full sm:w-auto">
+        {cta.label} <Icon name="arrow-right" class="btn-arrow" />
+      </a>
+      <ul class="site-menu__contact" role="list">
+        <li>
+          <a href={`https://wa.me/${contact.whatsapp}`} class="contact-chip" rel="noopener" target="_blank">
+            <Icon name="whatsapp" /> WhatsApp
+          </a>
+        </li>
+        <li>
+          <a href={`mailto:${contact.email}`} class="contact-chip"><Icon name="mail" /> Email</a>
+        </li>
+        <li>
+          <a href={contact.linkedin} class="contact-chip" rel="noopener" target="_blank"><Icon name="linkedin" /> LinkedIn</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  .skip-link {
+    position: fixed;
+    top: max(0.75rem, env(safe-area-inset-top));
+    left: 0.75rem;
+    z-index: 100;
+    transform: translateY(-200%);
+  }
+  .skip-link:focus-visible {
+    transform: none;
+  }
+
+  /* ---------- Header shell ---------- */
+  .site-header {
+    --header-h: 4.5rem;
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 50;
+    padding-top: env(safe-area-inset-top);
+    transition: transform 500ms var(--ease);
+  }
+  @media (min-width: 1024px) {
+    .site-header {
+      --header-h: 5.5rem;
+    }
+  }
+  .site-header[data-hidden] {
+    transform: translate3d(0, -100%, 0);
+  }
+  /* The ivory/blur/hairline layer fades in after 80px — opacity only. */
+  .site-header__bg {
+    position: absolute;
+    inset: 0;
+    background: rgb(246 241 231 / 0.93);
+    -webkit-backdrop-filter: blur(12px) saturate(1.1);
+    backdrop-filter: blur(12px) saturate(1.1);
+    border-bottom: 1px solid var(--color-hairline);
+    opacity: 0;
+    transition: opacity 500ms var(--ease);
+  }
+  .site-header[data-scrolled] .site-header__bg {
+    opacity: 1;
+  }
+
+  .site-header__inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    height: var(--header-h);
+  }
+  @media (min-width: 1024px) {
+    .site-header__inner {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+    }
+  }
+
+  .wordmark {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 1.75rem; /* 28px — the serif's minimum size */
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+    text-decoration: none;
+    white-space: nowrap;
+    padding-block: 0.5rem; /* ≥44px target */
+  }
+  @media (min-width: 1024px) {
+    .wordmark {
+      font-size: 1.875rem;
+      justify-self: center;
+    }
+  }
+
+  /* ---------- Links ---------- */
+  .nav-links {
+    display: none;
+    align-items: center;
+    gap: clamp(1.25rem, 2vw, 2rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  @media (min-width: 1024px) {
+    .nav-links--left,
+    .nav-links--right {
+      display: flex;
+    }
+  }
+  @media (min-width: 768px) and (max-width: 1023.98px) {
+    .nav-links--tablet {
+      display: flex;
+    }
+  }
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-weight: 600;
+    font-size: 1.0625rem;
+    color: var(--color-ink);
+    transition: color var(--dur-tap) var(--ease);
+  }
+  .nav-link:hover {
+    color: var(--color-green);
+  }
+  .nav-link[aria-current='page'] {
+    color: var(--color-green);
+  }
+  .nav-link[aria-current='page']::after {
+    transform: scaleX(1);
+    background: var(--color-brass);
+  }
+
+  .nav-end {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: clamp(1.25rem, 2vw, 2rem);
+  }
+  .nav-cta {
+    display: none;
+    min-height: 2.75rem;
+    padding: 0.6rem 1.15rem;
+    font-size: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .nav-cta {
+      display: inline-flex;
+    }
+  }
+
+  .menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+    margin-right: -0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1.0625rem;
+    color: var(--color-ink);
+    cursor: pointer;
+    transition: color var(--dur-tap) var(--ease);
+  }
+  .menu-btn:hover {
+    color: var(--color-green);
+  }
+  @media (min-width: 1024px) {
+    .site-header .menu-btn {
+      display: none;
+    }
+  }
+
+  /* ---------- Full-screen menu (phones & tablets) ---------- */
+  .site-menu {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    border: 0;
+    background-color: var(--color-ivory);
+    background-image: var(--grain);
+    color: var(--color-ink);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    opacity: 0;
+    transition:
+      opacity 200ms var(--ease),
+      overlay 200ms allow-discrete,
+      display 200ms allow-discrete;
+  }
+  .site-menu[open] {
+    opacity: 1;
+  }
+  @starting-style {
+    .site-menu[open] {
+      opacity: 0;
+    }
+  }
+  .site-menu::backdrop {
+    background: transparent;
+  }
+  .site-menu__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4.5rem;
+  }
+  .site-menu__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding-top: 1rem;
+    padding-bottom: 2.5rem;
+  }
+  .site-menu__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .site-menu__list li,
+  .site-menu__foot {
+    opacity: 0;
+    transform: translate3d(0, var(--move-sm), 0);
+    transition:
+      opacity var(--dur-reveal) var(--ease),
+      transform var(--dur-reveal) var(--ease);
+    transition-delay: calc(80ms + var(--i, 0) * 60ms);
+  }
+  .site-menu[open] .site-menu__list li,
+  .site-menu[open] .site-menu__foot {
+    opacity: 1;
+    transform: none;
+  }
+  @starting-style {
+    .site-menu[open] .site-menu__list li,
+    .site-menu[open] .site-menu__foot {
+      opacity: 0;
+      transform: translate3d(0, var(--move-sm), 0);
+    }
+  }
+  .site-menu:not([open]) .site-menu__list li,
+  .site-menu:not([open]) .site-menu__foot {
+    transition-duration: 150ms;
+    transition-delay: 0ms;
+  }
+  .site-menu__list li + li {
+    border-top: 1px solid var(--color-hairline);
+  }
+  .site-menu__link {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding-block: 0.7rem;
+    text-decoration: none;
+    color: var(--color-ink);
+  }
+  .site-menu__num {
+    width: 2.5rem;
+    flex: none;
+    font-size: 0.9375rem;
+    color: var(--color-stone);
+    font-variant-numeric: tabular-nums;
+  }
+  .site-menu__label {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.25rem);
+    line-height: 1.15;
+    transition: color var(--dur-tap) var(--ease);
+  }
+  .site-menu__link:hover .site-menu__label,
+  .site-menu__link[aria-current='page'] .site-menu__label {
+    color: var(--color-green);
+  }
+  .site-menu__link[aria-current='page'] .site-menu__label {
+    font-style: italic;
+  }
+  .site-menu__foot {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .site-menu__contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .contact-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-green);
+    text-decoration: none;
+  }
+
+  :global(html:has(.site-menu[open])) {
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  const THRESHOLD = 80; // px before the nav gets its ivory background
+  const DELTA = 6; // px of travel before hide/show reacts (ignores jitter)
+  const desktop = window.matchMedia('(min-width: 1024px)');
+  let lastY = 0;
+  let ticking = false;
+
+  const header = () => document.querySelector<HTMLElement>('[data-site-header]');
+  const menuOpen = () => !!document.querySelector('.site-menu[open]');
+
+  function update() {
+    ticking = false;
+    const el = header();
+    if (!el) return;
+    const y = Math.max(0, window.scrollY);
+    el.toggleAttribute('data-scrolled', y > THRESHOLD);
+
+    const dy = y - lastY;
+    if (y <= THRESHOLD) {
+      el.removeAttribute('data-hidden');
+      lastY = y;
+      return;
+    }
+    if (Math.abs(dy) < DELTA) return;
+    const hide = dy > 0 && desktop.matches && !el.matches(':focus-within') && !menuOpen();
+    el.toggleAttribute('data-hidden', hide);
+    lastY = y;
+  }
+
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    },
+    { passive: true }
+  );
+  desktop.addEventListener('change', () => header()?.removeAttribute('data-hidden'));
+
+  // Keyboard users always see the nav when tabbing into it.
+  document.addEventListener('focusin', (e) => {
+    const el = header();
+    if (el && e.target instanceof Node && el.contains(e.target)) el.removeAttribute('data-hidden');
+  });
+
+  function setupMenu() {
+    const dialog = document.querySelector<HTMLDialogElement>('#site-menu');
+    const opener = document.querySelector<HTMLButtonElement>('[data-menu-open]');
+    if (!dialog || !opener) return;
+    const lenis = () => (window as any).__lenis as { stop(): void; start(): void } | undefined;
+
+    opener.addEventListener('click', () => {
+      dialog.showModal();
+      opener.setAttribute('aria-expanded', 'true');
+      lenis()?.stop();
+    });
+    dialog.querySelector('[data-menu-close]')?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => {
+      opener.setAttribute('aria-expanded', 'false');
+      lenis()?.start();
+    });
+    // Same-page anchors (e.g. /#books on the home page): close before scrolling.
+    dialog.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => dialog.close()));
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    lastY = window.scrollY;
+    update();
+    setupMenu();
+  });
+  document.addEventListener('astro:after-swap', () => (window as any).__lenis?.start());
+</script>

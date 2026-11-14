@@ -1,0 +1,173 @@
+---
+/**
+ * Numbered index of articles (home §11 and /insights). Hairlines draw left →
+ * right; the title's underline grows on hover or focus (transform only).
+ * Each whole row is one link. CSS only.
+ */
+import type { CollectionEntry } from 'astro:content';
+import Icon from './Icon.astro';
+
+interface Props {
+  articles: CollectionEntry<'insights'>[];
+  /** h3 inside a home section, h2 on the /insights page. */
+  headingLevel?: 'h2' | 'h3';
+}
+const { articles, headingLevel = 'h3' } = Astro.props;
+const Title = headingLevel;
+const latest = articles;
+const fmt = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+---
+
+<ol class="idx" role="list">
+  {
+    latest.map((a, i) => (
+      <li class="idx__row">
+        <span class="idx__rule" data-draw-x style={`--i:${i}`} aria-hidden="true" />
+        <a href={`/insights/${a.id}`} class="idx__link" data-reveal style={`--i:${i}`}>
+          <span class="idx__num" aria-hidden="true">
+            ({String(i + 1).padStart(2, '0')})
+          </span>
+          <span class="idx__main">
+            <Title class="idx__title">
+              <span class="idx__underline">{a.data.title}</span>
+            </Title>
+            <span class="idx__summary">{a.data.summary}</span>
+          </span>
+          <span class="idx__meta">
+            <time datetime={a.data.date.toISOString().slice(0, 10)}>{fmt.format(a.data.date)}</time>
+            {a.data.placeholder && <span class="placeholder-tag">Placeholder</span>}
+          </span>
+          <Icon name="arrow-right" size={22} class="idx__arrow" />
+        </a>
+      </li>
+    ))
+  }
+  <li class="idx__row idx__row--end" aria-hidden="true">
+    <span class="idx__rule" data-draw-x style={`--i:${latest.length}`} />
+  </li>
+</ol>
+
+<style>
+  .idx {
+    margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .idx__row {
+    position: relative;
+  }
+  .idx__rule {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: var(--color-hairline);
+  }
+  .idx__row--end {
+    height: 1px;
+  }
+
+  /* Phones: number + date on top, title and summary below, arrow at the end. */
+  .idx__link {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'num  meta  arrow'
+      'main main  main';
+    align-items: center;
+    gap: 0.75rem 1rem;
+    padding-block: 1.75rem;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+  .idx__num {
+    grid-area: num;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+    font-variant-numeric: tabular-nums;
+  }
+  .idx__main {
+    grid-area: main;
+    display: grid;
+    gap: 0.4rem;
+  }
+  .idx__title {
+    font-size: var(--text-h3);
+    line-height: 1.2;
+  }
+  .idx__summary {
+    max-width: 60ch;
+    color: var(--color-stone);
+  }
+  .idx__meta {
+    grid-area: meta;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+    font-variant-numeric: tabular-nums;
+  }
+  .idx__link :global(.idx__arrow) {
+    grid-area: arrow;
+    color: var(--color-brass);
+    transition: transform var(--dur-tap) var(--ease);
+  }
+
+  @media (min-width: 768px) {
+    .idx__link {
+      grid-template-columns: 4.5rem minmax(0, 1fr) 11rem 2.5rem;
+      grid-template-areas: 'num main meta arrow';
+      align-items: baseline;
+      column-gap: 1.5rem;
+      padding-block: 2.25rem;
+    }
+    .idx__meta {
+      justify-content: flex-end;
+      text-align: right;
+    }
+    .idx__link :global(.idx__arrow) {
+      justify-self: end;
+      align-self: center;
+    }
+  }
+
+  /* Underline grows from the left under the title — transform only. The span is
+     an inline-block, so a wrapped title gets one rule under its whole box. */
+  .idx__underline {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.15em;
+  }
+  .idx__underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--dur-reveal) var(--ease);
+  }
+  .idx__link:hover .idx__underline::after,
+  .idx__link:focus-visible .idx__underline::after {
+    transform: scaleX(1);
+  }
+  .idx__link:hover .idx__title,
+  .idx__link:focus-visible .idx__title {
+    color: var(--color-green);
+  }
+  @media (hover: hover) {
+    .idx__link:hover :global(.idx__arrow) {
+      transform: translateX(4px);
+    }
+  }
+  .idx__link:focus-visible :global(.idx__arrow) {
+    transform: translateX(4px);
+  }
+  .idx__link:focus-visible {
+    outline-offset: 6px;
+  }
+</style>

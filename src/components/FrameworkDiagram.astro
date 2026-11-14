@@ -1,0 +1,177 @@
+---
+/**
+ * SVG framework diagram that draws stage by stage (CSS only):
+ *   shape="cycle" — four nodes on a circle joined by clockwise arcs (Beyond Ideas).
+ *   shape="rise"  — four nodes along the inflection line, flat then rising.
+ * Stage i: node fades in at i × 350ms; the connector to the next stage draws
+ * over 450ms right after. Decorative (aria-hidden): the stage list beside it
+ * carries the words. Nodes get .fw-node-{i} so the list can highlight them.
+ */
+interface Props {
+  shape: 'cycle' | 'rise';
+  stages: { name: string }[];
+  center?: string;
+  class?: string;
+}
+const { shape, stages, center, class: className } = Astro.props;
+
+const STEP = 350; // ms between stages
+const DRAW = 450; // ms per connector
+const f = (n: number) => Math.round(n * 10) / 10;
+
+type Node = { x: number; y: number; lx: number; ly: number; anchor: 'start' | 'middle' | 'end' };
+type Connector = { d: string; arrow?: string };
+
+let viewBox = '';
+let nodes: Node[] = [];
+let connectors: Connector[] = [];
+let nodeR = 30;
+
+if (shape === 'cycle') {
+  viewBox = '-80 -24 560 452';
+  const cx = 200, cy = 200, R = 140, gap = 17;
+  const rad = (deg: number) => (deg * Math.PI) / 180;
+  const pt = (deg: number, r = R) => ({ x: cx + r * Math.cos(rad(deg)), y: cy + r * Math.sin(rad(deg)) });
+  const angles = [-90, 0, 90, 180];
+  const labelPos: Array<[number, number, Node['anchor']]> = [
+    [0, -44, 'middle'],
+    [44, 6, 'start'],
+    [0, 58, 'middle'],
+    [-44, 6, 'end'],
+  ];
+  nodes = angles.map((a, i) => {
+    const p = pt(a);
+    const [dx, dy, anchor] = labelPos[i];
+    return { x: f(p.x), y: f(p.y), lx: f(p.x + dx), ly: f(p.y + dy), anchor };
+  });
+  connectors = angles.map((a) => {
+    const start = a + gap;
+    const end = a + 90 - gap;
+    const p1 = pt(start);
+    const p2 = pt(end);
+    // Arrowhead along the clockwise tangent at the arc's end.
+    const t = { x: -Math.sin(rad(end)), y: Math.cos(rad(end)) };
+    const back = (deg: number) => {
+      const c = Math.cos(rad(deg)), s = Math.sin(rad(deg));
+      const bx = -(t.x * c - t.y * s), by = -(t.x * s + t.y * c);
+      return `${f(p2.x + bx * 10)} ${f(p2.y + by * 10)}`;
+    };
+    return {
+      d: `M${f(p1.x)} ${f(p1.y)} A ${R} ${R} 0 0 1 ${f(p2.x)} ${f(p2.y)}`,
+      arrow: `M${back(28)} L ${f(p2.x)} ${f(p2.y)} L ${back(-28)}`,
+    };
+  });
+} else {
+  viewBox = '-12 0 640 300';
+  nodeR = 22;
+  // The inflection curve: flat, then rising (split into stage-to-stage segments).
+  nodes = [
+    { x: 40, y: 220, lx: 40, ly: 272, anchor: 'middle' },
+    { x: 180, y: 220, lx: 180, ly: 272, anchor: 'middle' },
+    { x: 420.3, y: 200.4, lx: 420.3, ly: 252, anchor: 'middle' },
+    // Last label sits to the left of its node, clear of the rising line.
+    { x: 560, y: 48, lx: 528, ly: 55, anchor: 'end' },
+  ];
+  connectors = [
+    { d: 'M40 220 H180' },
+    { d: 'M180 220 H300 C 348 220, 386.4 215.2, 420.3 200.4' },
+    { d: 'M420.3 200.4 C 471.2 178.1, 512 133.2, 560 48' },
+  ];
+}
+---
+
+<svg
+  class:list={['fw-diagram', `fw-diagram--${shape}`, className]}
+  viewBox={viewBox}
+  fill="none"
+  aria-hidden="true"
+  focusable="false"
+>
+  <!-- connectors draw first, so nodes sit on top of them -->
+  {
+    connectors.map((c, i) => (
+      <g data-draw-path style={`--draw-delay:${i * STEP + 150}ms;--draw-dur:${DRAW}ms`}>
+        <path d={c.d} pathLength="1" class="fw-connector" vector-effect="non-scaling-stroke" />
+        {c.arrow && <path d={c.arrow} pathLength="1" class="fw-arrow" vector-effect="non-scaling-stroke" />}
+      </g>
+    ))
+  }
+
+  {
+    shape === 'cycle' && center && (
+      <text x="200" y="196" text-anchor="middle" class="fw-center" data-reveal="fade" style={`--delay:${4 * STEP}ms`}>
+        {/* Two balanced lines so it clears the side nodes. */}
+        {(() => {
+          const words = center.split(' ');
+          const half = Math.ceil(words.length / 2);
+          return [words.slice(0, half).join(' '), words.slice(half).join(' ')].filter(Boolean).map((line, li) => (
+            <tspan x="200" dy={li === 0 ? 0 : 38}>
+              {line}
+            </tspan>
+          ));
+        })()}
+      </text>
+    )
+  }
+
+  {
+    nodes.map((n, i) => (
+      <g class={`fw-node fw-node-${i}`} data-reveal="fade" style={`--delay:${i * STEP}ms`}>
+        <circle cx={n.x} cy={n.y} r={nodeR} class="fw-node__dot" />
+        <text x={n.x} y={n.y + 6} text-anchor="middle" class="fw-node__num">
+          {String(i + 1).padStart(2, '0')}
+        </text>
+        <text x={n.lx} y={n.ly} text-anchor={n.anchor} class="fw-node__label">
+          {stages[i]?.name}
+        </text>
+      </g>
+    ))
+  }
+</svg>
+
+<style>
+  .fw-diagram {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .fw-connector {
+    stroke: var(--color-brass);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+  .fw-arrow {
+    stroke: var(--color-brass);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .fw-node__dot {
+    fill: var(--color-ivory);
+    stroke: var(--color-brass);
+    stroke-width: 1.5;
+    transition:
+      fill var(--dur-tap) var(--ease),
+      stroke var(--dur-tap) var(--ease);
+  }
+  .fw-node__num {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 17px;
+    fill: var(--color-ink);
+    transition: fill var(--dur-tap) var(--ease);
+  }
+  .fw-node__label {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 21px;
+    fill: var(--color-ink);
+  }
+  .fw-center {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 36px;
+    fill: var(--color-green);
+  }
+</style>

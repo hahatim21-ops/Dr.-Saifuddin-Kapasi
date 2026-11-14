@@ -1,0 +1,160 @@
+---
+/**
+ * Home §9 — What people say. Others do the praising (BRIEF §2): one large
+ * centred serif quote at a time (Testimonials island). Named quotes only appear
+ * once `permission: true`; placeholders are shown for review and tagged.
+ */
+import { getCollection } from 'astro:content';
+import home from '../../data/home.json';
+import Testimonials, { type Quote } from '../../islands/Testimonials.tsx';
+import SectionHeader from '../SectionHeader.astro';
+
+const quotes: Quote[] = (await getCollection('testimonials'))
+  // Real quotes need permission; placeholders stay visible until replaced.
+  .filter((t) => t.data.permission || t.data.placeholder)
+  .map((t) => ({
+    id: t.id,
+    quote: t.data.quote,
+    name: t.data.name,
+    role: t.data.role,
+    placeholder: t.data.placeholder,
+  }));
+const t = home.testimonials;
+---
+
+<section id="testimonials" class="testimonials" aria-labelledby="testimonials-title">
+  <div class="container-content">
+    <SectionHeader eyebrow={t.eyebrow} id="testimonials-title" title={t.title} center />
+    {
+      quotes.length > 0 && (
+        <div class="testimonials__body" data-reveal>
+          <Testimonials client:visible={{ rootMargin: '300px' }} quotes={quotes} label={t.carouselLabel} placeholderLabel={t.placeholderLabel} />
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .testimonials {
+    padding-block: var(--section-space);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .testimonials__body {
+    max-width: 56rem;
+    margin: clamp(2.5rem, 2rem + 3vw, 4rem) auto 0;
+  }
+
+  /* ----- island markup (classes rendered by Testimonials.tsx) ----- */
+  .testimonials :global(.tq__stage) {
+    display: grid;
+    touch-action: pan-y; /* vertical page scroll stays native; we read horizontal swipes */
+  }
+  .testimonials :global(.tq__slide) {
+    grid-area: 1 / 1;
+    margin: 0;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 700ms var(--ease),
+      visibility 0s linear 700ms;
+  }
+  .testimonials :global(.tq__slide.is-active) {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 700ms var(--ease),
+      visibility 0s;
+  }
+  .testimonials :global(.tq__mark) {
+    display: block;
+    height: 0.5em;
+    font-family: var(--font-serif);
+    font-size: clamp(4rem, 3rem + 4vw, 6rem);
+    line-height: 1;
+    color: var(--color-brass); /* large decorative glyph */
+  }
+  .testimonials :global(.tq__quote) {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(1.75rem, 1.35rem + 1.7vw, 2.75rem); /* 28 → 44px */
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  .testimonials :global(.tq__by) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    margin-top: 1.75rem;
+  }
+  .testimonials :global(.tq__name) {
+    font-weight: 600;
+  }
+  .testimonials :global(.tq__role) {
+    color: var(--color-stone);
+  }
+  .testimonials :global(.tq__by .placeholder-tag) {
+    margin-top: 0.5rem;
+  }
+
+  .testimonials :global(.tq__controls) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+  }
+  .testimonials :global(.tq__btn) {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    color: var(--color-green);
+    cursor: pointer;
+    transition:
+      background-color var(--dur-tap) var(--ease),
+      color var(--dur-tap) var(--ease),
+      border-color var(--dur-tap) var(--ease);
+  }
+  .testimonials :global(.tq__btn:hover) {
+    border-color: var(--color-green);
+  }
+  .testimonials :global(.tq__btn--pause) {
+    margin-left: 0.75rem;
+  }
+  .testimonials :global(.tq__dots) {
+    display: flex;
+  }
+  .testimonials :global(.tq__dot) {
+    display: grid;
+    place-items: center;
+    width: 2.75rem; /* 44px hit area around a small dot */
+    height: 2.75rem;
+    cursor: pointer;
+  }
+  .testimonials :global(.tq__dot span) {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--color-hairline);
+    box-shadow: inset 0 0 0 1px rgb(28 31 30 / 0.25);
+    transition:
+      transform var(--dur-tap) var(--ease),
+      background-color var(--dur-tap) var(--ease);
+  }
+  .testimonials :global(.tq__dot[aria-current='true'] span) {
+    background: var(--color-green);
+    box-shadow: none;
+    transform: scale(1.25);
+  }
+  @media (max-width: 479.98px) {
+    .testimonials :global(.tq__dot) {
+      width: 2.25rem;
+    }
+  }
+</style>

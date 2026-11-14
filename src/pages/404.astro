@@ -1,0 +1,49 @@
+---
+/** 404 — calm, with a few useful ways back. */
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import pages from '../data/pages.json';
+
+const p = pages.notFound;
+---
+
+<Base title="Page not found" noindex>
+  <main id="main">
+    <PageHeader eyebrow={p.eyebrow} title={p.title} intro={p.intro}>
+      <ul class="nf-links" role="list">
+        {
+          p.links.map((l) => (
+            <li>
+              <a href={l.href} class="link-grow-line">
+                {l.label} <span aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </PageHeader>
+    <div class="nf-space"></div>
+  </main>
+</Base>
+
+<style>
+  .nf-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .nf-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .nf-space {
+    height: clamp(4rem, 10vw, 8rem);
+  }
+</style>

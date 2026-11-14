@@ -1,0 +1,258 @@
+---
+/**
+ * /speaking — every programme in detail, formats, past engagements, the speaker
+ * kit and an enquiry form preset to "Speaking".
+ */
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import ContactSection from '../components/ContactSection.astro';
+import pages from '../data/pages.json';
+import home from '../data/home.json';
+import { field } from '../lib/placeholder';
+
+const p = pages.speaking;
+const labels = home.speaking.labels;
+const entries = (await getCollection('programmes')).sort((a, b) => a.data.order - b.data.order);
+const programmes = await Promise.all(
+  entries.map(async (e, i) => ({
+    entry: e,
+    num: String(i + 1).padStart(2, '0'),
+    Content: (await render(e)).Content,
+    facts: [
+      { label: labels.format, ...field(e.data.format) },
+      { label: labels.duration, ...field(e.data.duration) },
+      { label: labels.audience, ...field(e.data.audience) },
+    ],
+  }))
+);
+---
+
+<Base title="Speaking & training" description={p.meta}>
+  <main id="main">
+    <PageHeader eyebrow={p.eyebrow} title={p.title} intro={p.intro} />
+
+    <section class="page-section container-content" aria-labelledby="programmes-title">
+      <h2 id="programmes-title" class="sr-only">{p.programmesTitle}</h2>
+      <div class="sp-list">
+        {
+          programmes.map(({ entry, num, Content, facts }) => (
+            <article id={entry.id} class="sp" aria-labelledby={`sp-${entry.id}`}>
+              <div class="sp__head" data-reveal>
+                <span class="sp__num" aria-hidden="true">({num})</span>
+                <h3 id={`sp-${entry.id}`} class="sp__title">{entry.data.title}</h3>
+                <p class="sp__summary">{entry.data.summary}</p>
+              </div>
+              <div class="sp__body" data-reveal style="--i:1">
+                <dl class="sp__facts">
+                  {facts.map((f) => (
+                    <div>
+                      <dt>{f.label}</dt>
+                      <dd>
+                        {f.value}
+                        {f.placeholder && <span class="placeholder-tag ml-2">To confirm</span>}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                {entry.data.outcomes.length > 0 && (
+                  <ul class="sp__outcomes">
+                    {entry.data.outcomes.map((o) => <li>{o}</li>)}
+                  </ul>
+                )}
+                {entry.body?.trim() && (
+                  <div class="prose-body sp__notes">
+                    <Content />
+                  </div>
+                )}
+                <a href={`/contact?enquiry=training&programme=${entry.id}`} class="sp__cta link-grow-line">
+                  {p.programmeCta} <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="page-section container-content" aria-labelledby="formats-title">
+      <h2 id="formats-title" class="page-section__title" data-reveal>{p.formatsTitle}</h2>
+      <ul class="sp-formats" role="list">
+        {
+          p.formats.map((f, i) => (
+            <li data-reveal style={`--i:${i}`}>
+              <h3 class="sp-formats__title">{f.title}</h3>
+              <p class="sp-formats__text">{f.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="page-section container-content" aria-labelledby="past-title">
+      <h2 id="past-title" class="page-section__title" data-reveal>{p.pastTitle}</h2>
+      <ul class="sp-past" role="list">
+        {
+          p.past.map((e, i) => (
+            <li data-reveal style={`--i:${i}`}>
+              <span class="sp-past__when">{e.when}</span>
+              <span class="sp-past__what">{e.what}</span>
+              <span class="sp-past__where">{e.where}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="page-section container-content" aria-labelledby="kit-title">
+      <div class="sp-kit" data-reveal>
+        <div>
+          <h2 id="kit-title" class="page-section__title">{p.kitTitle}</h2>
+          <p class="mt-3 text-stone prose-measure">{p.kitText}</p>
+        </div>
+        <span class="placeholder-tag">{p.kitPlaceholder}</span>
+      </div>
+    </section>
+
+    <ContactSection defaultEnquiry="speaking" />
+  </main>
+</Base>
+
+<style>
+  .sp-list {
+    display: grid;
+  }
+  .sp {
+    display: grid;
+    gap: 1.5rem;
+    padding-block: clamp(2rem, 4vw, 3rem);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .sp:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+  @media (min-width: 1024px) {
+    .sp {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: 4rem;
+    }
+  }
+  .sp__num {
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .sp__title {
+    margin-top: 0.4rem;
+    font-size: var(--text-h2);
+  }
+  .sp__summary {
+    margin-top: 0.75rem;
+    color: var(--color-stone);
+    max-width: 44ch;
+  }
+  .sp__facts {
+    display: grid;
+    gap: 1.25rem;
+    margin: 0;
+  }
+  @media (min-width: 640px) {
+    .sp__facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .sp__facts dt {
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+  .sp__facts dd {
+    margin: 0.35rem 0 0;
+  }
+  .sp__outcomes {
+    margin-top: 1.5rem;
+    padding-left: 1.25em;
+    list-style: disc;
+  }
+  .sp__notes {
+    margin-top: 1.5rem;
+  }
+  .sp__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    margin-top: 1.25rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+
+  .sp-formats {
+    display: grid;
+    gap: 1.5rem;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 768px) {
+    .sp-formats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1280px) {
+    .sp-formats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .sp-formats li {
+    padding: 1.5rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+  }
+  .sp-formats__title {
+    font-size: var(--text-h3);
+  }
+  .sp-formats__text {
+    margin-top: 0.5rem;
+    color: var(--color-stone);
+  }
+
+  .sp-past {
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--color-hairline);
+  }
+  .sp-past li {
+    display: grid;
+    gap: 0.2rem;
+    padding-block: 1.1rem;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  @media (min-width: 768px) {
+    .sp-past li {
+      grid-template-columns: 9rem minmax(0, 1fr) minmax(0, 16rem);
+      gap: 1.5rem;
+    }
+  }
+  .sp-past__when,
+  .sp-past__where {
+    color: var(--color-stone);
+  }
+  .sp-past__what {
+    font-weight: 600;
+  }
+
+  .sp-kit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: clamp(1.75rem, 4vw, 3rem);
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+  }
+</style>
