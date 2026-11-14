@@ -81,36 +81,72 @@ const { contact } = site;
 </style>
 
 <script>
-  const phone = window.matchMedia('(max-width: 767.98px)');
-  let ticking = false;
+  import { onPageLoad } from '../lib/page';
 
-  function update() {
-    ticking = false;
+  // Visibility is tracked with IntersectionObservers (no per-frame layout
+  // reads): the dock shows on phones once the hero is passed, and steps aside
+  // at the first "stop" region (the contact form) or the footer.
+  const phone = window.matchMedia('(max-width: 767.98px)');
+  let pastHero = false;
+  let footerNear = false;
+  let observers: IntersectionObserver[] = [];
+
+  function apply() {
     const dock = document.querySelector<HTMLElement>('[data-dock]');
     if (!dock) return;
-    const hero = document.querySelector<HTMLElement>('[data-hero]');
-    // Step aside at the first "stop" region (the contact form) or the footer.
-    const stop = document.querySelector<HTMLElement>('[data-dock-stop]') ?? document.querySelector<HTMLElement>('[data-site-footer]');
-    const vh = window.innerHeight;
-
-    const pastHero = hero ? hero.getBoundingClientRect().bottom < 64 : window.scrollY > vh * 0.9;
-    const footerNear = stop ? stop.getBoundingClientRect().top < vh - 24 : false;
     const show = phone.matches && pastHero && !footerNear;
-
     if (show !== dock.hasAttribute('data-visible')) {
       dock.toggleAttribute('data-visible', show);
       dock.inert = !show;
     }
   }
 
-  const schedule = () => {
-    if (!ticking) {
-      ticking = true;
-      requestAnimationFrame(update);
+  // Pages without a hero: "past the top" means scrolled 90% of a screen.
+  const onScroll = () => {
+    const past = window.scrollY > window.innerHeight * 0.9;
+    if (past !== pastHero) {
+      pastHero = past;
+      apply();
     }
   };
-  window.addEventListener('scroll', schedule, { passive: true });
-  window.addEventListener('resize', schedule, { passive: true });
-  phone.addEventListener('change', schedule);
-  document.addEventListener('astro:page-load', update);
+
+  function setup() {
+    observers.forEach((o) => o.disconnect());
+    observers = [];
+    window.removeEventListener('scroll', onScroll);
+    pastHero = footerNear = false;
+
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    if (hero) {
+      const io = new IntersectionObserver(
+        ([e]) => {
+          pastHero = !e.isIntersecting && e.boundingClientRect.top < 0;
+          apply();
+        },
+        { rootMargin: '-64px 0px 0px 0px' }
+      );
+      io.observe(hero);
+      observers.push(io);
+    } else {
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+
+    const stop = document.querySelector<HTMLElement>('[data-dock-stop]') ?? document.querySelector<HTMLElement>('[data-site-footer]');
+    if (stop) {
+      const io = new IntersectionObserver(
+        ([e]) => {
+          footerNear = e.isIntersecting || e.boundingClientRect.top < 0;
+          apply();
+        },
+        { rootMargin: '0px 0px -24px 0px' }
+      );
+      io.observe(stop);
+      observers.push(io);
+    }
+    apply();
+  }
+
+  phone.addEventListener('change', apply);
+  onPageLoad(setup);
 </script>

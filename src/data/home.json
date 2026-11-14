@@ -1,4 +1,10 @@
 {
+  "manifesto": {
+    "eyebrow": "Manifesto",
+    "quote": "I believe institutions don't become enduring by chance, they are intentionally designed.",
+    "attribution": "Dr. Saifuddin Kapasi",
+    "signOff": "Ideas are easy. Impact is earned."
+  },
   "arc": {
     "eyebrow": "The Arc",
     "title": "From Customer Value to Institutional *Legacy*",
@@ -75,6 +81,7 @@
   },
   "contact": {
     "eyebrow": "Contact",
+    "display": "Let's build something *enduring*.",
     "title": "Let's start a *conversation*",
     "intro": "Invitations to speak or train, advisory work, bulk book orders or a student's question — tell him a little about what you have in mind.",
     "directTitle": "Prefer to talk?",

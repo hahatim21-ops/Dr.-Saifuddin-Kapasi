@@ -1,0 +1,86 @@
+---
+/**
+ * The travelling prism — fixed, decorative layer (aria-hidden, pointer-events
+ * none). Geometry reused from Prism.astro. Motion lives in src/lib/prism.ts;
+ * pages place waypoints with [data-prism-stop]. Hidden unless the desktop
+ * scene activates it, so phones, reduced motion and no-JS never see it.
+ */
+const rays = [1, 2, 3, 4, 5, 6, 7];
+const exit = { x: 206, y: 92 };
+const endYs = [44, 60, 76, 92, 108, 124, 140];
+---
+
+<div class="prism-layer" data-prism-layer aria-hidden="true">
+  <div class="prism-fly" data-prism-fly>
+    <div class="prism-fly__breath" data-prism-breath>
+      <div class="prism-fly__glow" data-prism-glow></div>
+    </div>
+    <svg class="prism-fly__svg" viewBox="0 0 400 180" fill="none" focusable="false">
+      <g data-prism-part="beam">
+        <path d="M0 112 L 150 98" class="prism-fly__beam" />
+        <path d={`M150 98 L ${exit.x} ${exit.y}`} class="prism-fly__beam prism-fly__beam--inner" />
+      </g>
+      <path d="M180 28 L 236 140 L 124 140 Z" class="prism-fly__glass" />
+      <g data-prism-part="spectrum" class="prism-fly__spectrum">
+        {
+          rays.map((n, i) => (
+            <path d={`M${exit.x} ${exit.y} L 400 ${endYs[i]}`} stroke={`var(--color-spectrum-${n})`} stroke-width="2" stroke-linecap="round" />
+          ))
+        }
+      </g>
+    </svg>
+  </div>
+</div>
+
+<style>
+  .prism-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    display: none;
+    overflow: hidden;
+  }
+  .prism-layer.is-active {
+    display: block;
+  }
+  .prism-fly {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 360px;
+    aspect-ratio: 400 / 180;
+  }
+  .prism-fly__breath,
+  .prism-fly__glow {
+    position: absolute;
+    inset: -60% -20%;
+  }
+  .prism-fly__glow {
+    inset: 0;
+    background: radial-gradient(closest-side at 45% 52%, rgb(212 180 131 / 0.55), rgb(212 180 131 / 0.12) 55%, transparent 75%);
+    filter: blur(6px);
+  }
+  .prism-fly__svg {
+    position: relative;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .prism-fly__glass {
+    stroke: var(--color-brass);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    fill: rgb(246 241 231 / 0.08);
+  }
+  .prism-fly__beam {
+    stroke: #fff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 4px rgb(212 180 131 / 0.9)) drop-shadow(0 0 10px rgb(212 180 131 / 0.5));
+  }
+  .prism-fly__beam--inner {
+    stroke-width: 1.25;
+    opacity: 0.7;
+  }
+</style>

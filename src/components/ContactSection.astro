@@ -9,10 +9,14 @@
  * - ?enquiry=speaking (from "Invite me to speak") preselects the type;
  *   ?programme=… is passed along with the message.
  * The phone dock hides while this section is on screen (data-dock-stop).
+ * Motion v2 (home): a giant display line, "Let's build something enduring.",
+ * rises in word by word above the section header; the submit button is
+ * magnetic on desktop.
  */
 import home from '../data/home.json';
 import site from '../data/site.json';
 import Icon from './Icon.astro';
+import RevealWords from './RevealWords.astro';
 import SectionHeader from './SectionHeader.astro';
 
 interface Props {
@@ -39,11 +43,14 @@ const DirectTag = asPageTitle ? 'h2' : 'h3';
     {
       asPageTitle ? (
         <header class="contact__page-head">
-          <h1 id="contact-title">{t.title.replace(/\*/g, '')}</h1>
+          <h1 id="contact-title" data-split="lines" data-split-now>{t.title.replace(/\*/g, '')}</h1>
           <p class="contact__intro">{t.intro}</p>
         </header>
       ) : (
-        <SectionHeader eyebrow={t.eyebrow} id="contact-title" title={t.title} intro={t.intro} />
+        <>
+          <RevealWords as="p" text={t.display} class="contact__display" split="words" />
+          <SectionHeader eyebrow={t.eyebrow} id="contact-title" title={t.title} intro={t.intro} />
+        </>
       )
     }
 
@@ -137,7 +144,7 @@ const DirectTag = asPageTitle ? 'h2' : 'h3';
         </div>
 
         <div class="cf__actions">
-          <button type="submit" class="btn btn-primary cf__submit" data-label={f.submit} data-sending={f.sending}>
+          <button type="submit" class="btn btn-primary cf__submit" data-label={f.submit} data-sending={f.sending} data-magnetic>
             {f.submit} <Icon name="arrow-right" size={18} class="btn-arrow" />
           </button>
           {!accessKey && <span class="placeholder-tag">Form not connected yet</span>}
@@ -159,6 +166,18 @@ const DirectTag = asPageTitle ? 'h2' : 'h3';
 </section>
 
 <style>
+  /* Giant display line (home only). */
+  .contact :global(.contact__display) {
+    margin: 0 0 clamp(2.5rem, 2rem + 3vw, 4.5rem);
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(3rem, 1.6rem + 6.4vw, 8.5rem);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    max-width: 14ch;
+    text-wrap: balance;
+  }
+
   .contact {
     padding-block: var(--section-space);
     border-top: 1px solid var(--color-hairline);
@@ -376,6 +395,8 @@ const DirectTag = asPageTitle ? 'h2' : 'h3';
 </style>
 
 <script>
+
+  import { onPageLoad } from '../lib/page';
   function setup() {
     const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
     if (!form || form.dataset.ready) return;
@@ -452,5 +473,5 @@ const DirectTag = asPageTitle ? 'h2' : 'h3';
       }
     });
   }
-  document.addEventListener('astro:page-load', setup);
+  onPageLoad(setup);
 </script>

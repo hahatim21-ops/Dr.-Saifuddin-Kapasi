@@ -18,7 +18,7 @@ const p = pages.students;
           p.sections.map((s, i) => (
             <li class="students-way" data-reveal style={`--i:${i}`}>
               <span class="students-way__num" aria-hidden="true">({String(i + 1).padStart(2, '0')})</span>
-              <h2 class="students-way__title">{s.title}</h2>
+              <h2 class="students-way__title" data-split="lines">{s.title}</h2>
               <p class="students-way__text">{s.text}</p>
             </li>
           ))
@@ -27,7 +27,7 @@ const p = pages.students;
     </section>
 
     <section class="page-section container-content" aria-labelledby="courses-title">
-      <h2 id="courses-title" class="page-section__title" data-reveal>{p.coursesTitle}</h2>
+      <h2 id="courses-title" class="page-section__title" data-split="lines">{p.coursesTitle}</h2>
       <dl class="students-courses">
         {
           p.courses.map((c, i) => (
@@ -42,7 +42,7 @@ const p = pages.students;
 
     <section class="page-section container-content" aria-labelledby="reach-title">
       <div class="students-reach" data-reveal>
-        <h2 id="reach-title" class="page-section__title">{p.reachTitle}</h2>
+        <h2 id="reach-title" class="page-section__title" data-split="lines">{p.reachTitle}</h2>
         <p class="mt-4 prose-measure">{p.reach}</p>
         <a href={p.ctaHref} class="btn btn-primary mt-8">
           {p.cta} <Icon name="arrow-right" size={18} class="btn-arrow" />

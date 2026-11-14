@@ -1,12 +1,13 @@
 ---
 /**
- * Home §7 — Speaking & training (the site's main goal).
- * - ≥768px: numbered rows (01)–(05) with hairlines that draw left → right; each
- *   row is a native <details> that opens to show format, duration and audience
- *   (keyboard and screen-reader friendly, no JavaScript). The opened content
- *   fades up 12px — opacity/transform only, the height is never animated.
- * - Phones: a swipe row of cards with scroll-snap (native horizontal scrolling of
- *   a list — the page itself never scrolls sideways).
+ * Home §8 — Speaking & training (the site's main goal). Motion v2: one list of
+ * five large programme cards for every width.
+ * - Desktop: the stage pins and vertical scroll moves the cards sideways, with
+ *   a "01 / 05" counter and a brass progress bar. Cards tilt slightly in the
+ *   scroll direction (skew ≤ 3°, from scroll velocity) and the track can be
+ *   dragged. Cards stay keyboard-focusable: focusing one scrolls it into view.
+ * - Phones/tablets (and JS off, reduced motion): a native scroll-snap swipe row
+ *   (the page itself never scrolls sideways), plus the counter.
  * Then a "Past audiences" line and the invitation button.
  */
 import { getCollection } from 'astro:content';
@@ -31,85 +32,49 @@ const programmes = (await getCollection('programmes'))
     ],
     href: `${t.enquireHref}&programme=${p.id}`,
   }));
+const total = String(programmes.length).padStart(2, '0');
 ---
 
 <section id="speaking" class="speaking" aria-labelledby="speaking-title">
-  <div class="container-content">
-    <SectionHeader eyebrow={t.eyebrow} id="speaking-title" title={t.title} intro={t.intro} />
+  <div class="speaking__stage" data-prog-stage>
+    <div class="container-content speaking__head">
+      <SectionHeader eyebrow={t.eyebrow} id="speaking-title" title={t.title} intro={t.intro} />
+    </div>
 
-    <!-- ≥768px: opening rows -->
-    <ol class="prog-rows" role="list">
-      {
-        programmes.map((p, i) => (
-          <li class="prog-row">
-            <span class="prog-row__rule" data-draw-x style={`--i:${i}`} aria-hidden="true" />
-            <details class="prog" open={i === 0} data-reveal style={`--i:${i}`}>
-              <summary class="prog__summary">
-                <span class="prog__num" aria-hidden="true">({p.num})</span>
-                <span class="prog__head">
-                  <h3 class="prog__title">{p.title}</h3>
-                  <span class="prog__lede">{p.summary}</span>
-                </span>
-                <span class="prog__toggle" aria-hidden="true">
-                  <Icon name="plus" size={22} />
-                </span>
-              </summary>
-              <div class="prog__body">
-                <dl class="prog__facts">
-                  {p.facts.map((f) => (
-                    <div>
-                      <dt>{f.label}</dt>
-                      <dd>
-                        {f.value}
-                        {f.placeholder && <span class="placeholder-tag ml-2">To confirm</span>}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-                <a href={p.href} class="prog__enquire link-grow-line">
-                  {t.enquire} <span aria-hidden="true">→</span>
-                </a>
-              </div>
-            </details>
-          </li>
-        ))
-      }
-      <li class="prog-row prog-row--end" aria-hidden="true">
-        <span class="prog-row__rule" data-draw-x style={`--i:${programmes.length}`} />
-      </li>
-    </ol>
-  </div>
-
-  <!-- Phones: swipe cards (full-bleed scroller, aligned to the content gutter) -->
-  <div class="prog-swipe">
-    <p class="prog-swipe__hint container-content">{t.swipeHint}</p>
-    <ul class="prog-swipe__track" role="list" aria-label={t.eyebrow} tabindex="0">
-      {
-        programmes.map((p) => (
-          <li class="prog-card">
-            <p class="prog-card__num" aria-hidden="true">
-              ({p.num})
-            </p>
-            <h3 class="prog-card__title">{p.title}</h3>
-            <p class="prog-card__lede">{p.summary}</p>
-            <dl class="prog-card__facts">
-              {p.facts.map((f) => (
-                <div>
-                  <dt>{f.label}</dt>
-                  <dd>
-                    {f.value}
-                    {f.placeholder && <span class="placeholder-tag ml-1">To confirm</span>}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <a href={p.href} class="prog-card__enquire">
-              {t.enquire} <span aria-hidden="true">→</span>
-            </a>
-          </li>
-        ))
-      }
-    </ul>
+    <div class="prog-wrap" data-prog-wrap>
+      <p class="prog-hint container-content">{t.swipeHint}</p>
+      <ul class="prog-track" role="list" aria-label={t.eyebrow} tabindex="0" data-prog-track data-cursor="Drag">
+        {
+          programmes.map((p) => (
+            <li class="prog-card" data-prog-card>
+              <p class="prog-card__num" aria-hidden="true">
+                {p.num}
+              </p>
+              <h3 class="prog-card__title">{p.title}</h3>
+              <p class="prog-card__lede">{p.summary}</p>
+              <dl class="prog-card__facts">
+                {p.facts.map((f) => (
+                  <div>
+                    <dt>{f.label}</dt>
+                    <dd>
+                      {f.value}
+                      {f.placeholder && <span class="placeholder-tag ml-1">To confirm</span>}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <a href={p.href} class="prog-card__enquire link-grow-line">
+                {t.enquire} <span aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="container-content prog-meter" aria-hidden="true">
+        <span class="prog-meter__count"><span data-prog-count>01</span> / {total}</span>
+        <span class="prog-meter__bar"><span class="prog-meter__fill" data-prog-fill></span></span>
+      </div>
+    </div>
   </div>
 
   <div class="container-content">
@@ -119,7 +84,7 @@ const programmes = (await getCollection('programmes'))
         {t.pastAudiences.map((a) => <span class="speaking__aud">{a}</span>)}
       </p>
       <div class="speaking__actions">
-        <a href={site.nav.cta.href} class="btn btn-primary">
+        <a href={site.nav.cta.href} class="btn btn-primary" data-magnetic>
           {t.cta} <Icon name="arrow-right" size={18} class="btn-arrow" />
         </a>
         <a href={t.allHref} class="btn btn-secondary">{t.allLink}</a>
@@ -132,171 +97,96 @@ const programmes = (await getCollection('programmes'))
   .speaking {
     padding-block: var(--section-space);
   }
-
-  /* ================= Rows (≥768px) ================= */
-  .prog-rows {
-    display: none;
-    margin: clamp(2.5rem, 5vw, 4rem) 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  @media (min-width: 768px) {
-    .prog-rows {
-      display: block;
-    }
-  }
-  .prog-row {
-    position: relative;
-  }
-  .prog-row__rule {
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 1px;
-    background: var(--color-hairline);
-  }
-  .prog-row--end {
-    height: 1px;
+  .speaking__stage {
+    background: var(--color-ivory);
   }
 
-  .prog__summary {
-    display: grid;
-    grid-template-columns: 4.5rem minmax(0, 1fr) 2.75rem;
-    align-items: start;
-    column-gap: 1.5rem;
-    padding-block: 2rem;
-    cursor: pointer;
-    list-style: none;
+  /* ---------- Track (native swipe row; pinned + translated on desktop) ---------- */
+  .prog-wrap {
+    margin-top: clamp(2rem, 4vw, 3.5rem);
   }
-  .prog__summary::-webkit-details-marker {
-    display: none;
-  }
-  .prog__summary:focus-visible {
-    outline-offset: 4px;
-  }
-  .prog__num {
-    padding-top: 0.6rem;
+  .prog-hint {
     font-size: var(--text-small);
     color: var(--color-stone);
-    font-variant-numeric: tabular-nums;
   }
-  .prog__head {
-    display: grid;
-    gap: 0.35rem;
-  }
-  .prog__title {
-    font-size: var(--text-h3);
-    line-height: 1.15;
-    transition: color var(--dur-tap) var(--ease);
-  }
-  .prog__lede {
-    max-width: 60ch;
-    color: var(--color-stone);
-  }
-  .prog__toggle {
-    display: grid;
-    place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border: 1px solid var(--color-hairline);
-    border-radius: 999px;
-    color: var(--color-green);
-    transition:
-      transform var(--dur-tap) var(--ease),
-      background-color var(--dur-tap) var(--ease),
-      color var(--dur-tap) var(--ease);
-  }
-  .prog[open] .prog__toggle {
-    transform: rotate(45deg);
-    background: var(--color-green);
-    color: var(--color-ivory);
-  }
-  .prog__summary:hover .prog__title {
-    color: var(--color-green);
-  }
-
-  .prog__body {
-    padding: 0 0 2.25rem calc(4.5rem + 1.5rem);
-  }
-  .prog[open] .prog__body {
-    animation: fade-up var(--dur-reveal) var(--ease) both;
-  }
-  .prog__facts {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1.5rem;
-    margin: 0;
-    padding: 1.25rem 0;
-    border-top: 1px solid var(--color-hairline);
-    max-width: 52rem;
-  }
-  .prog__facts dt,
-  .prog-card__facts dt {
-    font-size: var(--text-eyebrow);
-    font-weight: 600;
-    letter-spacing: var(--tracking-eyebrow);
-    text-transform: uppercase;
-    color: var(--color-stone);
-  }
-  .prog__facts dd,
-  .prog-card__facts dd {
-    margin: 0.35rem 0 0;
-  }
-  .prog__enquire {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    min-height: 2.75rem;
-    font-weight: 600;
-    color: var(--color-green);
-  }
-
-  /* ================= Swipe cards (phones) ================= */
-  .prog-swipe {
-    margin-top: 2.5rem;
-  }
-  @media (min-width: 768px) {
-    .prog-swipe {
+  @media (min-width: 1024px) {
+    .prog-hint {
       display: none;
     }
   }
-  .prog-swipe__hint {
-    font-size: var(--text-small);
-    color: var(--color-stone);
-  }
-  .prog-swipe__track {
+  .prog-track {
     display: flex;
-    gap: 1rem;
+    gap: clamp(1rem, 2vw, 1.75rem);
     margin: 1rem 0 0;
-    padding: 0.25rem var(--gutter) 1rem;
+    padding: 0.25rem max(var(--gutter), calc((100vw - var(--container-content)) / 2)) 1rem;
     list-style: none;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--gutter);
+    scroll-padding-inline: max(var(--gutter), calc((100vw - var(--container-content)) / 2));
     scrollbar-width: thin;
     scrollbar-color: var(--color-hairline) transparent;
   }
-  .prog-swipe__track:focus-visible {
+  .prog-track:focus-visible {
     outline-offset: -2px;
   }
+  /* Desktop, pinned: the page scroll drives the track, so it never scrolls itself. */
+  .prog-wrap.is-pinned {
+    overflow: clip;
+  }
+  .prog-wrap.is-pinned .prog-track {
+    overflow: visible;
+    scroll-snap-type: none;
+    width: max-content;
+    cursor: grab;
+    user-select: none;
+  }
+  .prog-wrap.is-pinned .prog-track.is-dragging {
+    cursor: grabbing;
+  }
+
   .prog-card {
     flex: 0 0 min(84%, 22rem);
     scroll-snap-align: start;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.85rem;
     padding: 1.5rem;
     border: 1px solid var(--color-hairline);
     border-radius: 8px;
-    background: var(--color-ivory);
+    background-color: var(--color-ivory);
+    background-image: var(--grain);
+    transform-origin: 50% 100%;
+  }
+  @media (min-width: 768px) {
+    .prog-card {
+      flex-basis: clamp(22rem, 44vw, 26rem);
+      padding: 2rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .prog-card {
+      flex-basis: clamp(24rem, 34vw, 32rem);
+      padding: clamp(1.75rem, 2.2vw, 2.5rem);
+    }
   }
   .prog-card__num {
-    font-size: var(--text-small);
-    color: var(--color-stone);
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(2.75rem, 1.8rem + 3vw, 4.5rem);
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--color-brass);
+    font-variant-numeric: lining-nums tabular-nums;
   }
   .prog-card__title {
     font-size: 1.75rem; /* 28px — serif minimum */
-    line-height: 1.15;
+    line-height: 1.12;
+  }
+  @media (min-width: 1024px) {
+    .prog-card__title {
+      font-size: var(--text-h3);
+    }
   }
   .prog-card__lede {
     color: var(--color-stone);
@@ -308,8 +198,28 @@ const programmes = (await getCollection('programmes'))
     padding-top: 1rem;
     border-top: 1px solid var(--color-hairline);
   }
+  @media (min-width: 1024px) {
+    .prog-card__facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem 1.25rem;
+    }
+    .prog-card__facts > div:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+  .prog-card__facts dt {
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+  .prog-card__facts dd {
+    margin: 0.35rem 0 0;
+  }
   .prog-card__enquire {
     margin-top: auto;
+    align-self: flex-start;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -319,7 +229,36 @@ const programmes = (await getCollection('programmes'))
     text-decoration: none;
   }
 
-  /* ================= Foot ================= */
+  /* ---------- Counter + progress bar ---------- */
+  .prog-meter {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 0.5rem;
+  }
+  .prog-meter__count {
+    font-size: var(--text-small);
+    font-weight: 600;
+    color: var(--color-stone);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+  }
+  .prog-meter__bar {
+    position: relative;
+    flex: 1;
+    max-width: 20rem;
+    height: 1px;
+    background: var(--color-hairline);
+  }
+  .prog-meter__fill {
+    position: absolute;
+    inset: 0;
+    background: var(--color-brass);
+    transform: scaleX(0.2);
+    transform-origin: left center;
+  }
+
+  /* ---------- Foot ---------- */
   .speaking__foot {
     display: grid;
     gap: 2rem;
@@ -355,3 +294,130 @@ const programmes = (await getCollection('programmes'))
     }
   }
 </style>
+
+<script>
+  import { gsap, registerScene, getLenis } from '../../lib/scroll';
+  import { GS } from '../../lib/motion';
+
+  registerScene('speaking', ({ desktop }) => {
+    const stage = document.querySelector<HTMLElement>('[data-prog-stage]');
+    const wrap = document.querySelector<HTMLElement>('[data-prog-wrap]');
+    const track = document.querySelector<HTMLElement>('[data-prog-track]');
+    const countEl = document.querySelector<HTMLElement>('[data-prog-count]');
+    const fill = document.querySelector<HTMLElement>('[data-prog-fill]');
+    if (!stage || !wrap || !track || !countEl || !fill) return;
+    const cards = [...track.querySelectorAll<HTMLElement>('[data-prog-card]')];
+    const n = cards.length;
+    const pad = (i: number) => String(i + 1).padStart(2, '0');
+    const meter = (progress: number) => {
+      countEl.textContent = pad(Math.min(n - 1, Math.round(progress * (n - 1))));
+      fill.style.transform = `scaleX(${Math.max(0.2, progress)})`;
+    };
+
+    /* ---------- Phones / tablets / reduced motion: native swipe + counter ---------- */
+    if (!desktop) {
+      const onScroll = () => {
+        const max = track.scrollWidth - track.clientWidth;
+        meter(max > 0 ? track.scrollLeft / max : 0);
+      };
+      track.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      return () => track.removeEventListener('scroll', onScroll);
+    }
+
+    /* ---------- Desktop: pinned horizontal track ---------- */
+    wrap.classList.add('is-pinned');
+    const distance = () => Math.max(0, track.scrollWidth - wrap.clientWidth);
+    const skewTo = gsap.quickTo(cards, 'skewX', { duration: 0.5, ease: 'power3' });
+    const settle = gsap.delayedCall(0.14, () => skewTo(0)).pause();
+
+    const tween = gsap.to(track, {
+      x: () => -distance(),
+      ease: 'none',
+      scrollTrigger: {
+        trigger: stage,
+        start: () => (stage.offsetHeight > window.innerHeight ? 'bottom bottom' : 'center center'),
+        end: () => '+=' + distance(),
+        pin: true,
+        scrub: GS.scrub,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          meter(self.progress);
+          // Lean into the direction of travel, never more than 3°.
+          skewTo(gsap.utils.clamp(-GS.skewMax, GS.skewMax, -self.getVelocity() / 450));
+          settle.restart(true);
+        },
+      },
+    });
+    const st = tween.scrollTrigger!;
+    const scrollToX = (x: number, immediate = false) => {
+      const d = distance();
+      const y = st.start + (d ? gsap.utils.clamp(0, d, x) / d : 0) * (st.end - st.start);
+      const lenis = getLenis();
+      if (lenis) lenis.scrollTo(y, { immediate });
+      else window.scrollTo({ top: y, behavior: immediate ? 'auto' : 'smooth' });
+    };
+
+    // Keyboard: focusing a card (or its link) brings it into view.
+    const onFocus = (e: FocusEvent) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>('[data-prog-card]');
+      if (!card) return;
+      const r = card.getBoundingClientRect();
+      const w = wrap.getBoundingClientRect();
+      if (r.left >= w.left && r.right <= w.right) return;
+      const current = -Number(gsap.getProperty(track, 'x'));
+      scrollToX(current + r.left - w.left - parseFloat(getComputedStyle(track).paddingLeft), true);
+    };
+
+    // Drag: pulls the track (by moving the page scroll); a drag never clicks.
+    let dragX: number | null = null;
+    let startX = 0;
+    let moved = false;
+    const down = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      dragX = e.clientX;
+      startX = -Number(gsap.getProperty(track, 'x'));
+      moved = false;
+    };
+    const move = (e: PointerEvent) => {
+      if (dragX === null) return;
+      const dx = e.clientX - dragX;
+      if (!moved && Math.abs(dx) > 6) {
+        moved = true;
+        track.classList.add('is-dragging');
+      }
+      if (moved) scrollToX(startX - dx * 1.4, true);
+    };
+    const up = () => {
+      dragX = null;
+      track.classList.remove('is-dragging');
+    };
+    const click = (e: MouseEvent) => {
+      if (moved) {
+        e.preventDefault();
+        e.stopPropagation();
+        moved = false;
+      }
+    };
+    const noDrag = (e: Event) => e.preventDefault();
+    track.addEventListener('focusin', onFocus);
+    track.addEventListener('pointerdown', down);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    track.addEventListener('click', click, true);
+    track.addEventListener('dragstart', noDrag);
+
+
+    return () => {
+      settle.kill();
+      wrap.classList.remove('is-pinned');
+      track.removeEventListener('focusin', onFocus);
+      track.removeEventListener('pointerdown', down);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      track.removeEventListener('click', click, true);
+      track.removeEventListener('dragstart', noDrag);
+      gsap.set(cards, { clearProps: 'transform' });
+    };
+  });
+</script>

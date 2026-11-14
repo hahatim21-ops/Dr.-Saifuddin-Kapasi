@@ -7,7 +7,10 @@ import Base from '../layouts/Base.astro';
 import Eyebrow from '../components/Eyebrow.astro';
 import InflectionLine from '../components/InflectionLine.astro';
 import Prism from '../components/Prism.astro';
-import TextReveal from '../islands/TextReveal.tsx';
+import InflectionEdge from '../components/InflectionEdge.astro';
+import { Image } from 'astro:assets';
+import photoA from '../assets/placeholders/gallery-kampala-masterclass.jpg';
+import photoB from '../assets/placeholders/gallery-kampala-convocation.jpg';
 
 const colours = [
   { name: 'Ivory paper', token: 'ivory', hex: '#F6F1E7', use: 'Page background (with 3% paper grain)', contrast: '—', dark: false },
@@ -32,20 +35,123 @@ const motion = [
 ---
 
 <Base title="Style test" noindex>
-  <main id="main" class="pb-24">
+  <main id="main" class="pb-24" data-motion-cursor>
+    <!-- =================== Motion v2 primitives =================== -->
+    <section class="mv2-intro container-content" aria-labelledby="mv2-title">
+      <p class="eyebrow">Motion v2 · primitives</p>
+      <div class="mv2-intro__row">
+        <h1 id="mv2-title" class="mv2-intro__title" data-split="chars" data-split-now data-split-delay="0.15">Saifuddin Kapasi</h1>
+        <span class="mv2-stop" data-prism-stop="a" data-prism-scale="0.55" data-prism-beam="0.25" data-prism-anchor="left" data-prism-dx="130" aria-hidden="true"></span>
+      </div>
+      <p class="mv2-note">
+        Character split (0.025s stagger, expo.out). The prism beside the name is the first of four waypoints on this page — scroll and
+        it travels. Desktop only; on phones it stays hidden here.
+      </p>
+    </section>
+
+    <section class="container-content mv2-block" aria-labelledby="mv2-split">
+      <p class="eyebrow">01 · Split reveal</p>
+      <h2 id="mv2-split" class="mt-4" data-split="lines">Lines rise out of their masks, eighty milliseconds apart, as the heading enters.</h2>
+      <p class="mt-6 prose-measure text-stone" data-split="lines">
+        Body copy can split by lines too. Screen readers still hear whole sentences because SplitText's aria option labels the
+        parent and hides the pieces. Resize the window: the lines re-split cleanly.
+      </p>
+    </section>
+
+    <section class="container-content mv2-block" aria-labelledby="mv2-clip">
+      <p class="eyebrow">02 · Clip reveal + parallax</p>
+      <h2 id="mv2-clip" class="mt-4" data-split="lines">Photographs wipe open; the image settles from 1.15 to 1.</h2>
+      <div class="mv2-photos">
+        <figure class="mv2-photo" data-cursor="View">
+          <div class="mv2-photo__frame" data-clip="up">
+            <Image src={photoA} alt="Placeholder photo: Growth Mindset Master Class, Kampala" widths={[480, 800]} sizes="(min-width: 768px) 45vw, 90vw" />
+          </div>
+          <figcaption class="mv2-cap">Wipe up · cursor shows “View”</figcaption>
+        </figure>
+        <figure class="mv2-photo mv2-photo--tall" data-cursor="View">
+          <div class="mv2-photo__frame mv2-photo__frame--clip" data-clip="left">
+            <div data-parallax="8" class="mv2-parallax">
+              <Image src={photoB} alt="Placeholder photo: Kampala convocation" widths={[480, 800]} sizes="(min-width: 768px) 35vw, 90vw" />
+            </div>
+          </div>
+          <figcaption class="mv2-cap">Wipe from the left · parallax ±8% (desktop)</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Green band with the inflection-shaped top edge; prism stop b behind the words -->
+    <InflectionEdge />
+    <section class="on-green mv2-band" aria-labelledby="mv2-edge">
+      <div class="container-content">
+        <p class="eyebrow">03 · Inflection edge + travelling prism</p>
+        <h2 id="mv2-edge" class="mv2-band__line" data-split="lines">
+          Institutions don't become enduring by chance. They are intentionally designed.
+        </h2>
+        <span class="mv2-stop mv2-stop--centre" data-prism-stop="b" data-prism-scale="1.7" data-prism-beam="1" aria-hidden="true"></span>
+        <p class="mv2-note mv2-note--on-green">
+          The band's top edge started flat and bent upward as it scrolled in. The prism is docked large behind this line with its beam at
+          full brightness.
+        </p>
+      </div>
+    </section>
+
+    <section class="container-content mv2-block" aria-labelledby="mv2-odo">
+      <p class="eyebrow">04 · Odometer</p>
+      <h2 id="mv2-odo" class="mt-4" data-split="lines">Digits roll into place once, and scale from 0.9 to 1.</h2>
+      <div class="mv2-odos">
+        <p class="mv2-odo"><span data-odometer>1995</span><span class="mv2-odo__label">first role</span></p>
+        <p class="mv2-odo"><span data-odometer>2026</span><span class="mv2-odo__label">Kampala</span></p>
+        <p class="mv2-odo"><span><span data-odometer>30</span>+</span><span class="mv2-odo__label">years</span></p>
+        <span class="mv2-stop" data-prism-stop="c" data-prism-scale="0.7" data-prism-rotate="24" data-prism-beam="0.4" data-prism-anchor="right" data-prism-dx="-80" aria-hidden="true"></span>
+      </div>
+    </section>
+
+    <section class="container-content mv2-block" aria-labelledby="mv2-mag">
+      <p class="eyebrow">05 · Magnetic buttons + cursor</p>
+      <h2 id="mv2-mag" class="mt-4" data-split="lines">Primary buttons lean towards the pointer, eight pixels at most.</h2>
+      <div class="mv2-buttons">
+        <a href="#mv2-mag" class="btn btn-primary" data-magnetic>Invite me to speak</a>
+        <button type="button" class="btn btn-secondary" data-magnetic>Explore the books</button>
+      </div>
+      <ul class="mv2-cards" role="list">
+        {
+          ['Read', 'View', 'Open', 'Drag'].map((label) => (
+            <li class="mv2-card" data-cursor={label}>
+              <span class="mv2-card__label">data-cursor="{label}"</span>
+              <span class="mv2-card__hint">Point here: the ring grows and says “{label}”.</span>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="mv2-form">
+        <label for="mv2-input" class="mv2-cap">Inputs keep the native cursor:</label>
+        <input id="mv2-input" class="mv2-input" type="text" placeholder="Type here" />
+      </div>
+    </section>
+
+    <InflectionEdge />
+    <section class="on-green mv2-band mv2-band--spectrum" aria-labelledby="mv2-spectrum">
+      <div class="container-content mv2-spectrum">
+        <div>
+          <p class="eyebrow">06 · Spectrum split</p>
+          <h2 id="mv2-spectrum" class="mv2-band__line mv2-band__line--sm" data-split="lines">At the Beyond Ideas cover, the beam splits into the full spectrum.</h2>
+        </div>
+        <span class="mv2-stop mv2-stop--box" data-prism-stop="d" data-prism-scale="1.15" data-prism-beam="1" data-prism-spectrum="1" aria-hidden="true"></span>
+      </div>
+    </section>
+
+    <div class="container-content mv2-block">
+      <p class="mv2-note">Below: the v1 reference (colours, type, tokens) kept for comparison.</p>
+    </div>
+
     <!-- Intro + hero-scale sample with the hero load sequence timing -->
-    <header class="container-content pt-28 sm:pt-36">
+    <header class="container-content pt-16">
       <div data-reveal="fade" data-reveal-now style="--delay:100ms">
         <Eyebrow>Stage 1 · Style test</Eyebrow>
       </div>
-      <TextReveal
-        client:load
-        as="h1"
-        trigger="load"
-        delay={0.1}
-        text="Saifuddin Kapasi is an architect of *enduring* institutions."
-        className="mt-6 max-w-[15ch] text-[length:var(--text-hero)] leading-[var(--text-hero--line-height)] font-semibold tracking-[-0.015em]"
-      />
+      <p class="mt-6 max-w-[15ch] font-serif text-[length:var(--text-hero)] leading-[var(--text-hero--line-height)] font-semibold tracking-[-0.015em]" data-split="lines">
+        Saifuddin Kapasi is an architect of <em class="accent">enduring</em> institutions.
+      </p>
       <div class="mt-8 max-w-[34rem] space-y-1 text-stone" data-reveal data-reveal-now style="--delay:400ms">
         <p><span class="font-semibold text-ink">Currently:</span> Director, Inflection Point · Visiting Faculty, SIMSREE and Burhani College.</p>
         <p><span class="font-semibold text-ink">Previously:</span> 17 years leading Credit &amp; Collections at Vodafone.</p>
@@ -151,7 +257,7 @@ const motion = [
     <!-- Heading reveal -->
     <section id="reveal" class="container-content mt-24" aria-labelledby="reveal-demo">
       <Eyebrow>Motion</Eyebrow>
-      <TextReveal client:visible id="reveal-demo" as="h2" text="Because businesses may grow. But institutions *endure.*" className="mt-4 max-w-[20ch]" />
+      <h2 id="reveal-demo" class="mt-4 max-w-[20ch]" data-split="lines">Because businesses may grow. But institutions <em class="accent">endure.</em></h2>
       <p class="mt-4 prose-measure text-stone">Section headings reveal word by word when scrolled into view: blur 8px → 0, up 12px, 80ms apart, 600ms each. Plays once — scrolling back up does not replay it.</p>
 
       <h3 class="mt-16">CSS reveals &amp; hairlines</h3>
@@ -229,3 +335,189 @@ const motion = [
     </section>
   </main>
 </Base>
+
+<style>
+  .mv2-intro {
+    padding-top: calc(clamp(7rem, 5rem + 6vw, 10rem) + env(safe-area-inset-top));
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+  }
+  .mv2-intro__row {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 1rem;
+  }
+  .mv2-intro__title {
+    font-size: clamp(4rem, 1.8rem + 9vw, 12rem);
+    font-weight: 700;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+  }
+  .mv2-stop {
+    display: block;
+    width: 1px;
+    height: 1px;
+    flex: none;
+  }
+  .mv2-stop--centre {
+    margin-inline: auto;
+  }
+  .mv2-stop--box {
+    width: 100%;
+    height: 12rem;
+  }
+  .mv2-note {
+    margin-top: 1.25rem;
+    max-width: var(--container-prose);
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .mv2-note--on-green {
+    color: var(--color-brass-light);
+  }
+  .mv2-block {
+    padding-block: clamp(4rem, 3rem + 4vw, 7rem);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .mv2-photos {
+    display: grid;
+    gap: 2rem;
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 768px) {
+    .mv2-photos {
+      grid-template-columns: 1.25fr 1fr;
+      align-items: start;
+    }
+  }
+  .mv2-photo {
+    margin: 0;
+  }
+  .mv2-photo__frame {
+    overflow: hidden;
+    border-radius: 8px;
+  }
+  .mv2-photo__frame :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .mv2-photo--tall .mv2-photo__frame {
+    aspect-ratio: 4 / 5;
+  }
+  .mv2-parallax {
+    height: 116%;
+    margin-top: -8%;
+  }
+  .mv2-parallax :global(img) {
+    height: 100%;
+    object-fit: cover;
+  }
+  .mv2-cap {
+    display: block;
+    margin-top: 0.75rem;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .mv2-band {
+    background: var(--color-green);
+    color: var(--color-ivory);
+    padding-block: clamp(5rem, 4rem + 6vw, 10rem);
+  }
+  .mv2-band__line {
+    margin-top: 1.5rem;
+    max-width: 18ch;
+    font-size: clamp(2.5rem, 1.5rem + 4vw, 5.5rem);
+    line-height: 1.05;
+    color: var(--color-ivory);
+  }
+  .mv2-band__line--sm {
+    font-size: var(--text-h2);
+  }
+  .mv2-spectrum {
+    display: grid;
+    gap: 2rem;
+    align-items: center;
+  }
+  @media (min-width: 768px) {
+    .mv2-spectrum {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .mv2-odos {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 2rem 4rem;
+    margin-top: 2.5rem;
+  }
+  .mv2-odo {
+    display: grid;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-numeral);
+    line-height: 1;
+    color: var(--color-brass);
+  }
+  .mv2-odo__label {
+    margin-top: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: var(--text-small);
+    font-weight: 400;
+    color: var(--color-stone);
+  }
+  .mv2-odos .mv2-stop {
+    position: absolute;
+    right: 0;
+    top: 50%;
+  }
+  .mv2-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .mv2-cards {
+    display: grid;
+    gap: 1rem;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 768px) {
+    .mv2-cards {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .mv2-card {
+    display: grid;
+    gap: 0.5rem;
+    min-height: 9rem;
+    padding: 1.25rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+  }
+  .mv2-card__label {
+    font-weight: 600;
+  }
+  .mv2-card__hint {
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .mv2-form {
+    margin-top: 2rem;
+    max-width: 24rem;
+  }
+  .mv2-input {
+    display: block;
+    width: 100%;
+    min-height: 3rem;
+    margin-top: 0.25rem;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid rgb(28 31 30 / 0.28);
+    border-radius: 8px;
+    background: #fffdf8;
+    font: inherit;
+  }
+</style>

@@ -69,7 +69,7 @@ const jsonLd = articleSchema(article, new URL(Astro.url.pathname, Astro.site).hr
     {
       others.length > 0 && (
         <section class="page-section container-content art__more" aria-labelledby="more-title">
-          <h2 id="more-title" class="page-section__title" data-reveal>{p.readNext}</h2>
+          <h2 id="more-title" class="page-section__title" data-split="lines">{p.readNext}</h2>
           <InsightsList articles={others} />
         </section>
       )

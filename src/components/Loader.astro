@@ -1,0 +1,201 @@
+---
+/**
+ * Loader (home page only, first visit per session, never with reduced motion).
+ * Full-screen institution green; brass Cormorant numerals count 000 → 100 at
+ * bottom-left; the inflection line draws across the bottom as the progress bar;
+ * "Pioneering possibilities." in light brass. At 100 the panel lifts away like a
+ * curtain (clip-path from the bottom) and the hero intro plays.
+ *
+ * - Hidden by default: an inline script shows it before first paint only when it
+ *   should play, so with JS off it never appears and the hero is always there.
+ * - Failsafe: if the engine hasn't taken over within 4s, the inline script
+ *   removes it, so the page can never be stuck behind it.
+ * - Progress is real (web fonts + the hero image), capped so the whole thing
+ *   finishes within 1.8s. A click or any key skips it. No ENTER gate.
+ */
+import site from '../data/site.json';
+---
+
+<div class="loader" data-loader aria-hidden="true">
+  <div class="loader__bottom">
+    <p class="loader__count" data-loader-count>000</p>
+    <p class="loader__caption">{site.loaderCaption}</p>
+  </div>
+  <svg class="loader__line" viewBox="0 0 1200 120" preserveAspectRatio="none" focusable="false">
+    <path class="loader__track" d="M0 110 H760 C960 110 1060 92 1200 8"></path>
+    <path class="loader__progress" data-loader-line d="M0 110 H760 C960 110 1060 92 1200 8"></path>
+  </svg>
+</div>
+
+<script is:inline>
+  (function () {
+    var d = document.documentElement;
+    var el = document.querySelector('[data-loader]');
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var seen = false;
+    try {
+      seen = sessionStorage.getItem('sk:loader') === '1';
+    } catch (e) {}
+    if (!el || reduce || seen) return;
+    el.classList.add('is-on');
+    d.dataset.loaderState = 'on';
+    setTimeout(function () {
+      // Failsafe: the engine marks data-loader-state="running" when it takes over.
+      if (d.dataset.loaderState === 'on') {
+        el.classList.remove('is-on');
+        delete d.dataset.loaderState;
+      }
+    }, 4000);
+  })();
+</script>
+
+<style>
+  .loader {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: none;
+    background-color: var(--color-green);
+    background-image: var(--grain);
+    color: var(--color-ivory);
+  }
+  .loader.is-on {
+    display: block;
+  }
+  :global(html[data-loader-state]) {
+    overflow: hidden;
+  }
+  .loader__bottom {
+    position: absolute;
+    left: max(var(--gutter), env(safe-area-inset-left));
+    bottom: calc(clamp(5rem, 10vw, 8rem) + env(safe-area-inset-bottom));
+  }
+  .loader__count {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(5rem, 3rem + 10vw, 12rem);
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    color: var(--color-brass);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .loader__caption {
+    margin-top: 1rem;
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-brass-light);
+  }
+  .loader__line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    width: 100%;
+    height: clamp(48px, 8vw, 110px);
+    overflow: visible;
+  }
+  .loader__track,
+  .loader__progress {
+    fill: none;
+    stroke-linecap: round;
+  }
+  .loader__track {
+    stroke: rgb(212 180 131 / 0.18);
+    stroke-width: 1;
+  }
+  .loader__progress {
+    stroke: var(--color-brass);
+    stroke-width: 2;
+  }
+</style>
+
+<script>
+  import { gsap, getLenis, registerScene } from '../lib/scroll';
+
+  registerScene('loader', ({ reduce }) => {
+    const root = document.documentElement;
+    const el = document.querySelector<HTMLElement>('[data-loader]');
+    if (!el || root.dataset.loaderState !== 'on') return;
+    root.dataset.loaderState = 'running';
+    const count = el.querySelector<HTMLElement>('[data-loader-count]')!;
+    const line = el.querySelector<SVGPathElement>('[data-loader-line]')!;
+    const lenis = getLenis();
+    lenis?.stop();
+
+    const finish = () => {
+      try {
+        sessionStorage.setItem('sk:loader', '1');
+      } catch {}
+      el.classList.remove('is-on');
+      delete root.dataset.loaderState;
+      gsap.set(el, { clearProps: 'clipPath' });
+      lenis?.start();
+      document.dispatchEvent(new CustomEvent('loader:done'));
+    };
+
+    if (reduce) return finish();
+
+    const state = { v: 0 };
+    const render = () => {
+      count.textContent = String(Math.round(state.v)).padStart(3, '0');
+      gsap.set(line, { drawSVG: `0% ${state.v}%` });
+    };
+    render();
+
+    // Timed against the page's own clock (performance.now() starts at
+    // navigation), so the whole loader — however late this script starts —
+    // is finished by ~1.75s: the count ends by COUNT_END, then a 0.6s lift.
+    const LIFT = 0.6;
+    const COUNT_END = 1.75 - LIFT;
+    const now = () => performance.now() / 1000;
+    let target = 0;
+    let lifting = false;
+    let tween: gsap.core.Tween | null = null;
+
+    const lift = (fast = false) => {
+      if (lifting) return;
+      lifting = true;
+      tween?.kill();
+      gsap
+        .timeline({ onComplete: finish })
+        .to(state, { v: 100, duration: fast ? 0.12 : 0.18, ease: 'power2.out', onUpdate: render })
+        .to(el, { clipPath: 'inset(0% 0% 100% 0%)', duration: fast ? 0.45 : LIFT, ease: 'power4.inOut' }, '>-0.05');
+    };
+
+    const push = (to: number) => {
+      target = Math.max(target, to);
+      // Use the time left before COUNT_END so it reads as a count, not a flash.
+      const duration = Math.max(0.2, Math.min(0.7, COUNT_END - now()));
+      tween?.kill();
+      tween = gsap.to(state, {
+        v: target,
+        duration,
+        ease: 'power2.out',
+        onUpdate: render,
+        onComplete: () => target >= 100 && lift(),
+      });
+    };
+
+    // Real progress: fonts are half, the hero image the other half.
+    const heroImg = document.querySelector<HTMLImageElement>('[data-hero] img');
+    const imgReady = heroImg && !heroImg.complete ? new Promise((r) => heroImg.addEventListener('load', r, { once: true })) : Promise.resolve();
+    push(12);
+    document.fonts?.ready.then(() => push(target + 44));
+    imgReady.then(() => push(target + 44));
+    Promise.all([document.fonts?.ready, imgReady]).then(() => push(100));
+    // Hard cap: lift at COUNT_END whatever happens (total ≤ 1.8s).
+    const cap = gsap.delayedCall(Math.max(0.2, COUNT_END - now()), () => lift());
+
+    const skip = () => lift(true);
+    window.addEventListener('pointerdown', skip, { once: true });
+    window.addEventListener('keydown', skip, { once: true });
+
+    return () => {
+      cap.kill();
+      window.removeEventListener('pointerdown', skip);
+      window.removeEventListener('keydown', skip);
+    };
+  });
+</script>

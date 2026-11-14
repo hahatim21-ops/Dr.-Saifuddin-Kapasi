@@ -1,11 +1,13 @@
 ---
 /**
- * SVG framework diagram that draws stage by stage (CSS only):
+ * SVG framework diagram (decorative, aria-hidden: the stage list beside it
+ * carries the words).
  *   shape="cycle" — four nodes on a circle joined by clockwise arcs (Beyond Ideas).
  *   shape="rise"  — four nodes along the inflection line, flat then rising.
- * Stage i: node fades in at i × 350ms; the connector to the next stage draws
- * over 450ms right after. Decorative (aria-hidden): the stage list beside it
- * carries the words. Nodes get .fw-node-{i} so the list can highlight them.
+ * The HTML ships the finished drawing (JS off / reduced motion). The
+ * "frameworks" scene draws it stage by stage with DrawSVG: pinned and scrubbed
+ * on desktop, once on entry elsewhere. Hooks: [data-fw-node="i"] (also
+ * .fw-node-{i} for list highlighting), [data-fw-connector="i"], [data-fw-center].
  */
 interface Props {
   shape: 'cycle' | 'rise';
@@ -15,8 +17,6 @@ interface Props {
 }
 const { shape, stages, center, class: className } = Astro.props;
 
-const STEP = 350; // ms between stages
-const DRAW = 450; // ms per connector
 const f = (n: number) => Math.round(n * 10) / 10;
 
 type Node = { x: number; y: number; lx: number; ly: number; anchor: 'start' | 'middle' | 'end' };
@@ -90,16 +90,16 @@ if (shape === 'cycle') {
   <!-- connectors draw first, so nodes sit on top of them -->
   {
     connectors.map((c, i) => (
-      <g data-draw-path style={`--draw-delay:${i * STEP + 150}ms;--draw-dur:${DRAW}ms`}>
-        <path d={c.d} pathLength="1" class="fw-connector" vector-effect="non-scaling-stroke" />
-        {c.arrow && <path d={c.arrow} pathLength="1" class="fw-arrow" vector-effect="non-scaling-stroke" />}
+      <g data-fw-connector={i}>
+        <path d={c.d} class="fw-connector" />
+        {c.arrow && <path d={c.arrow} class="fw-arrow" />}
       </g>
     ))
   }
 
   {
     shape === 'cycle' && center && (
-      <text x="200" y="196" text-anchor="middle" class="fw-center" data-reveal="fade" style={`--delay:${4 * STEP}ms`}>
+      <text x="200" y="196" text-anchor="middle" class="fw-center" data-fw-center>
         {/* Two balanced lines so it clears the side nodes. */}
         {(() => {
           const words = center.split(' ');
@@ -116,7 +116,7 @@ if (shape === 'cycle') {
 
   {
     nodes.map((n, i) => (
-      <g class={`fw-node fw-node-${i}`} data-reveal="fade" style={`--delay:${i * STEP}ms`}>
+      <g class={`fw-node fw-node-${i}`} data-fw-node={i}>
         <circle cx={n.x} cy={n.y} r={nodeR} class="fw-node__dot" />
         <text x={n.x} y={n.y + 6} text-anchor="middle" class="fw-node__num">
           {String(i + 1).padStart(2, '0')}
@@ -145,6 +145,9 @@ if (shape === 'cycle') {
     stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+  .fw-diagram--rise .fw-connector {
+    stroke-width: 2;
   }
   .fw-node__dot {
     fill: var(--color-ivory);

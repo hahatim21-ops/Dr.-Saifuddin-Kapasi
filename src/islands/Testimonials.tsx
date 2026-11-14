@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
-import { TESTIMONIAL_INTERVAL } from '../lib/motion';
+import gsap from 'gsap';
+import { SplitText } from 'gsap/SplitText';
+import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
+
+// Same GSAP instance as the engine (src/lib/scroll.ts); registering twice is a no-op.
+gsap.registerPlugin(SplitText, DrawSVGPlugin);
+import { GS, TESTIMONIAL_INTERVAL } from '../lib/motion';
 
 export type Quote = {
   id: string;
@@ -17,6 +23,10 @@ interface Props {
 
 /**
  * One large centred quote at a time, crossfading (700ms, opacity only) every 8s.
+ * Motion v2: each new quote rises line by line out of masks (GSAP SplitText),
+ * a big brass quote mark draws itself, and a thin ring around the pause button
+ * shows the 8s timer (the ring's CSS animation *is* the timer, so pausing
+ * freezes both together).
  * The only looping motion on the site, so it is careful:
  * - pauses on hover and on keyboard focus anywhere inside, and has a visible
  *   pause/play button (WCAG 2.2.2);
@@ -55,13 +65,38 @@ export default function Testimonials({ quotes, label, placeholderLabel }: Props)
 
   const rotating = !paused && !hovering && !focused && visible && !reduce && n > 1;
 
+  // Seen once: the first reveal plays when the carousel first comes into view.
+  const [seen, setSeen] = useState(false);
   useEffect(() => {
-    if (!rotating) return;
-    const t = window.setTimeout(() => {
-      if (document.visibilityState === 'visible') go(index + 1);
-    }, TESTIMONIAL_INTERVAL);
-    return () => clearTimeout(t);
-  }, [rotating, index, go]);
+    if (visible) setSeen(true);
+  }, [visible]);
+
+  // Each new quote: lines rise out of masks; the quote mark draws itself.
+  const stage = useRef<HTMLDivElement>(null);
+  const mark = useRef<SVGSVGElement>(null);
+  useEffect(() => {
+    if (!seen || reduce) return;
+    const p = stage.current?.querySelectorAll<HTMLElement>('.tq__quote p')[index];
+    const paths = mark.current?.querySelectorAll('path');
+    const tl = gsap.timeline();
+    if (paths?.length) {
+      tl.fromTo(paths, { drawSVG: '0%', fillOpacity: 0 }, { drawSVG: '100%', duration: 0.9, ease: 'power2.inOut', stagger: 0.12 }, 0).to(
+        paths,
+        { fillOpacity: 1, duration: 0.5, ease: 'power1.out' },
+        0.7
+      );
+    }
+    let split: SplitText | null = null;
+    if (p) {
+      split = SplitText.create(p, { type: 'lines', mask: 'lines', aria: 'none', linesClass: 'split-line' }); // temporary (reverted after ~1s); lines keep whole words
+      tl.from(split.lines, { yPercent: 110, duration: GS.dur.reveal, ease: GS.ease.reveal, stagger: GS.stagger.lines }, 0.1);
+      tl.add(() => split?.revert());
+    }
+    return () => {
+      tl.kill();
+      split?.revert();
+    };
+  }, [index, seen, reduce]);
 
   const onPointerDown = (e: PointerEvent) => {
     if (e.pointerType === 'touch') swipeX.current = e.clientX;
@@ -86,7 +121,12 @@ export default function Testimonials({ quotes, label, placeholderLabel }: Props)
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setFocused(false);
       }}
     >
+      <svg ref={mark} className="tq__mark" viewBox="0 0 92 64" aria-hidden="true" focusable="false">
+        <path d="M30 6 C16 13 7 25 7 40 C7 51 13 58 22 58 C30 58 36 52 36 44 C36 36 30 31 23 31 C20 31 18 32 17 33 C18 24 24 16 33 11 Z" />
+        <path d="M76 6 C62 13 53 25 53 40 C53 51 59 58 68 58 C76 58 82 52 82 44 C82 36 76 31 69 31 C66 31 64 32 63 33 C64 24 70 16 79 11 Z" />
+      </svg>
       <div
+        ref={stage}
         className="tq__stage"
         aria-live={rotating ? 'off' : 'polite'}
         onPointerDown={onPointerDown}
@@ -105,9 +145,6 @@ export default function Testimonials({ quotes, label, placeholderLabel }: Props)
               aria-hidden={!active}
               style={reduce ? { transition: 'none' } : undefined}
             >
-              <span className="tq__mark" aria-hidden="true">
-                “
-              </span>
               <blockquote className="tq__quote">
                 <p>{q.quote}</p>
               </blockquote>
@@ -155,6 +192,18 @@ export default function Testimonials({ quotes, label, placeholderLabel }: Props)
               aria-label={paused ? 'Play testimonials' : 'Pause testimonials'}
               aria-pressed={paused}
             >
+              {/* The 8s timer: when the ring completes, the next quote shows. */}
+              <svg className="tq__ring" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                <circle
+                  key={index}
+                  cx="24"
+                  cy="24"
+                  r="22.5"
+                  pathLength={1}
+                  style={{ animationDuration: `${TESTIMONIAL_INTERVAL}ms`, animationPlayState: rotating ? 'running' : 'paused' }}
+                  onAnimationEnd={() => go(index + 1)}
+                />
+              </svg>
               {paused ? (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M8 5.5v13l10-6.5z" />

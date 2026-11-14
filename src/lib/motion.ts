@@ -1,5 +1,24 @@
 /**
- * Motion tokens (BRIEF §5b) — the single source for React islands.
+ * Motion v2 tokens for GSAP (BRIEF §5b "Motion v2"). Mirrored as CSS custom
+ * properties in src/styles/global.css (--ease-expo, --dur-reveal-v2, …).
+ * - UI ease "inflect" = cubic-bezier(0.22,1,0.36,1) (registered with CustomEase)
+ * - Reveal eases: expo.out (default) and power4.out (clip wipes, odometers)
+ * - Reveals 0.9–1.2s · char stagger 0.025s · line stagger 0.08s · scrub 0.6–1
+ */
+export const GS = {
+  ease: { ui: 'inflect', reveal: 'expo.out', strong: 'power4.out' },
+  dur: { ui: 0.18, reveal: 1.0, revealLong: 1.2, chars: 0.9, count: 1.2, curtain: 0.8, loaderMax: 1.8 },
+  stagger: { chars: 0.025, words: 0.04, lines: 0.08, frames: 0.08 },
+  /** Scrub smoothing in seconds (0.6–1). */
+  scrub: 0.8,
+  /** Magnetic pull, px. */
+  magnetic: 8,
+  /** Velocity skew cap, degrees. */
+  skewMax: 3,
+} as const;
+
+/**
+ * Motion v1 tokens (Motion/React islands that are driven by interaction).
  * Mirrors the CSS custom properties in src/styles/global.css.
  * Rules: one easing; 150–200ms taps, 500–700ms reveals, ≤1.2s hero line/count-ups;
  * move 12–24px; scale 0.98–1.04; blur ≤8px; tilt ≤6°; stagger 60–80ms; play once.

@@ -1,16 +1,23 @@
 ---
 /**
- * Home §5 — Books, like a quiet author site. Per book: a large 3D cover (Book3D
- * island: rises with scroll, tilts under the pointer on desktop), a "New
- * release" pill, a two-tone serif title, a two-line pitch, one quote, buy
- * links and the bulk-order line. Then a green band with a short excerpt, where
- * the prism's spectrum fades in. Phones: cover above text; ≥768px: side by
- * side, alternating.
+ * Home §6 — Books (Motion v2). A green band with the inflection-shaped top edge.
+ * - A giant "Books" word drifts horizontally behind the covers (scrubbed).
+ * - Covers rise and rotate in from 12° to 0 (scrubbed); pointer tilt on desktop
+ *   (BookCover.astro).
+ * - Desktop: the travelling prism docks beside the Beyond Ideas cover and splits
+ *   its beam into the full spectrum across the band, then fades out by the next
+ *   book. Phones/tablets: a still prism sits beside the excerpt instead.
+ * - The excerpt reveals line by line.
+ * Per book: "New release" pill, two-tone serif title, pitch, one quote, buy
+ * links and the bulk-order line. Phones: cover above text; ≥768px: side by
+ * side, alternating (Beyond Ideas has its cover on the right, so the spectrum
+ * fans toward it).
  */
 import { getCollection } from 'astro:content';
 import { getImage } from 'astro:assets';
 import home from '../../data/home.json';
-import Book3D from '../../islands/Book3D.tsx';
+import BookCover from '../BookCover.astro';
+import InflectionEdge from '../InflectionEdge.astro';
 import Icon from '../Icon.astro';
 import Prism from '../Prism.astro';
 import SectionHeader from '../SectionHeader.astro';
@@ -46,116 +53,182 @@ const excerptBook = books.find((b) => b.data.excerpt);
 const isLive = (url: string) => url && url !== '#';
 ---
 
-<section id="books" class="books" aria-labelledby="books-title">
-  <div class="container-content">
-    <SectionHeader eyebrow={home.books.eyebrow} id="books-title" title={home.books.title} intro={home.books.intro} />
+<div class="books-sheet">
+  <InflectionEdge />
+  <section id="books" class="books on-green" aria-labelledby="books-title" data-section={home.books.eyebrow}>
+    <span class="books__word" aria-hidden="true" data-books-word>{home.books.eyebrow}</span>
+    <!-- Prism waypoint: still hidden as the band arrives, then it fades in beside Beyond Ideas. -->
+    <span class="books__in" data-prism-stop="books-in" data-prism-opacity="0" data-prism-scale="0.6" data-prism-beam="0" data-prism-anchor="right" data-prism-dx="-320" aria-hidden="true"></span>
+    <div class="container-content books__inner">
+      <SectionHeader eyebrow={home.books.eyebrow} id="books-title" title={home.books.title} intro={home.books.intro} />
 
-    <div class="books__list">
-      {
-        items.map(({ book, cover }, i) => {
-          const d = book.data;
-          const live = d.buyLinks.filter((l) => isLive(l.url));
-          const pending = d.buyLinks.filter((l) => !isLive(l.url));
-          return (
-            <article class:list={['book', { 'book--flip': i % 2 === 1 }]} aria-labelledby={`book-${book.id}`}>
-              <div class="book__cover">
-                {cover && (
-                  <Book3D
-                    client:visible={{ rootMargin: '300px' }}
-                    {...cover}
-                    alt={d.coverAlt}
-                    sizes={COVER_SIZES}
-                  />
-                )}
-              </div>
-
-              <div class="book__text">
-                {d.status === 'new-release' && (
-                  <p data-reveal="fade">
-                    <span class="pill">{home.books.newRelease}</span>
-                  </p>
-                )}
-                <h3 id={`book-${book.id}`} class="book__title" data-reveal>
-                  {d.title} <span class="book__accent">{d.titleAccent}</span>
-                </h3>
-                <p class="book__subtitle" data-reveal style="--i:1">
-                  {d.subtitle}
-                </p>
-                <p class="book__pitch" data-reveal style="--i:2">
-                  {d.pitch}
-                </p>
-
-                {d.quote && (
-                  <figure class="book__quote" data-reveal style="--i:3">
-                    <blockquote>
-                      <p>{d.quote.text}</p>
-                    </blockquote>
-                    <figcaption>
-                      — {d.quote.author}
-                      {d.quote.role && <span>, {d.quote.role}</span>}
-                      {d.quote.placeholder && <span class="placeholder-tag ml-2">Placeholder</span>}
-                    </figcaption>
-                  </figure>
-                )}
-
-                <div class="book__actions" data-reveal style="--i:4">
-                  {live.map((l) => (
-                    <a href={l.url} class="btn btn-primary" rel="noopener" target="_blank">
-                      Buy on {l.label}
-                      <Icon name="arrow-right" size={18} class="btn-arrow" />
-                    </a>
-                  ))}
-                  <a href={`/books/${book.id}`} class="btn btn-secondary">
-                    {home.books.readMore}
-                  </a>
+      <div class="books__list">
+        {
+          items.map(({ book, cover }, i) => {
+            const d = book.data;
+            const live = d.buyLinks.filter((l) => isLive(l.url));
+            const pending = d.buyLinks.filter((l) => !isLive(l.url));
+            return (
+              <article class:list={['book', { 'book--flip': i % 2 === 0 }]} aria-labelledby={`book-${book.id}`}>
+                <div class="book__cover">
+                  {i === 0 && (
+                    <span
+                      class="book__stop"
+                      data-prism-stop="books"
+                      data-prism-scale="0.95"
+                      data-prism-beam="0.85"
+                      data-prism-spectrum="1"
+                      data-prism-anchor="left"
+                      data-prism-dx="-120"
+                      data-prism-hold="45"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {i === 1 && (
+                    <span
+                      class="book__stop"
+                      data-prism-stop="books-out"
+                      data-prism-opacity="0"
+                      data-prism-scale="0.6"
+                      data-prism-beam="0"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {cover && <BookCover {...cover} alt={d.coverAlt} sizes={COVER_SIZES} />}
                 </div>
-                {pending.length > 0 && (
-                  <p class="book__pending" data-reveal style="--i:4">
-                    <span class="placeholder-tag">{pending.map((l) => l.label).join(', ')} link to come</span>
-                  </p>
-                )}
-                <p class="book__bulk" data-reveal style="--i:5">
-                  <a href={home.books.bulkHref} class="link-grow-line">
-                    {home.books.bulk}
-                  </a>
-                </p>
-              </div>
-            </article>
-          );
-        })
-      }
-    </div>
-  </div>
 
-  {
-    excerptBook && (
-      <div class="on-green excerpt">
-        <div class="container-content excerpt__inner">
-          <div class="excerpt__prism" data-reveal="fade">
-            <Prism tone="dark" />
-          </div>
-          <figure class="excerpt__body">
-            <div data-reveal="fade">
-              <Eyebrow>{home.books.excerptEyebrow}</Eyebrow>
-            </div>
-            <blockquote class="excerpt__text" data-reveal style="--i:1">
-              <p>{excerptBook.data.excerpt}</p>
-            </blockquote>
-            <figcaption class="excerpt__source" data-reveal style="--i:2">
-              {excerptBook.data.title} {excerptBook.data.titleAccent}
-              {excerptBook.data.placeholder && <span class="placeholder-tag ml-2">Placeholder excerpt</span>}
-            </figcaption>
-          </figure>
-        </div>
+                <div class="book__text">
+                  {d.status === 'new-release' && (
+                    <p data-reveal="fade">
+                      <span class="pill">{home.books.newRelease}</span>
+                    </p>
+                  )}
+                  <h3 id={`book-${book.id}`} class="book__title" data-split="lines">
+                    {d.title} <span class="book__accent">{d.titleAccent}</span>
+                  </h3>
+                  <p class="book__subtitle" data-reveal style="--i:1">
+                    {d.subtitle}
+                  </p>
+                  <p class="book__pitch" data-reveal style="--i:2">
+                    {d.pitch}
+                  </p>
+
+                  {d.quote && (
+                    <figure class="book__quote" data-reveal style="--i:3">
+                      <blockquote>
+                        <p>{d.quote.text}</p>
+                      </blockquote>
+                      <figcaption>
+                        — {d.quote.author}
+                        {d.quote.role && <span>, {d.quote.role}</span>}
+                        {d.quote.placeholder && <span class="placeholder-tag ml-2">Placeholder</span>}
+                      </figcaption>
+                    </figure>
+                  )}
+
+                  <div class="book__actions" data-reveal style="--i:4">
+                    {live.map((l) => (
+                      <a href={l.url} class="btn btn-primary" rel="noopener" target="_blank" data-magnetic>
+                        Buy on {l.label}
+                        <Icon name="arrow-right" size={18} class="btn-arrow" />
+                      </a>
+                    ))}
+                    <a href={`/books/${book.id}`} class="btn btn-secondary">
+                      {home.books.readMore}
+                    </a>
+                  </div>
+                  {pending.length > 0 && (
+                    <p class="book__pending" data-reveal style="--i:4">
+                      <span class="placeholder-tag">{pending.map((l) => l.label).join(', ')} link to come</span>
+                    </p>
+                  )}
+                  <p class="book__bulk" data-reveal style="--i:5">
+                    <a href={home.books.bulkHref} class="link-grow-line">
+                      {home.books.bulk}
+                    </a>
+                  </p>
+                </div>
+              </article>
+            );
+          })
+        }
       </div>
-    )
-  }
-</section>
+    </div>
+
+    {
+      excerptBook && (
+        <div class="excerpt">
+          <div class="container-content excerpt__inner">
+            <div class="excerpt__prism" data-reveal="fade" data-prism-static>
+              <Prism tone="dark" />
+            </div>
+            <figure class="excerpt__body">
+              <div data-reveal="fade">
+                <Eyebrow>{home.books.excerptEyebrow}</Eyebrow>
+              </div>
+              <blockquote class="excerpt__text">
+                <p data-split="lines">{excerptBook.data.excerpt}</p>
+              </blockquote>
+              <figcaption class="excerpt__source" data-reveal style="--i:2">
+                {excerptBook.data.title} {excerptBook.data.titleAccent}
+                {excerptBook.data.placeholder && <span class="placeholder-tag ml-2">Placeholder excerpt</span>}
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      )
+    }
+  </section>
+</div>
 
 <style>
   .books {
-    padding-top: var(--section-space);
+    position: relative;
+    background-color: var(--color-green);
+    color: var(--color-ivory);
+    padding-top: clamp(2.5rem, 1.5rem + 4vw, 5rem);
   }
+  .books__inner,
+  .excerpt {
+    position: relative;
+    z-index: 6; /* above the travelling prism (z 4): it glows behind the covers */
+  }
+
+  /* Giant word drifting behind the covers (decorative). */
+  .books__word {
+    position: absolute;
+    top: clamp(10rem, 16vw, 16rem);
+    left: 0;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: clamp(8rem, 28vw, 30rem);
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    color: rgb(212 180 131 / 0.07);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Ink-on-ivory colours, re-tuned for the green band. */
+  .books :global(.section-header__title),
+  .book__title {
+    color: var(--color-ivory);
+  }
+  .books :global(.section-header__title .accent),
+  .book__accent {
+    color: var(--color-brass-light);
+  }
+  .books :global(.section-header__intro),
+  .book__subtitle,
+  .book__quote figcaption {
+    color: rgb(246 241 231 / 0.74);
+  }
+  .books :global(.placeholder-tag) {
+    color: var(--color-brass-light);
+    border-color: var(--color-brass-light);
+  }
+
   .books__list {
     display: grid;
     gap: clamp(4.5rem, 3rem + 6vw, 8rem);
@@ -170,9 +243,22 @@ const isLive = (url: string) => url && url !== '#';
     align-items: center;
   }
   .book__cover {
+    position: relative;
     width: min(64vw, 17rem);
     margin-inline: auto;
     padding-right: 10px; /* room for the page block */
+  }
+  .books__in {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+  }
+  .book__stop {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 1px;
+    height: 1px;
   }
   @media (min-width: 768px) {
     .book {
@@ -199,12 +285,10 @@ const isLive = (url: string) => url && url !== '#';
     line-height: var(--text-h2--line-height);
   }
   .book__accent {
-    color: var(--color-green);
     font-style: italic;
   }
   .book__subtitle {
     margin-top: 0.5rem;
-    color: var(--color-stone);
   }
   .book__pitch {
     margin-top: 1.25rem;
@@ -215,7 +299,7 @@ const isLive = (url: string) => url && url !== '#';
   .book__quote {
     margin: 1.75rem 0 0;
     padding-left: 1.25rem;
-    border-left: 1px solid var(--color-brass);
+    border-left: 1px solid var(--color-brass-light);
   }
   .book__quote blockquote {
     margin: 0;
@@ -228,7 +312,6 @@ const isLive = (url: string) => url && url !== '#';
   .book__quote figcaption {
     margin-top: 0.75rem;
     font-size: var(--text-small);
-    color: var(--color-stone);
   }
 
   .book__actions {
@@ -248,7 +331,7 @@ const isLive = (url: string) => url && url !== '#';
   .book__bulk {
     margin-top: 1.25rem;
     font-weight: 600;
-    color: var(--color-green);
+    color: var(--color-brass-light);
   }
   .book__bulk a {
     display: inline-flex;
@@ -256,10 +339,9 @@ const isLive = (url: string) => url && url !== '#';
     min-height: 2.75rem;
   }
 
-  /* ---------- Excerpt band ---------- */
+  /* ---------- Excerpt ---------- */
   .excerpt {
-    background: var(--color-green);
-    color: var(--color-ivory);
+    border-top: 1px solid var(--color-hairline-on-green);
     padding-block: clamp(4rem, 3rem + 5vw, 7rem);
   }
   .excerpt__inner {
@@ -299,8 +381,23 @@ const isLive = (url: string) => url && url !== '#';
     font-size: var(--text-small);
     color: var(--color-brass-light);
   }
-  .excerpt .placeholder-tag {
-    color: var(--color-brass-light);
-    border-color: var(--color-brass-light);
-  }
 </style>
+
+<script>
+  import { gsap, registerScene } from '../../lib/scroll';
+
+  registerScene('books', ({ reduce }) => {
+    const word = document.querySelector<HTMLElement>('[data-books-word]');
+    if (!word || reduce) return;
+    // The giant word drifts right → left behind the covers as the band passes.
+    gsap.fromTo(
+      word,
+      { xPercent: 8 },
+      {
+        xPercent: -45,
+        ease: 'none',
+        scrollTrigger: { trigger: word.closest('section'), start: 'top bottom', end: 'bottom top', scrub: 1 },
+      }
+    );
+  });
+</script>

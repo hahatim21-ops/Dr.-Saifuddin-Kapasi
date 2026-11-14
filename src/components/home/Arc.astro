@@ -1,19 +1,26 @@
 ---
 /**
- * Home §2 — The Arc: "From Customer Value to Institutional Legacy".
- * Chapters from chapters.json, entries from timeline.json; the Timeline island
- * renders them (server-rendered HTML, hydrated as it nears the viewport).
+ * Home §3 — The Arc (Muhsin's "journey" pattern), Astro + GSAP (no React).
+ * - Desktop: the left column stays put (CSS sticky) with a giant brass year that
+ *   rolls like an odometer as each entry on the right passes the centre; the
+ *   chapter title (Customers → Ventures → Institutions) swaps with a mask
+ *   slide; the brass line beside the entries fills as you read. The travelling
+ *   prism docks beside the year and turns slowly.
+ * - Phones: one column with a small sticky year chip at the top of the timeline.
+ * - The "Back where he learned" callout gets ruled exercise-book lines that
+ *   draw in and a brass underline sweep.
+ * The stage and chip are decorative duplicates (aria-hidden), shown only once
+ * the scene runs; with JS off or reduced motion the list carries everything.
  */
 import { getCollection } from 'astro:content';
 import SectionHeader from '../SectionHeader.astro';
 import home from '../../data/home.json';
 import InflectionLine from '../InflectionLine.astro';
-import Timeline, { type ArcChapter } from '../../islands/Timeline.tsx';
 
 const chapterEntries = (await getCollection('chapters')).sort((a, b) => a.data.order - b.data.order);
 const timeline = await getCollection('timeline');
 
-const chapters: ArcChapter[] = chapterEntries.map((c, i) => ({
+const chapters = chapterEntries.map((c, i) => ({
   id: c.data.id,
   number: String(i + 1).padStart(2, '0'),
   title: c.data.title,
@@ -23,36 +30,441 @@ const chapters: ArcChapter[] = chapterEntries.map((c, i) => ({
   entries: timeline
     .filter((t) => t.data.chapter === c.data.id)
     .sort((a, b) => a.data.startYear - b.data.startYear)
-    .map((t) => ({
-      id: t.data.id,
-      years: t.data.years,
-      role: t.data.role,
-      organisation: t.data.organisation,
-      note: t.data.note,
-      current: t.data.current,
-    })),
+    .map((t) => t.data),
 }));
+const first = chapters[0];
+const firstYear = String(first.entries[0]?.startYear ?? '');
 ---
 
-<section id="arc" class="arc-section" aria-labelledby="arc-title">
+<section id="arc" class="arc" aria-labelledby="arc-title">
   <div class="container-content">
     <InflectionLine variant="divider" />
-    <SectionHeader
-      eyebrow={home.arc.eyebrow}
-      id="arc-title"
-      title={home.arc.title}
-      intro={home.arc.intro}
-      class="mt-14 sm:mt-20"
-    />
-    <div class="mt-14 md:mt-20">
-      <Timeline client:visible={{ rootMargin: '300px' }} chapters={chapters} />
+    <SectionHeader eyebrow={home.arc.eyebrow} id="arc-title" title={home.arc.title} intro={home.arc.intro} class="mt-14 sm:mt-20" />
+
+    <div class="arc__grid" data-arc data-prism-hold-host>
+      <!-- Desktop stage (decorative; the list below has all the words) -->
+      <div class="arc__stage" aria-hidden="true">
+        <span
+          class="arc__stop"
+          data-prism-stop="arc"
+          data-prism-scale="0.62"
+          data-prism-beam="0.45"
+          data-prism-rotate="-8"
+          data-prism-rotate-to="38"
+          data-prism-hold="section"
+          data-prism-anchor="right"
+          data-prism-dx="-70"
+          data-prism-vy="0.3"></span>
+        <div class="arc__sticky">
+          <p class="arc__year" data-arc-year>{firstYear}</p>
+          <p class="arc__chapter">
+            <span class="arc__chapter-num" data-arc-num>({first.number})</span>
+            <span class="arc__chapter-mask"><span class="arc__chapter-title" data-arc-title>{first.title}</span></span>
+          </p>
+          <p class="arc__summary" data-arc-summary>{first.summary}</p>
+        </div>
+      </div>
+
+      <!-- Phones: sticky year chip -->
+      <div class="arc__chip" aria-hidden="true">
+        <span class="arc__chip-year" data-arc-chip>{firstYear}</span>
+        <span class="arc__chip-sep">·</span>
+        <span data-arc-chip-title>{first.title}</span>
+      </div>
+
+      <div class="arc__track" data-arc-track>
+        <span class="arc__rail" aria-hidden="true"><span class="arc__fill" data-arc-fill></span></span>
+        {
+          chapters.map((c) => (
+            <section
+              class="arc__block"
+              aria-labelledby={`arc-${c.id}`}
+              data-arc-chapter={c.title}
+              data-arc-number={c.number}
+              data-arc-summary={c.summary}
+            >
+              <header class="arc__ch-head">
+                <p class="arc__ch-num">({c.number})</p>
+                <h3 id={`arc-${c.id}`} class="arc__ch-title">
+                  {c.title}
+                </h3>
+                <p class="arc__ch-years">{c.years}</p>
+                <p class="arc__ch-summary">{c.summary}</p>
+              </header>
+              <ol class="arc__entries" role="list">
+                {c.entries.map((e) => (
+                  <li class="arc__entry" data-arc-entry data-year={e.startYear}>
+                    <span class="arc__dot" aria-hidden="true" />
+                    <p class="arc__years">
+                      {e.years}
+                      {e.current && <span class="arc__now">Now</span>}
+                    </p>
+                    <h4 class="arc__role">{e.role}</h4>
+                    <p class="arc__org">{e.organisation}</p>
+                    {e.note && <p class="arc__note">{e.note}</p>}
+                  </li>
+                ))}
+              </ol>
+              {c.callout && (
+                <aside class="on-green arc__callout" data-arc-callout>
+                  <svg class="arc__ruled" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                    {[40, 80, 120, 160].map((y) => (
+                      <path d={`M0 ${y} H600`} class="arc__rule" />
+                    ))}
+                    <path d="M56 0 V200" class="arc__rule arc__rule--margin" />
+                  </svg>
+                  <p class="eyebrow arc__callout-title">
+                    {c.callout.title}
+                    <span class="arc__underline" data-arc-underline aria-hidden="true" />
+                  </p>
+                  <p class="arc__callout-text">{c.callout.text}</p>
+                </aside>
+              )}
+            </section>
+          ))
+        }
+      </div>
     </div>
   </div>
 </section>
 
 <style>
-  .arc-section {
+  .arc {
     padding-block: var(--section-space);
     padding-top: clamp(2rem, 4vw, 3rem);
   }
+  .arc__grid {
+    position: relative;
+    margin-top: clamp(3rem, 2rem + 4vw, 5rem);
+  }
+
+  /* ---------- Stage + chip are hidden until the scene runs ---------- */
+  .arc__stage,
+  .arc__chip {
+    display: none;
+  }
+
+  /* ---------- Track ---------- */
+  .arc__track {
+    position: relative;
+    padding-left: 2rem;
+  }
+  .arc__rail {
+    position: absolute;
+    left: 5px;
+    top: 0.5rem;
+    bottom: 0;
+    width: 1px;
+    background: var(--color-hairline);
+  }
+  .arc__fill {
+    position: absolute;
+    inset: 0;
+    background: var(--color-brass);
+    transform-origin: top;
+  }
+  .arc__block + .arc__block {
+    margin-top: clamp(3.5rem, 6vw, 6rem);
+  }
+  .arc__ch-num {
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .arc__ch-title {
+    margin-top: 0.25rem;
+  }
+  .arc__ch-years {
+    margin-top: 0.2rem;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-h3);
+    color: var(--color-green); /* text: brass is for rules and large numerals only */
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .arc__ch-summary {
+    margin-top: 0.75rem;
+    max-width: 46ch;
+    color: var(--color-stone);
+  }
+  .arc__entries {
+    display: grid;
+    gap: 2.25rem;
+    margin: 2.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .arc__entry {
+    position: relative;
+  }
+  .arc__dot {
+    position: absolute;
+    left: -2rem;
+    top: 0.42rem;
+    width: 11px;
+    height: 11px;
+    border: 1px solid var(--color-brass);
+    border-radius: 999px;
+    background: var(--color-ivory);
+  }
+  .arc__years {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: var(--text-small);
+    color: var(--color-stone);
+    font-variant-numeric: tabular-nums;
+  }
+  .arc__now {
+    padding: 0 0.5rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .arc__role {
+    margin-top: 0.25rem;
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+  .arc__note {
+    margin-top: 0.5rem;
+    max-width: 60ch;
+    color: var(--color-stone);
+  }
+
+  /* ---------- Callout with ruled exercise-book lines ---------- */
+  .arc__callout {
+    position: relative;
+    margin-top: 2.5rem;
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+    padding-left: clamp(3.5rem, 6vw, 5rem);
+    border-radius: 8px;
+    background: var(--color-green);
+    color: var(--color-ivory);
+    overflow: hidden;
+  }
+  .arc__ruled {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .arc__rule {
+    fill: none;
+    stroke: rgb(212 180 131 / 0.22);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .arc__rule--margin {
+    stroke: rgb(212 180 131 / 0.45);
+  }
+  .arc__callout-title {
+    position: relative;
+    display: inline-block;
+  }
+  .arc__underline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -6px;
+    height: 2px;
+    background: var(--color-brass);
+    transform-origin: left;
+  }
+  .arc__callout-text {
+    position: relative;
+    margin-top: 0.85rem;
+    max-width: 40ch;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: var(--text-h3);
+    line-height: 1.25;
+  }
+
+  /* ================= Live (scene running) ================= */
+  /* Phones/tablets: the sticky year chip at the top of the timeline. */
+  .arc__grid.is-live .arc__chip {
+    position: sticky;
+    top: calc(4.75rem + env(safe-area-inset-top));
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1.5rem;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    background: rgb(246 241 231 / 0.94);
+    font-size: var(--text-small);
+    font-weight: 600;
+  }
+  .arc__chip-year {
+    font-family: var(--font-serif);
+    font-size: 1.375rem;
+    line-height: 1;
+    color: var(--color-brass);
+  }
+  .arc__chip-sep {
+    color: var(--color-brass);
+  }
+
+  @media (min-width: 1024px) {
+    .arc__grid.is-live {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      column-gap: clamp(2.5rem, 5vw, 5rem);
+    }
+    .arc__grid.is-live .arc__chip {
+      display: none;
+    }
+    .arc__grid.is-live .arc__stage {
+      position: relative;
+      display: block;
+    }
+    .arc__stop {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 7rem;
+      height: 1px;
+    }
+    .arc__sticky {
+      position: sticky;
+      top: 7rem;
+    }
+    .arc__year {
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: clamp(6rem, 3rem + 7vw, 11rem);
+      line-height: 0.9;
+      letter-spacing: -0.02em;
+      color: var(--color-brass);
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    .arc__chapter {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+    .arc__chapter-num {
+      font-size: var(--text-small);
+      color: var(--color-stone);
+    }
+    .arc__chapter-mask {
+      display: inline-block;
+      overflow: hidden;
+      padding-bottom: 0.1em;
+    }
+    .arc__chapter-title {
+      display: inline-block;
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: var(--text-h2);
+      line-height: 1.05;
+    }
+    .arc__summary {
+      margin-top: 1rem;
+      max-width: 38ch;
+      color: var(--color-stone);
+    }
+    /* The stage shows the chapter summary; the list keeps title + years. */
+    .arc__grid.is-live .arc__ch-summary {
+      display: none;
+    }
+  }
 </style>
+
+<script>
+  import { gsap, ScrollTrigger, registerScene, createOdometer } from '../../lib/scroll';
+  import { GS } from '../../lib/motion';
+
+  registerScene('arc', ({ reduce }) => {
+    const grid = document.querySelector<HTMLElement>('[data-arc]');
+    if (!grid || reduce) return;
+    grid.classList.add('is-live');
+
+    const yearEl = grid.querySelector<HTMLElement>('[data-arc-year]')!;
+    const chipEl = grid.querySelector<HTMLElement>('[data-arc-chip]')!;
+    const titleEl = grid.querySelector<HTMLElement>('[data-arc-title]')!;
+    const numEl = grid.querySelector<HTMLElement>('[data-arc-num]')!;
+    const summaryEl = grid.querySelector<HTMLElement>('[data-arc-summary]')!;
+    const chipTitle = grid.querySelector<HTMLElement>('[data-arc-chip-title]')!;
+    const year = createOdometer(yearEl);
+    const chip = createOdometer(chipEl);
+    const entries = [...grid.querySelectorAll<HTMLElement>('[data-arc-entry]')];
+
+    let currentYear = '';
+    let currentChapter = grid.querySelector<HTMLElement>('[data-arc-chapter]')?.dataset.arcChapter ?? '';
+
+    const setChapter = (block: HTMLElement) => {
+      const title = block.dataset.arcChapter ?? '';
+      if (title === currentChapter) return;
+      const down = entries.indexOf(block.querySelector('[data-arc-entry]')!) > 0;
+      currentChapter = title;
+      gsap
+        .timeline({ defaults: { duration: 0.45, ease: GS.ease.strong } })
+        .to(titleEl, { yPercent: down ? -110 : 110 })
+        .add(() => {
+          titleEl.textContent = title;
+          numEl.textContent = `(${block.dataset.arcNumber})`;
+          summaryEl.textContent = block.dataset.arcSummary ?? '';
+          chipTitle.textContent = title;
+        })
+        .fromTo(titleEl, { yPercent: down ? 110 : -110 }, { yPercent: 0, duration: 0.6 })
+        .fromTo(summaryEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, '<');
+    };
+
+    const activate = (entry: HTMLElement) => {
+      const y = entry.dataset.year ?? '';
+      if (y !== currentYear) {
+        currentYear = y;
+        year.set(y, { duration: 0.9, stagger: 0.05 });
+        chip.set(y, { duration: 0.7, stagger: 0.04 });
+      }
+      setChapter(entry.closest<HTMLElement>('[data-arc-chapter]')!);
+    };
+
+    entries.forEach((entry) => {
+      // The entry nearest the centre drives the year and chapter.
+      ScrollTrigger.create({
+        trigger: entry,
+        start: 'top 55%',
+        end: 'bottom 55%',
+        onToggle: (self) => self.isActive && activate(entry),
+      });
+      gsap.from(entry, {
+        autoAlpha: 0,
+        y: 24,
+        duration: GS.dur.reveal,
+        scrollTrigger: { trigger: entry, start: 'top 88%', once: true },
+      });
+    });
+
+    // The brass line fills with reading progress.
+    const fill = grid.querySelector('[data-arc-fill]');
+    if (fill)
+      gsap.fromTo(
+        fill,
+        { scaleY: 0 },
+        { scaleY: 1, ease: 'none', scrollTrigger: { trigger: grid.querySelector('[data-arc-track]'), start: 'top 55%', end: 'bottom 55%', scrub: GS.scrub } }
+      );
+
+    // Callout: ruled lines draw in, then the underline sweeps.
+    grid.querySelectorAll<HTMLElement>('[data-arc-callout]').forEach((box) => {
+      const rules = box.querySelectorAll('.arc__rule');
+      const underline = box.querySelector('[data-arc-underline]');
+      gsap
+        .timeline({ scrollTrigger: { trigger: box, start: 'top 80%', once: true } })
+        .from(rules, { drawSVG: '0%', duration: 1.1, ease: 'power2.inOut', stagger: 0.08 })
+        .fromTo(underline, { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: GS.ease.strong }, 0.5);
+    });
+
+    return () => {
+      grid.classList.remove('is-live');
+      year.restore();
+      chip.restore();
+    };
+  });
+</script>

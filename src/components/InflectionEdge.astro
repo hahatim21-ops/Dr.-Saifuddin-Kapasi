@@ -1,0 +1,39 @@
+---
+/**
+ * The top edge of a green band, shaped like the inflection line: flat, then
+ * bending upward on the right. Place it directly above the band. The HTML ships
+ * the finished curve (so no-JS and reduced motion see the designed edge); the
+ * "edge" scene in src/lib/scroll.ts starts it flat and scrubs the bend as the
+ * band scrolls into view. Both paths have identical commands, so GSAP can
+ * interpolate the d attribute without a morph plugin.
+ */
+interface Props {
+  /** Fill colour token (defaults to institution green). */
+  color?: string;
+  class?: string;
+}
+const { color = 'var(--color-green)', class: className } = Astro.props;
+
+const curved = 'M0 120 L0 110 H760 C960 110 1060 92 1200 8 V120 Z';
+const flat = 'M0 120 L0 110 H760 C960 110 1060 110 1200 110 V120 Z';
+---
+
+<div class:list={['edge', className]} data-edge aria-hidden="true" style={`color:${color}`}>
+  <svg viewBox="0 0 1200 120" preserveAspectRatio="none" focusable="false">
+    <path class="edge__path" d={curved} data-flat={flat} fill="currentColor"></path>
+  </svg>
+</div>
+
+<style>
+  .edge {
+    position: relative;
+    height: clamp(48px, 8vw, 120px);
+    margin-bottom: -1px; /* no hairline seam against the band below */
+    pointer-events: none;
+  }
+  .edge svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>

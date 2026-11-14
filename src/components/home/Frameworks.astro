@@ -1,13 +1,16 @@
 ---
 /**
- * Home §6 — Thinking tools. Two frameworks, each an SVG diagram that draws
- * stage by stage beside a numbered list of its stages (CSS only, no JS).
- * - Phones: the diagram is hidden; the list becomes a vertical stepper with a
- *   brass rail that draws downward.
- * - ≥768px: diagram + list side by side (alternating). Pointing at a stage in
- *   the list highlights its node in the diagram — a bonus, never required:
- *   every stage's words are always visible in the list.
- * The prism appears here (one of its two allowed sections).
+ * Home §7 — Thinking tools (also the body of /frameworks, `standalone`).
+ * Two frameworks, each an SVG diagram beside a numbered list of its stages.
+ * Motion v2:
+ * - Desktop: each framework pins in turn. Scrolling draws its diagram stage by
+ *   stage (DrawSVG); the active stage lights up in the list and its one-line
+ *   meaning swaps in beside it. Then the second framework does the same.
+ * - Tablets (diagram visible, no pin): the diagram draws stage by stage once.
+ * - Phones: the diagram is hidden; the list is a vertical stepper whose brass
+ *   rail draws downward as each stage enters.
+ * Every stage's words are always in the list, in reading order. JS off and
+ * reduced motion show the finished diagram.
  */
 import { getCollection } from 'astro:content';
 import home from '../../data/home.json';
@@ -37,7 +40,7 @@ const frameworks = (await getCollection('frameworks')).sort((a, b) => a.data.ord
       !standalone && (
         <div class="frameworks__head">
           <SectionHeader eyebrow={home.frameworks.eyebrow} id="frameworks-title" title={home.frameworks.title} intro={home.frameworks.intro} />
-          <div class="frameworks__prism">
+          <div class="frameworks__prism" data-prism-static>
             <Prism />
           </div>
         </div>
@@ -47,7 +50,7 @@ const frameworks = (await getCollection('frameworks')).sort((a, b) => a.data.ord
     <div class="frameworks__list">
       {
         frameworks.map((fw, i) => (
-          <article id={fw.id} class:list={['fw', { 'fw--flip': i % 2 === 1 }]} aria-labelledby={`fw-${fw.id}`}>
+          <article id={fw.id} class:list={['fw', { 'fw--flip': i % 2 === 1 }]} aria-labelledby={`fw-${fw.id}`} data-fw>
             <div class="fw__figure">
               <FrameworkDiagram shape={fw.data.shape} stages={fw.data.stages} center={fw.data.center} />
             </div>
@@ -56,7 +59,7 @@ const frameworks = (await getCollection('frameworks')).sort((a, b) => a.data.ord
               <p class="fw__source" data-reveal="fade">
                 {fw.data.source}
               </p>
-              <TitleTag id={`fw-${fw.id}`} class="fw__title" data-reveal>
+              <TitleTag id={`fw-${fw.id}`} class="fw__title" data-split="lines">
                 {fw.data.title}
               </TitleTag>
               <p class="fw__summary" data-reveal style="--i:1">
@@ -290,6 +293,43 @@ const frameworks = (await getCollection('frameworks')).sort((a, b) => a.data.ord
     }
   }
 
+  /* Desktop pinned stepping (class set by the scene): the lit stage is full
+     strength, the others recede; only opacity and transform change. */
+  .fw.is-stepping .fw-stage {
+    opacity: 0.32;
+    transition: opacity 0.35s var(--ease-ui);
+  }
+  .fw.is-stepping .fw-stage.is-done {
+    opacity: 0.6;
+  }
+  .fw.is-stepping .fw-stage.is-lit {
+    opacity: 1;
+  }
+  .fw.is-stepping .fw-stage__line {
+    transform: translateX(-10px);
+    opacity: 0;
+    transition:
+      opacity 0.35s var(--ease-ui),
+      transform 0.5s var(--ease-ui);
+  }
+  .fw.is-stepping .fw-stage.is-lit .fw-stage__line,
+  .fw.is-stepping .fw-stage.is-done .fw-stage__line {
+    transform: none;
+    opacity: 1;
+  }
+  .fw.is-stepping .fw-stage.is-lit .fw-stage__num {
+    background: var(--color-green);
+    border-color: var(--color-green);
+    color: var(--color-ivory);
+  }
+  .fw.is-stepping :global(.fw-node.is-lit .fw-node__dot) {
+    fill: var(--color-green);
+    stroke: var(--color-green);
+  }
+  .fw.is-stepping :global(.fw-node.is-lit .fw-node__num) {
+    fill: var(--color-ivory);
+  }
+
   .frameworks__more {
     margin-top: clamp(3rem, 2rem + 3vw, 4.5rem);
     font-weight: 600;
@@ -302,3 +342,79 @@ const frameworks = (await getCollection('frameworks')).sort((a, b) => a.data.ord
     min-height: 2.75rem;
   }
 </style>
+
+<script>
+  import { gsap, registerScene } from '../../lib/scroll';
+
+  registerScene('frameworks', ({ reduce, desktop }) => {
+    if (reduce) return;
+    const restores: Array<() => void> = [];
+    document.querySelectorAll<HTMLElement>('[data-fw]').forEach((fw) => {
+      const figure = fw.querySelector<HTMLElement>('.fw__figure');
+      // Phones: the diagram is hidden; the CSS stepper handles the list.
+      if (!figure || getComputedStyle(figure).display === 'none') return;
+      const nodes = [...fw.querySelectorAll<SVGGElement>('[data-fw-node]')];
+      const connectors = [...fw.querySelectorAll<SVGGElement>('[data-fw-connector]')];
+      const center = fw.querySelector('[data-fw-center]');
+      const stages = [...fw.querySelectorAll<HTMLElement>('.fw-stage')];
+      const n = nodes.length;
+
+      // Stage i: node i pops in, then the connector to the next stage draws.
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+      gsap.set(nodes, { autoAlpha: 0, scale: 0.6, transformOrigin: '50% 50%' });
+      connectors.forEach((c) => gsap.set(c.querySelectorAll('path'), { drawSVG: '0%' }));
+      if (center) gsap.set(center, { autoAlpha: 0 });
+      nodes.forEach((node, i) => {
+        tl.to(node, { autoAlpha: 1, scale: 1, duration: 0.5 }, i);
+        const c = connectors[i];
+        if (c) tl.to(c.querySelectorAll('path'), { drawSVG: '100%', duration: 0.5, ease: 'none', stagger: 0.4 }, i + 0.45);
+      });
+      if (center) tl.to(center, { autoAlpha: 1, duration: 0.5 }, n - 0.2);
+
+      if (!desktop) {
+        // Tablets: draw once as it enters, on a clock.
+        tl.pause();
+        gsap.timeline({ scrollTrigger: { trigger: figure, start: 'top 75%', once: true } }).add(
+          tl.tweenFromTo(0, tl.duration(), { duration: tl.duration() * 0.55, ease: 'none' })
+        );
+        return;
+      }
+
+      // Desktop: pinned and scrubbed; the list lights the active stage.
+      stages.forEach((s) => s.removeAttribute('data-reveal'));
+      fw.classList.add('is-stepping');
+      let lit = -1;
+      const light = (i: number) => {
+        if (i === lit) return;
+        lit = i;
+        stages.forEach((s, si) => {
+          s.classList.toggle('is-lit', si === i);
+          s.classList.toggle('is-done', si < i);
+        });
+        nodes.forEach((nd, ni) => nd.classList.toggle('is-lit', ni === i));
+      };
+      light(0);
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: fw,
+          start: () => (fw.offsetHeight < window.innerHeight * 0.9 ? 'center center' : 'top 12%'),
+          end: () => '+=' + window.innerHeight * 0.55 * n,
+          pin: true,
+          scrub: 0.6,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => light(Math.min(n - 1, Math.floor(self.progress * n * 0.999))),
+        },
+      }).add(tl.paused(false), 0);
+      restores.push(() => {
+        fw.classList.remove('is-stepping');
+        stages.forEach((s) => {
+          s.setAttribute('data-reveal', '');
+          s.classList.remove('is-lit', 'is-done');
+          s.classList.add('is-in');
+        });
+        nodes.forEach((nd) => nd.classList.remove('is-lit'));
+      });
+    });
+    return () => restores.forEach((f) => f());
+  });
+</script>

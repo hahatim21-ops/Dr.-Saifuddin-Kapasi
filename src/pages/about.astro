@@ -24,7 +24,7 @@ const honours = await getCollection('honours');
     <!-- Story -->
     <section class="page-section container-content" aria-labelledby="story-title">
       <div class="about-story">
-        <div class="about-story__portrait" data-reveal>
+        <div class="about-story__portrait" data-settle="-5">
           <BlurImage
             src={heroPortrait.src}
             alt={heroPortrait.alt}
@@ -32,11 +32,12 @@ const honours = await getCollection('honours');
             widths={[400, 640, 800]}
             position={heroPortrait.position}
             class="about-story__img"
+            clip="up"
           />
           {heroPortrait.placeholder && <span class="placeholder-tag mt-3">Placeholder portrait</span>}
         </div>
         <div>
-          <h2 id="story-title" class="page-section__title" data-reveal>{p.storyTitle}</h2>
+          <h2 id="story-title" class="page-section__title" data-split="lines">{p.storyTitle}</h2>
           <div class="prose-body mt-6">
             {p.story.map((para, i) => <p data-reveal style={`--i:${i}`}>{para}</p>)}
           </div>
@@ -46,7 +47,7 @@ const honours = await getCollection('honours');
 
     <!-- Values -->
     <section class="page-section container-content" aria-labelledby="values-title">
-      <h2 id="values-title" class="page-section__title" data-reveal>{p.valuesTitle}</h2>
+      <h2 id="values-title" class="page-section__title" data-split="lines">{p.valuesTitle}</h2>
       <ol class="about-values" role="list">
         {
           p.values.map((v, i) => (
@@ -64,11 +65,11 @@ const honours = await getCollection('honours');
     <section class="page-section container-content" aria-labelledby="roots-title">
       <div class="about-two">
         <div data-reveal>
-          <h2 id="roots-title" class="page-section__title">{p.rootsTitle}</h2>
+          <h2 id="roots-title" class="page-section__title" data-split="lines">{p.rootsTitle}</h2>
           <p class="mt-6 prose-measure">{p.roots}</p>
         </div>
         <div data-reveal style="--i:1">
-          <h2 class="page-section__title">{p.educationTitle}</h2>
+          <h2 class="page-section__title" data-split="lines">{p.educationTitle}</h2>
           <dl class="about-edu">
             {
               p.education.map((e) => (
@@ -88,7 +89,7 @@ const honours = await getCollection('honours');
 
     <!-- Honours -->
     <section class="page-section container-content" aria-labelledby="honours-title">
-      <h2 id="honours-title" class="page-section__title" data-reveal>{p.honoursTitle}</h2>
+      <h2 id="honours-title" class="page-section__title" data-split="lines">{p.honoursTitle}</h2>
       <ul class="about-honours" role="list">
         {
           honours.map((h, i) => (
@@ -109,7 +110,7 @@ const honours = await getCollection('honours');
 
     <!-- Bios -->
     <section class="page-section container-content" aria-labelledby="bios-title">
-      <h2 id="bios-title" class="page-section__title" data-reveal>{p.biosTitle}</h2>
+      <h2 id="bios-title" class="page-section__title" data-split="lines">{p.biosTitle}</h2>
       <p class="mt-4 text-stone" data-reveal>{p.biosIntro}</p>
       <div class="about-bios">
         {
@@ -303,7 +304,9 @@ const honours = await getCollection('honours');
 </style>
 
 <script>
-  document.addEventListener('astro:page-load', () => {
+
+  import { onPageLoad } from '../lib/page';
+  onPageLoad(() => {
     document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
       const label = btn.textContent?.trim() ?? 'Copy';
       btn.addEventListener('click', async () => {

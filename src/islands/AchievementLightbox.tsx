@@ -1,8 +1,19 @@
-import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react';
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
-import { DUR, EASE, MOVE, STAGGER } from '../lib/motion';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { GS } from '../lib/motion';
 
 type Sources = { avif: string; webp: string; fallback: string; width: number; height: number };
+type FlipPlugin = typeof import('gsap/Flip').Flip;
+
+// Same GSAP instance as the engine (src/lib/scroll.ts). Flip loads on demand.
+gsap.registerPlugin(ScrollTrigger);
+let flipPromise: Promise<FlipPlugin> | null = null;
+const loadFlip = () =>
+  (flipPromise ??= import('gsap/Flip').then(({ Flip }) => {
+    gsap.registerPlugin(Flip);
+    return Flip;
+  }));
 
 export type Achievement = {
   id: string;
@@ -27,13 +38,19 @@ interface Props {
   emptyLabel?: string;
 }
 
+const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 /**
- * Achievements wall + viewer.
- * Wall: framed images (thin frame, matte, soft shadow) that rise 24px into place
- * 80ms apart, once; lift 4px with a deeper shadow on hover (desktop pointer).
+ * Achievements wall + viewer (Motion v2: GSAP, no Motion library).
+ * Wall: framed images (thin frame, matte, soft shadow). As the wall enters, the
+ * frames drop in with a slight rotation and settle straight, 80ms apart.
+ * On /achievements the Awards / Honours / Features filter re-flows the wall
+ * with Flip. JS off: every frame is visible (start states are runtime only).
  * Viewer: a native <dialog> opened with showModal() — focus is trapped by the
- * browser, Esc closes, focus returns to the frame that opened it. Fades in over
- * 200ms. ← / → keys, buttons and touch swipe move between items.
+ * browser, Esc closes, focus returns to the frame that opened it. The image
+ * grows out of the clicked frame (Flip) and shrinks back into it on close.
+ * ← / → keys, buttons and touch swipe move between items.
+ * Reduced motion: no drop-in, no Flip; the viewer simply appears.
  */
 export default function AchievementLightbox({
   items,
@@ -46,13 +63,65 @@ export default function AchievementLightbox({
 }: Props) {
   const [filter, setFilter] = useState('all');
   const visible = filter === 'all' ? items : items.filter((a) => a.kind === filter);
-  const reduce = useReducedMotion();
   const dialog = useRef<HTMLDialogElement>(null);
+  const list = useRef<HTMLUListElement>(null);
+  const lbImg = useRef<HTMLImageElement>(null);
   const [open, setOpen] = useState<number | null>(null);
   const swipeX = useRef<number | null>(null);
+  const flip = useRef<FlipPlugin | null>(null);
+  const flipState = useRef<ReturnType<FlipPlugin['getState']> | null>(null);
+  const zoomFrom = useRef<HTMLImageElement | null>(null);
+  const closing = useRef(false);
   const n = visible.length;
 
-  const show = useCallback((i: number) => {
+  // Flip loads on demand (shared with the rest of the site via the engine).
+  useEffect(() => {
+    if (reducedMotion()) return;
+    loadFlip().then((F) => (flip.current = F));
+  }, []);
+
+  // Frames drop in with a slight rotation and settle straight, 80ms apart.
+  useEffect(() => {
+    const ul = list.current;
+    if (!ul || reducedMotion()) return;
+    const frames = ul.querySelectorAll('.aw__item');
+    const tween = gsap.from(frames, {
+      y: -36,
+      rotation: (i: number) => (i % 2 ? 3 : -3.5),
+      opacity: 0,
+      duration: GS.dur.reveal,
+      ease: 'back.out(1.4)',
+      stagger: GS.stagger.frames,
+      scrollTrigger: { trigger: ul, start: 'top 85%', once: true },
+    });
+    return () => {
+      tween.scrollTrigger?.kill();
+      tween.progress(1).kill();
+    };
+  }, []);
+
+  // Filter change: re-flow the wall with Flip (entering frames fade in).
+  const choose = (value: string) => {
+    if (value === filter) return;
+    const F = flip.current;
+    if (F && list.current) flipState.current = F.getState(list.current.querySelectorAll('.aw__item'));
+    setFilter(value);
+  };
+  useLayoutEffect(() => {
+    const F = flip.current;
+    const state = flipState.current;
+    flipState.current = null;
+    if (!F || !state || !list.current) return;
+    F.from(state, {
+      targets: list.current.querySelectorAll('.aw__item'),
+      duration: 0.6,
+      ease: 'expo.out',
+      onEnter: (els) => gsap.fromTo(els, { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'power2.out' }),
+    });
+  }, [filter]);
+
+  const show = useCallback((i: number, from?: HTMLImageElement | null) => {
+    zoomFrom.current = from ?? null;
     setOpen(i);
     const d = dialog.current;
     if (d && !d.open) {
@@ -60,7 +129,40 @@ export default function AchievementLightbox({
       (window as any).__lenis?.stop();
     }
   }, []);
-  const close = () => dialog.current?.close();
+
+  // Opening: the large image grows out of the clicked frame.
+  useLayoutEffect(() => {
+    const F = flip.current;
+    const img = lbImg.current;
+    const from = zoomFrom.current;
+    zoomFrom.current = null;
+    if (!F || !img || !from || open === null) return;
+    gsap.from(img, { ...F.fit(img, from, { scale: true, getVars: true }), duration: 0.6, ease: 'expo.out', clearProps: 'transform' });
+  }, [open]);
+
+  // Closing: shrink back into the current item's frame, then close.
+  const close = () => {
+    const d = dialog.current;
+    if (!d || closing.current) return;
+    const F = flip.current;
+    const img = lbImg.current;
+    const frame = open !== null ? list.current?.querySelectorAll<HTMLImageElement>('.aw__frame img')[open] : null;
+    if (!F || !img || !frame) {
+      d.close();
+      return;
+    }
+    closing.current = true;
+    gsap
+      .timeline({
+        onComplete: () => {
+          closing.current = false;
+          d.close();
+          gsap.set([img, d], { clearProps: 'transform,opacity' });
+        },
+      })
+      .to(img, { ...F.fit(img, frame, { scale: true, getVars: true }), duration: 0.45, ease: 'power3.inOut' }, 0)
+      .to(d, { opacity: 0, duration: 0.3, ease: 'power1.in' }, 0.15);
+  };
   const step = (dir: number) => setOpen((i) => (i === null ? i : (i + dir + n) % n));
 
   useEffect(() => {
@@ -70,9 +172,19 @@ export default function AchievementLightbox({
       setOpen(null);
       (window as any).__lenis?.start();
     };
+    // Esc: animate back into the frame instead of vanishing.
+    const onCancel = (e: Event) => {
+      if (!flip.current) return;
+      e.preventDefault();
+      close();
+    };
     d.addEventListener('close', onClose);
-    return () => d.removeEventListener('close', onClose);
-  }, []);
+    d.addEventListener('cancel', onCancel);
+    return () => {
+      d.removeEventListener('close', onClose);
+      d.removeEventListener('cancel', onCancel);
+    };
+  });
 
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'ArrowRight') step(1);
@@ -92,20 +204,10 @@ export default function AchievementLightbox({
     if (e.target === e.currentTarget) close();
   };
 
-  const reveal = (i: number) =>
-    reduce
-      ? { initial: false as const }
-      : {
-          initial: { opacity: 0, y: MOVE.lg },
-          whileInView: { opacity: 1, y: 0 },
-          viewport: { once: true, amount: 0.25 },
-          transition: { duration: DUR.reveal, ease: EASE, delay: (i % 3) * STAGGER.frames },
-        };
-
   const cur = open !== null ? visible[open] : null;
 
   return (
-    <LazyMotion features={domAnimation} strict>
+    <>
       {filters && (
         <div className="aw-filters" role="group" aria-label={filterLabel}>
           {filters.map((f) => {
@@ -116,7 +218,7 @@ export default function AchievementLightbox({
                 type="button"
                 className="aw-filter"
                 aria-pressed={filter === f.value}
-                onClick={() => setFilter(f.value)}
+                onClick={() => choose(f.value)}
               >
                 {f.label} <span className="aw-filter__count">{count}</span>
               </button>
@@ -125,10 +227,16 @@ export default function AchievementLightbox({
         </div>
       )}
       {visible.length === 0 && <p className="aw-empty">{emptyLabel}</p>}
-      <ul className={`aw${swipeOnPhones ? ' aw--swipe' : ''}`} role="list" aria-label={label} tabIndex={swipeOnPhones ? 0 : undefined}>
+      <ul ref={list} className={`aw${swipeOnPhones ? ' aw--swipe' : ''}`} role="list" aria-label={label} tabIndex={swipeOnPhones ? 0 : undefined}>
         {visible.map((a, i) => (
-          <m.li key={a.id} className="aw__item" data-motion="" {...reveal(i)}>
-            <button type="button" className="aw__frame" onClick={() => show(i)} aria-haspopup="dialog">
+          <li key={a.id} className="aw__item" data-flip-id={a.id}>
+            <button
+              type="button"
+              className="aw__frame"
+              onClick={(e) => show(i, e.currentTarget.querySelector('img'))}
+              aria-haspopup="dialog"
+              data-cursor="View"
+            >
               <span className="aw__matte">
                 <picture>
                   <source type="image/avif" srcSet={a.thumb.avif} sizes="(min-width: 1024px) 360px, (min-width: 768px) 44vw, 76vw" />
@@ -143,7 +251,7 @@ export default function AchievementLightbox({
               {a.meta}
               {a.placeholder && <span className="placeholder-tag ml-2">{placeholderLabel}</span>}
             </p>
-          </m.li>
+          </li>
         ))}
       </ul>
 
@@ -171,7 +279,7 @@ export default function AchievementLightbox({
               <picture>
                 <source type="image/avif" srcSet={cur.full.avif} sizes="(min-width: 1024px) 70vw, 94vw" />
                 <source type="image/webp" srcSet={cur.full.webp} sizes="(min-width: 1024px) 70vw, 94vw" />
-                <img key={cur.id} src={cur.full.fallback} width={cur.full.width} height={cur.full.height} alt={cur.alt} />
+                <img ref={lbImg} key={cur.id} src={cur.full.fallback} width={cur.full.width} height={cur.full.height} alt={cur.alt} />
               </picture>
               <figcaption>
                 <span className="lb__title">{cur.title}</span>
@@ -195,6 +303,6 @@ export default function AchievementLightbox({
           </div>
         )}
       </dialog>
-    </LazyMotion>
+    </>
   );
 }

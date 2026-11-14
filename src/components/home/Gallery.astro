@@ -1,12 +1,17 @@
 ---
 /**
- * Home §8 — In the room. Real session photos with quiet captions
+ * Home §9 — In the room. Real session photos with quiet captions
  * ("Kampala convocation / 2026"). Each photo sharpens from a blurred
  * placeholder as it loads (BlurImage, lazy below the fold).
- * - ≥768px: staggered two-column grid (the second column starts lower; the
- *   stagger is fixed — scroll never moves it).
- * - Phones: one swipe row with scroll-snap. The two column wrappers switch to
- *   display: contents, and `order` restores the original sequence.
+ * Motion v2 (the collage):
+ * - A huge "In the room" word sits behind the photos.
+ * - Desktop: the photos start scattered and tilted (±4–8°) like prints on a
+ *   desk and straighten into the grid as you scroll; the two columns move at
+ *   different parallax speeds and the captions slide in.
+ * - Phones: the swipe row; each photo straightens as it enters.
+ * Layout: ≥768px a staggered two-column grid; phones one scroll-snap row (the
+ * column wrappers switch to display: contents, `order` keeps the sequence).
+ * JS off / reduced motion: the tidy grid, nothing hidden.
  */
 import { getCollection } from 'astro:content';
 import home from '../../data/home.json';
@@ -27,7 +32,8 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
 ---
 
 <section id="gallery" class="gallery" aria-labelledby="gallery-title">
-  <div class="container-content">
+  <span class="gallery__word" aria-hidden="true" data-gallery-word>{home.gallery.eyebrow}</span>
+  <div class="container-content gallery__head">
     <SectionHeader eyebrow={home.gallery.eyebrow} id="gallery-title" title={home.gallery.title} intro={home.gallery.intro} />
     <p class="gallery__hint">{home.gallery.swipeHint}</p>
   </div>
@@ -36,13 +42,14 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
     <div class="gallery__track" role="list" aria-label={home.gallery.eyebrow} tabindex="0">
       {
         columns.map((col, ci) => (
-          <div class:list={['gallery__col', { 'gallery__col--b': ci === 1 }]}>
+          <div class:list={['gallery__col', { 'gallery__col--b': ci === 1 }]} data-gallery-col={ci}>
             {col.map((p) => (
               <figure
                 class="photo"
                 role="listitem"
                 style={`order:${p.index};--i:${ci};--ratio:${p.image!.width} / ${p.image!.height}`}
-                data-reveal
+                data-photo={p.index}
+                data-cursor="View"
               >
                 <BlurImage src={p.image!} alt={p.altText} sizes={SIZES} class="photo__img" />
                 <figcaption class="photo__caption">
@@ -62,7 +69,33 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
 
 <style>
   .gallery {
+    position: relative;
+    overflow: clip;
     padding-block: var(--section-space);
+  }
+  .gallery__head,
+  .gallery__wrap {
+    position: relative;
+    z-index: 1;
+  }
+  /* Huge word behind the collage (decorative). */
+  .gallery__word {
+    position: absolute;
+    top: clamp(14rem, 22vw, 24rem);
+    inset-inline: 0;
+    display: flex;
+    justify-content: center; /* centres the overflowing word on both sides */
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: clamp(5rem, 17vw, 19rem);
+    line-height: 0.85;
+    white-space: nowrap;
+    color: rgb(176 141 87 / 0.1);
+    pointer-events: none;
+    user-select: none;
+  }
+  .photo {
+    transform-origin: 50% 60%;
   }
   .gallery__hint {
     margin-top: 1.5rem;
@@ -153,3 +186,74 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
     }
   }
 </style>
+
+<script>
+  import { gsap, registerScene } from '../../lib/scroll';
+  import { GS } from '../../lib/motion';
+
+  // Deterministic "prints on a desk" offsets: rotation (°), x and y (px).
+  const SCATTER = [
+    [-7, -36, 60],
+    [6, 42, 90],
+    [-4, 28, 40],
+    [8, -30, 110],
+    [5, -44, 70],
+    [-6, 34, 50],
+  ];
+
+  registerScene('gallery', ({ reduce, desktop }) => {
+    const track = document.querySelector<HTMLElement>('.gallery__track');
+    if (!track || reduce) return;
+    const photos = [...track.querySelectorAll<HTMLElement>('[data-photo]')];
+
+    if (!desktop) {
+      // Phones/tablets: each photo straightens as it enters (the row may be
+      // swiped, so the trigger watches the photo itself).
+      photos.forEach((ph) => {
+        const [r] = SCATTER[Number(ph.dataset.photo) % SCATTER.length];
+        gsap.from(ph, {
+          rotation: r * 0.6,
+          y: 24,
+          duration: GS.dur.revealLong,
+          ease: GS.ease.reveal,
+          scrollTrigger: { trigger: ph, start: 'top 92%', once: true },
+        });
+      });
+      return;
+    }
+
+    // Desktop: scattered → straight, scrubbed per photo.
+    photos.forEach((ph) => {
+      const [r, x, y] = SCATTER[Number(ph.dataset.photo) % SCATTER.length];
+      gsap.fromTo(
+        ph,
+        { rotation: r, x, y, scale: 0.94 },
+        {
+          rotation: 0,
+          x: 0,
+          y: 0,
+          scale: 1,
+          ease: 'none',
+          scrollTrigger: { trigger: ph, start: 'top bottom', end: 'top 35%', scrub: GS.scrub },
+        }
+      );
+      const cap = ph.querySelector('figcaption');
+      if (cap)
+        gsap.from(cap, {
+          x: -24,
+          autoAlpha: 0,
+          duration: GS.dur.reveal,
+          scrollTrigger: { trigger: ph, start: 'top 60%', once: true },
+        });
+    });
+    // Columns at different parallax speeds.
+    const [a, b] = [...track.querySelectorAll<HTMLElement>('[data-gallery-col]')];
+    const st = () => ({ trigger: track, start: 'top bottom', end: 'bottom top', scrub: GS.scrub });
+    if (a) gsap.fromTo(a, { y: 40 }, { y: -40, ease: 'none', scrollTrigger: st() });
+    if (b) gsap.fromTo(b, { y: 140 }, { y: -140, ease: 'none', scrollTrigger: st() });
+    // The big word drifts slowly the other way.
+    const word = document.querySelector<HTMLElement>('[data-gallery-word]');
+    if (word)
+      gsap.fromTo(word, { xPercent: 8 }, { xPercent: -8, ease: 'none', scrollTrigger: { trigger: track, start: 'top bottom', end: 'bottom top', scrub: 1 } });
+  });
+</script>

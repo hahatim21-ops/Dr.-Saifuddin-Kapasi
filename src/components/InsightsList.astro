@@ -1,8 +1,11 @@
 ---
 /**
- * Numbered index of articles (home §11 and /insights). Hairlines draw left →
+ * Numbered index of articles (home §12 and /insights). Hairlines draw left →
  * right; the title's underline grows on hover or focus (transform only).
- * Each whole row is one link. CSS only.
+ * Each whole row is one link.
+ * Motion v2, desktop fine pointers only: a small preview card (title, date,
+ * first line) follows the cursor over a row. It is decorative (aria-hidden) —
+ * the row itself carries the same words. Phones: unchanged.
  */
 import type { CollectionEntry } from 'astro:content';
 import Icon from './Icon.astro';
@@ -16,6 +19,17 @@ const { articles, headingLevel = 'h3' } = Astro.props;
 const Title = headingLevel;
 const latest = articles;
 const fmt = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+/** First line of the article body (markdown stripped), for the hover preview. */
+const firstLine = (a: CollectionEntry<'insights'>) => {
+  const line =
+    (a.body ?? '')
+      .split(String.fromCharCode(10))
+      .map((l) => l.trim())
+      .find((l) => l && !/^(#|>|-|\*|!\[|<)/.test(l)) ?? a.data.summary;
+  const plain = line.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/[*_`]/g, '');
+  return plain.length > 130 ? plain.slice(0, 127).replace(/\s+\S*$/, '') + '…' : plain;
+};
 ---
 
 <ol class="idx" role="list">
@@ -23,7 +37,14 @@ const fmt = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', y
     latest.map((a, i) => (
       <li class="idx__row">
         <span class="idx__rule" data-draw-x style={`--i:${i}`} aria-hidden="true" />
-        <a href={`/insights/${a.id}`} class="idx__link" data-reveal style={`--i:${i}`}>
+        <a
+          href={`/insights/${a.id}`}
+          class="idx__link"
+          data-reveal
+          style={`--i:${i}`}
+          data-preview-date={fmt.format(a.data.date)}
+          data-preview-line={firstLine(a)}
+        >
           <span class="idx__num" aria-hidden="true">
             ({String(i + 1).padStart(2, '0')})
           </span>
@@ -171,3 +192,55 @@ const fmt = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', y
     outline-offset: 6px;
   }
 </style>
+
+<script>
+  import { gsap, registerScene } from '../lib/scroll';
+
+  registerScene('insights-preview', ({ desktop }) => {
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('.idx__link[data-preview-line]')];
+    if (!desktop || links.length === 0) return;
+
+    const card = document.createElement('div');
+    card.className = 'idx-preview';
+    card.setAttribute('aria-hidden', 'true');
+    card.innerHTML = '<span class="idx-preview__date"></span><span class="idx-preview__title"></span><span class="idx-preview__line"></span>';
+    document.body.append(card);
+    const [date, title, line] = [...card.children] as HTMLElement[];
+    gsap.set(card, { xPercent: 0, yPercent: -50, autoAlpha: 0, scale: 0.92 });
+    const xTo = gsap.quickTo(card, 'x', { duration: 0.45, ease: 'power3' });
+    const yTo = gsap.quickTo(card, 'y', { duration: 0.45, ease: 'power3' });
+
+    const move = (e: PointerEvent) => {
+      // Sit to the right of the cursor, flipping left near the edge.
+      const w = card.offsetWidth;
+      const x = e.clientX + 28 + w > window.innerWidth - 16 ? e.clientX - 28 - w : e.clientX + 28;
+      xTo(x);
+      yTo(e.clientY);
+    };
+    const enter = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return;
+      const a = e.currentTarget as HTMLAnchorElement;
+      title.textContent = a.querySelector('.idx__underline')?.textContent ?? '';
+      date.textContent = a.dataset.previewDate ?? '';
+      line.textContent = a.dataset.previewLine ?? '';
+      move(e);
+      gsap.set(card, { x: gsap.getProperty(card, 'x') });
+      gsap.to(card, { autoAlpha: 1, scale: 1, duration: 0.3, ease: 'power3.out', overwrite: 'auto' });
+    };
+    const leave = () => gsap.to(card, { autoAlpha: 0, scale: 0.92, duration: 0.2, ease: 'power2.in', overwrite: 'auto' });
+
+    links.forEach((a) => {
+      a.addEventListener('pointerenter', enter);
+      a.addEventListener('pointermove', move);
+      a.addEventListener('pointerleave', leave);
+    });
+    return () => {
+      links.forEach((a) => {
+        a.removeEventListener('pointerenter', enter);
+        a.removeEventListener('pointermove', move);
+        a.removeEventListener('pointerleave', leave);
+      });
+      card.remove();
+    };
+  });
+</script>

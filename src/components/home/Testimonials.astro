@@ -67,13 +67,19 @@ const t = home.testimonials;
       opacity 700ms var(--ease),
       visibility 0s;
   }
+  /* Big brass quote mark: outlines draw, then the fill settles in (GSAP). */
   .testimonials :global(.tq__mark) {
     display: block;
-    height: 0.5em;
-    font-family: var(--font-serif);
-    font-size: clamp(4rem, 3rem + 4vw, 6rem);
-    line-height: 1;
-    color: var(--color-brass); /* large decorative glyph */
+    width: clamp(3.75rem, 3rem + 3vw, 5.5rem);
+    height: auto;
+    margin: 0 auto 1.25rem;
+    overflow: visible;
+  }
+  .testimonials :global(.tq__mark path) {
+    fill: var(--color-brass);
+    stroke: var(--color-brass);
+    stroke-width: 1.25;
+    stroke-linejoin: round;
   }
   .testimonials :global(.tq__quote) {
     margin: 0;
@@ -125,7 +131,33 @@ const t = home.testimonials;
     border-color: var(--color-green);
   }
   .testimonials :global(.tq__btn--pause) {
+    position: relative;
     margin-left: 0.75rem;
+  }
+  /* 8s timer ring around the pause button. */
+  .testimonials :global(.tq__ring) {
+    position: absolute;
+    inset: -3px;
+    width: calc(100% + 6px);
+    height: calc(100% + 6px);
+    transform: rotate(-90deg);
+    pointer-events: none;
+    overflow: visible;
+  }
+  .testimonials :global(.tq__ring circle) {
+    fill: none;
+    stroke: var(--color-brass);
+    stroke-width: 1.5;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation-name: tq-ring;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+  @keyframes tq-ring {
+    to {
+      stroke-dashoffset: 0;
+    }
   }
   .testimonials :global(.tq__dots) {
     display: flex;

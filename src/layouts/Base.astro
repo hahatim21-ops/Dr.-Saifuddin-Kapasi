@@ -1,5 +1,5 @@
 ---
-import { ClientRouter, fade } from 'astro:transitions';
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 // Preload the heading font (the hero/LCP text is set in it).
 import cormorant600 from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-600-normal.woff2?url';
@@ -7,6 +7,7 @@ import site from '../data/site.json';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import PhoneDock from '../components/PhoneDock.astro';
+import PrismTraveller from '../components/PrismTraveller.astro';
 
 interface Props {
   title?: string;
@@ -45,13 +46,23 @@ const ogIsDefault = ogImage === '/og.jpg';
 ---
 
 <!doctype html>
-<html lang="en-IN" transition:animate={fade({ duration: '250ms' })}>
+<html lang="en-IN" transition:animate="none">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#F6F1E7" />
     <!-- Hide-before-reveal only applies when JS runs; set before first paint. -->
-    <script is:inline>document.documentElement.classList.add('js');</script>
+    <script is:inline>
+      (function (d) {
+        d.classList.add('js');
+        // Motion v2: hide split/clip targets for the few frames before GSAP sets
+        // their real start state. Never under reduced motion; 2.5s failsafe.
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          d.classList.add('motion-pending');
+          setTimeout(function () { d.classList.remove('motion-pending'); }, 2500);
+        }
+      })(document.documentElement);
+    </script>
     <style is:inline>html{background:#F6F1E7}</style>
 
     <title>{fullTitle}</title>
@@ -94,26 +105,27 @@ const ogIsDefault = ogImage === '/og.jpg';
     <Footer />
     {dock && <PhoneDock />}
 
+    <PrismTraveller />
+    <!-- Page-transition curtain (persists across pages; see src/lib/transition.ts) -->
+    <div class="curtain" data-curtain transition:persist="curtain" aria-hidden="true">
+      <svg viewBox="0 0 1200 120" preserveAspectRatio="none" focusable="false">
+        <path data-curtain-line d="M0 110 H760 C960 110 1060 92 1200 8"></path>
+      </svg>
+    </div>
+
     <script>
-      import Lenis from 'lenis';
+
+      import { onPageLoad } from '../lib/page';
+      // Motion v2 engine: GSAP + ScrollTrigger + Lenis (desktop), scenes, cursor, prism.
+      import '../lib/scroll';
+      import '../lib/cursor';
+      import '../lib/prism';
+      import '../lib/transition';
 
       const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const finePointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-      /* ---- Lenis: desktop pointer devices only, never with reduced motion ---- */
-      let lenis: Lenis | null = null;
-      function setupLenis() {
-        if (lenis || reduced() || !finePointer()) return;
-        lenis = new Lenis({
-          autoRaf: true,
-          lerp: 0.12, // gentle inertia; never slows the scroll below native speed
-          anchors: true,
-          smoothWheel: true,
-        });
-        (window as any).__lenis = lenis;
-      }
-
-      /* ---- Reveals: CSS-driven, IntersectionObserver adds .is-in once ---- */
+      /* ---- v1 reveals still used by sections not yet moved to GSAP:
+              CSS-driven, IntersectionObserver adds .is-in once ---- */
       let io: IntersectionObserver | null = null;
       function setupReveals() {
         io?.disconnect();
@@ -127,12 +139,17 @@ const ogIsDefault = ogImage === '/og.jpg';
         io = new IntersectionObserver(
           (entries) => {
             for (const entry of entries) {
-              if (!entry.isIntersecting) continue;
+              // Shown once on screen — or once scrolled past (a fast flick or an
+              // anchor jump can carry it above the viewport between callbacks).
+              const passed = entry.boundingClientRect.bottom < 0;
+              if (!entry.isIntersecting && !passed) continue;
               entry.target.classList.add('is-in');
               io?.unobserve(entry.target); // play once
             }
           },
-          { rootMargin: '0px 0px -8% 0px', threshold: 0.12 }
+          // The root reaches one screen above the viewport, so an element that
+          // jumps from below to above between two frames still crosses it.
+          { rootMargin: '100% 0px -8% 0px', threshold: 0.12 }
         );
         targets.forEach((el) => {
           // [data-reveal-now] plays on load (hero), on the next frame so the start state paints.
@@ -144,16 +161,7 @@ const ogIsDefault = ogImage === '/og.jpg';
         });
       }
 
-      // View-transition swaps replace <html> attributes: restore the js flag.
-      document.addEventListener('astro:after-swap', () => {
-        document.documentElement.classList.add('js');
-        lenis?.resize(); // the router restores scroll natively; Lenis follows it
-      });
-
-      document.addEventListener('astro:page-load', () => {
-        setupLenis();
-        setupReveals();
-      });
+      onPageLoad(() => setupReveals());
     </script>
   </body>
 </html>

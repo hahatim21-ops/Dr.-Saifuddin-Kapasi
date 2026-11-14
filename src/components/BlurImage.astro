@@ -4,6 +4,8 @@
  * With `fade` (default), the photo sharpens in from blur 8px → 0 as it loads.
  * Above-the-fold images use `priority` (eager, high fetch priority) and no fade,
  * so they never wait on JavaScript.
+ * `clip` (Motion v2): a clip-path wipe reveal with the image scaling 1.15 → 1
+ * (engine primitive [data-clip]; visible with JS off and reduced motion).
  */
 import { Picture } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
@@ -19,6 +21,8 @@ interface Props {
   class?: string;
   /** CSS object-position for the crop. */
   position?: string;
+  /** Clip-path wipe reveal direction (Motion v2). */
+  clip?: 'up' | 'down' | 'left' | 'right';
 }
 
 const {
@@ -30,6 +34,7 @@ const {
   fade = !priority,
   class: className,
   position = 'center',
+  clip,
 } = Astro.props;
 
 const placeholder = await blurDataURL(src);
@@ -39,6 +44,7 @@ const placeholder = await blurDataURL(src);
   class:list={['blur-img', className]}
   style={placeholder ? `--ph:url(${placeholder})` : undefined}
   {...fade ? { 'data-blur-img': '' } : {}}
+  {...clip ? { 'data-clip': clip } : {}}
 >
   <Picture
     src={src}
@@ -103,6 +109,8 @@ const placeholder = await blurDataURL(src);
 </style>
 
 <script>
+
+  import { onPageLoad } from '../lib/page';
   function setup() {
     document.querySelectorAll<HTMLElement>('[data-blur-img]:not(.is-loaded)').forEach((wrap) => {
       const img = wrap.querySelector('img');
@@ -115,7 +123,7 @@ const placeholder = await blurDataURL(src);
       }
     });
   }
-  document.addEventListener('astro:page-load', setup);
+  onPageLoad(setup);
 </script>
 <noscript>
   <style>

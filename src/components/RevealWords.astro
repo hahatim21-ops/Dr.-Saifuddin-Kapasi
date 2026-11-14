@@ -1,59 +1,43 @@
 ---
 /**
- * CSS-only word-by-word reveal (no JavaScript framework): each word goes from
- * blur 8px → 0 and up 12px, 80ms apart, 600ms each. Plays once when the block
- * scrolls into view, or on load with `now` (hero). Wrap one word in *asterisks*
- * for the italic green accent. Screen readers get the sentence as one string.
- *
- * Used where shipping React would be wasteful: the hero name and the footer
- * sign-off (which is on every page). The TextReveal island does the same job
- * inside React sections.
+ * Motion v2 heading reveal. Renders the text as plain HTML (fully visible with
+ * JS off) and marks it for the engine's SplitText primitive:
+ *   - headings (h1/h2/h3): lines rise out of masks (yPercent 110 → 0, 0.08s apart)
+ *   - other tags: words rise out of masks
+ * `now` plays on load instead of on scroll-in. SplitText's aria option keeps the
+ * sentence whole for screen readers. Wrap one word in *asterisks* for the
+ * italic green accent.
  */
 interface Props {
   text: string;
   as?: 'h1' | 'h2' | 'h3' | 'p' | 'div' | 'span';
   class?: string;
-  /** Delay before the first word, in ms. */
+  /** Delay before the reveal, in ms. */
   delay?: number;
-  /** Gap between words, in ms (60–80). */
+  /** Kept for API compatibility (v1 word gap); unused. */
   stagger?: number;
   /** Play on load instead of on scroll-in. */
   now?: boolean;
   /** Class applied to the accent word (defaults to italic green). */
   accentClass?: string;
   id?: string;
+  /** Override the split kind. */
+  split?: 'lines' | 'words' | 'chars';
 }
 
-const { text, as: Tag = 'p', class: className, delay = 0, stagger = 80, now = false, accentClass = 'accent', id } = Astro.props;
+const { text, as: Tag = 'p', class: className, delay = 0, now = false, accentClass = 'accent', id, split } = Astro.props;
+const kind = split ?? (Tag === 'h1' || Tag === 'h2' || Tag === 'h3' ? 'lines' : 'words');
 
-const words = text
-  .split(/\s+/)
+const parts = text
+  .split(/(\*[^*]+\*)/)
   .filter(Boolean)
-  .map((w) => {
-    const m = w.match(/^\*(.+)\*([.,;:!?]*)$/);
-    return m ? { text: m[1], trail: m[2], accent: true } : { text: w, trail: '', accent: false };
-  });
-const plain = text.replace(/\*/g, '');
+  .map((p) => (p.startsWith('*') && p.endsWith('*') ? { text: p.slice(1, -1), accent: true } : { text: p, accent: false }));
 ---
 
 <Tag
-  class:list={['reveal-words', className]}
+  class:list={['reveal-split', className]}
   id={id}
-  data-reveal-words
-  {...now ? { 'data-reveal-now': '' } : {}}
-  style={`--delay:${delay}ms;--stagger:${stagger}ms`}
->
-  <span class="sr-only">{plain}</span>
-  <span aria-hidden="true">
-    {
-      words.map((w, i) => (
-        <>
-          <span class="rw" style={`--i:${i}`}>
-            {w.accent ? <em class={accentClass}>{w.text}</em> : w.text}
-            {w.trail}
-          </span>{' '}
-        </>
-      ))
-    }
-  </span>
-</Tag>
+  data-split={kind}
+  {...now ? { 'data-split-now': '' } : {}}
+  {...delay ? { 'data-split-delay': String(delay / 1000) } : {}}
+>{parts.map((p) => (p.accent ? <em class={accentClass}>{p.text}</em> : p.text))}</Tag>

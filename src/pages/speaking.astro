@@ -76,7 +76,7 @@ const programmes = await Promise.all(
     </section>
 
     <section class="page-section container-content" aria-labelledby="formats-title">
-      <h2 id="formats-title" class="page-section__title" data-reveal>{p.formatsTitle}</h2>
+      <h2 id="formats-title" class="page-section__title" data-split="lines">{p.formatsTitle}</h2>
       <ul class="sp-formats" role="list">
         {
           p.formats.map((f, i) => (
@@ -90,7 +90,7 @@ const programmes = await Promise.all(
     </section>
 
     <section class="page-section container-content" aria-labelledby="past-title">
-      <h2 id="past-title" class="page-section__title" data-reveal>{p.pastTitle}</h2>
+      <h2 id="past-title" class="page-section__title" data-split="lines">{p.pastTitle}</h2>
       <ul class="sp-past" role="list">
         {
           p.past.map((e, i) => (
@@ -107,7 +107,7 @@ const programmes = await Promise.all(
     <section class="page-section container-content" aria-labelledby="kit-title">
       <div class="sp-kit" data-reveal>
         <div>
-          <h2 id="kit-title" class="page-section__title">{p.kitTitle}</h2>
+          <h2 id="kit-title" class="page-section__title" data-split="lines">{p.kitTitle}</h2>
           <p class="mt-3 text-stone prose-measure">{p.kitText}</p>
         </div>
         <span class="placeholder-tag">{p.kitPlaceholder}</span>

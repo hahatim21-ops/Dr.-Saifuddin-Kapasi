@@ -170,7 +170,7 @@ The spectrum (red → violet) appears only inside the prism motif and on the Bey
 
 ### Motion
 
-Slow, quiet and played once. The full motion system is in section 5b.
+Cinematic and scroll-driven, on institution green and ivory — never black, neon or glitch. The full system is "Motion v2" in section 5b; the motion notes in the 5a table below describe the earlier, subtler version.
 
 ## 5a. Design blend: what to take from where
 
@@ -213,48 +213,66 @@ The site takes its calm from Rachel Chen's portfolio, its book pages from the El
 | 11. Insights | Numbered index list | Underline grows on hover |
 | 12. Contact + footer | Marshall Goldsmith's green band | Footer line "Ideas are easy. Impact is earned." appears word by word |
 
-## 5b. Motion system: subtle by design
+## 5b. Motion v2: cinematic, scroll-driven
 
-Every animation should feel like a page turning, not a page performing: one easing curve, short distances, and each thing plays once. Smoothness comes from consistency and restraint, not from more effects.
+This section replaces the earlier "subtle by design" motion system. The site keeps its brand — ivory, ink, institution green, brass, Cormorant Garamond and Source Sans 3 — but its motion now has the feel of two references: Muhsin Gigani's portfolio (a signature object that travels through the page, a pinned journey, a numbered work slider) and Sanika Joshi's (a percentage loader, a hero that a paper-like sheet slides over, colour-blocked bands, a scattered collage). The big moments happen on institution green and ivory. Never black backgrounds, neon or glitch effects.
 
-### Rules
+### Engine
 
-- **One easing curve everywhere:** `cubic-bezier(0.22, 1, 0.36, 1)` — fast start, long gentle settle.
-- **Durations:** 150–200ms for hovers and taps; 500–700ms for reveals; up to 1.2s only for the hero line and count-ups.
-- **Small moves:** travel 12–24px at most; scale between 98% and 104%; blur 8px at most; tilt 6° at most.
-- **Stagger:** 60–80ms between items in a group.
-- **Once per visit:** reveals don't replay when scrolling back up.
-- **Smooth to render:** animate only opacity, transform and blur — never width, height or position, which stutter on phones.
-- **Smooth scrolling:** Lenis on desktop with gentle inertia; native scrolling on phones and tablets, where it already feels right. Scroll drives effects in only three places — the Arc's filling line, the book covers rising, the achievement frames settling in — and the page is never pinned or hijacked.
-- **Page changes:** a 250ms crossfade using Astro's built-in view transitions.
-- **Never:** custom cursors, autoplay video, scroll-jacking, pop-ups, or anything that loops except the slow testimonial crossfade.
-- **Reduced motion:** when the device asks for less motion, everything appears instantly and the timeline line is shown full.
+- **GSAP** (free npm package) with ScrollTrigger, SplitText, DrawSVGPlugin, Flip (loaded on demand) and CustomEase. No Three.js.
+- One engine file, `src/lib/scroll.ts`: registers plugins once; runs **Lenis** on desktop fine pointers only, driven by `gsap.ticker` (`lenis.on('scroll', ScrollTrigger.update)`, autoRaf off, `lagSmoothing(0)`); wraps every animation in `gsap.matchMedia()` with three contexts — **desktop** `(min-width:1024px) and (hover:hover) and (pointer:fine)`, **touch/small**, and **reduced motion**.
+- Astro ClientRouter: on `astro:before-swap` every context is reverted and every ScrollTrigger killed; on `astro:page-load` they are created again. Start-up runs the on-screen scenes first, then the rest one per task (no long task), then one `ScrollTrigger.refresh()`; it refreshes again after `document.fonts.ready` and after any size-less lazy image loads. Keyboard focus survives a refresh. Back/forward never leaves a stale pin.
+- **GSAP owns all motion.** The Motion library is no longer used: the Book3D island became `BookCover.astro` (scroll rise + pointer tilt), and the Testimonials and AchievementLightbox islands animate with GSAP (SplitText lines, a drawn quote mark, Flip). React remains only for those two interactive islands.
+- `ScrollTrigger.config({ ignoreMobileResize: true })`; no normalizeScroll.
 
-### Hero load sequence
+### Tokens (CSS in `global.css`, GSAP in `src/lib/motion.ts` → `GS`)
 
-1. 0ms — ivory background and paper grain are already there (no white flash).
-2. 100ms — the name appears word by word: blur 8px to 0, up 12px, 80ms apart.
-3. 400ms — tagline and the "Currently / Previously" lines fade up.
-4. 600ms — the portrait settles from 104% to 100%.
-5. 800ms — the brass inflection line draws itself over 1.2s.
-6. 1000ms — buttons and navigation fade in.
+| Token | Value |
+| --- | --- |
+| UI ease "inflect" | `cubic-bezier(0.22, 1, 0.36, 1)` (registered with CustomEase) |
+| Reveal eases | `expo.out` (default), `power4.out` (clip wipes, odometers) |
+| Reveal duration | 0.9–1.2s |
+| Stagger | characters 0.025s · words 0.04s · lines 0.08s · frames 0.08s |
+| Scrub | 0.6–1 (default 0.8) |
+| Hovers and taps | 150–200ms |
+| Page transition | ≤ 800ms · loader ≤ 1.8s |
+| Limits | magnetic pull ≤ 8px · velocity skew ≤ 3° · tilt ≤ 6° |
 
-### Navigation behaviour
+### Primitives
 
-- At the top: transparent over the ivory page.
-- After 80px of scroll: ivory with a soft background blur and a hairline underneath.
-- Desktop: hides when scrolling down, returns when scrolling up.
-- Phones: a floating pill dock with "Invite to speak" slides up once the hero has scrolled past.
+- **Split reveal** `[data-split="lines|words|chars"]` — SplitText lines in masks, yPercent 110 → 0. `aria: 'auto'` keeps whole words for screen readers; `autoSplit` + `onSplit` re-split cleanly on resize.
+- **Clip reveal** `[data-clip="up|down|left|right"]` — clip-path inset wipe; the inner image scales 1.15 → 1. **Parallax** `[data-parallax]` yPercent ±8, desktop only.
+- **Odometer** `[data-odometer]` — rolling digit columns; the real value stays in sr-only text.
+- **Magnetic** `[data-magnetic]` — follows the pointer, at most 8px, desktop only.
+- **Inflection edge** (`InflectionEdge.astro`) — the top edge of a green band starts flat and bends upward as it scrolls in (scrubbed path).
+- **Travelling prism** (`PrismTraveller.astro` + `src/lib/prism.ts`) — the signature graphic on a fixed, aria-hidden layer; scrubbed between `[data-prism-stop]` waypoints (scale, beam, spectrum split, rotation, opacity). Its 6s breathing glow is its only idle loop. Desktop only; phones and tablets get static prisms in the hero and Books.
+- **Custom cursor** — an ink dot and a brass ring that follows with lerp, growing with a label ("Read", "View", "Open", "Drag") over cards and photos. Native cursor on inputs. Desktop fine pointers only.
 
-### Tools
+### Site-wide moments
 
-| Tool | Used for | Note |
-| --- | --- | --- |
-| Motion (motion.dev, formerly Framer Motion) | Timeline, text reveals, testimonials, book tilt | Inside React islands that load only when scrolled into view |
-| Lenis | Smooth scrolling | Desktop only |
-| Astro view transitions | Crossfade between pages | Built in |
-| CSS + IntersectionObserver | Simple fade-ups and hairline draws | No library needed |
-| 21st.dev "Copy prompt" | Handing each chosen component to Claude Code | Or take the free code from Aceternity UI, Magic UI or Motion Primitives |
+1. **Loader** — first visit per session only; green screen, brass numerals 000 → 100 bottom-left, the inflection line as the progress bar, "Pioneering possibilities."; lifts away like a curtain. ≤ 1.8s, real progress (fonts + hero image), skippable by click or key, no ENTER gate. Never on inner pages or under reduced motion; the hero HTML is underneath from the start.
+2. **Travelling prism** stops: beside the hero name (faint beam) → large behind the manifesto (beam brightens) → docked beside the Arc's year, turning → at the Beyond Ideas cover, splitting into the full spectrum → fades out, then reappears beside the footer sign-off.
+3. **Inflection edges** on every green band.
+4. **Headings** — every h1 and h2 reveals with split lines; the hero name by characters.
+5. **Images** — clip-path wipes with an inner 1.15 → 1 scale; light parallax on large photos (desktop).
+6. **Nav** — a brass scroll-progress hairline; on desktop the current section name, a counter ("03 / 13") and an active link. Hide-on-scroll-down and the phone dock stay.
+7. **Cursor** and **magnetic primary buttons** (desktop).
+8. **Page transitions** — a green curtain wipe carrying the brass inflection line, ≤ 800ms; instant under reduced motion.
+9. **Film grain** — the paper grain animates on green bands only (steps, 8fps, very faint).
+
+### Home page
+
+Hero (giant character-split name, rotating eyebrow, clip-revealed duotone portrait, live Mumbai clock, scroll cue, credibility marquee; pins while the next section slides up over it like a sheet of paper) → **Manifesto** (new green band, pinned ~150vh, words scrub from brass to ivory with the prism behind) → **The Arc** (pinned left column with an odometer year 1995 → 2026 and swapping chapter titles; ruled lines on the "Back where he learned" callout) → **Numbers** (odometers) → **Pillars** (outlined numerals; rows flood green on hover) → **Books** (green band, a giant "Books" word in parallax, covers rise and rotate in, spectrum splits) → **Thinking tools** (pinned, DrawSVG stage by stage) → **Speaking & training** (pinned horizontal track of five cards, "01 / 05", velocity skew) → **In the room** (scattered prints straighten into the grid) → **What people say** (line masks, a drawn quote mark, a progress ring on pause) → **Achievements** (frames drop and settle; Flip lightbox) → **Insights** (a preview card follows the cursor) → **Contact + footer** ("Let's build something enduring.", magnetic submit, the name edge to edge, the sign-off word by word, the prism returns).
+
+Phones never pin, except where noted; they get the same intros, swipe rows with counters, and reveals as things enter.
+
+### Guardrails (non-negotiable)
+
+- **JS off:** every word and image is visible. Hidden start states are set only at runtime by GSAP; the `<noscript>` overrides stay.
+- **Reduced motion:** no loader, pins, scrub, cursor, marquee or prism travel; Lenis off; content simply appears.
+- **Pinned and horizontal sections** stay reachable by keyboard and screen reader in reading order, with no focus traps; tab order matches what is visible.
+- Animate only **transform, opacity, clip-path and filter** (plus the scrubbed SVG path of the inflection edge and stroke drawing); `will-change` only while animating; 60fps on a mid-range phone under 4× CPU throttle.
+- **Budgets:** about 180KB of JS (gzipped) on the home page, heavy parts starting only near the viewport. Lighthouse mobile: Performance 85+, Accessibility 95+, CLS < 0.1, LCP < 2.5s.
 
 ## 6. How it will be built
 
@@ -267,7 +285,7 @@ Use Astro with Tailwind CSS, keep all content in simple Markdown and JSON files,
 | Framework | Astro (latest) | Content-first, static, very fast, simple for Claude Code to scaffold |
 | Styling | Tailwind CSS v4 with design tokens in one CSS file | Mobile-first utilities and breakpoints built in |
 | Content | Astro content collections: Markdown + JSON | Books, programmes, testimonials, timeline, honours, articles live as data |
-| Animation | Motion inside React islands for the animated components, Lenis for smooth scrolling on desktop, CSS for simple fades (section 5b) | Islands load only when scrolled into view, so pages stay light |
+| Animation | GSAP (ScrollTrigger, SplitText, DrawSVG, Flip) in one engine file, Lenis for smooth scrolling on desktop, CSS for simple fades (section 5b) | Scenes start in small tasks; islands load only when scrolled into view |
 | Images | Astro's Image component | Auto AVIF/WebP and responsive sizes |
 | Contact form | Web3Forms or Formspree | No backend needed; emails land in his inbox |
 | Hosting | Vercel or Netlify (free tier) + his domain | HTTPS, previews, one-click deploys |
@@ -288,7 +306,7 @@ src/
   components/
     Nav, Hero, Arc, NumbersStrip, Pillars, BookCard, Framework,
     ProgrammeCard, Gallery, Recognition, ContactForm, Footer
-  islands/            React + Motion: Timeline, TextReveal, Testimonials, Book3D, NumberTicker
+  islands/            React (GSAP for motion): Testimonials, AchievementLightbox
   layouts/            Base.astro
   pages/
     index.astro, about.astro, speaking.astro, frameworks.astro,
@@ -409,10 +427,9 @@ STACK
   timeline, testimonials, achievements, honours (JSON). No content hard-coded
   in components.
 - Plain .astro components by default. React islands (client:visible) only for
-  animated parts: TextReveal, Timeline, NumberTicker, Book3D, Testimonials,
-  AchievementLightbox.
-- "motion" package (LazyMotion + domAnimation), Lenis smooth scroll on desktop
-  pointer devices only, Astro view transitions for a 250ms page crossfade.
+  the two interactive parts: Testimonials and AchievementLightbox.
+- GSAP (src/lib/scroll.ts) for all motion, Lenis smooth scroll on desktop
+  pointer devices only, Astro view transitions with a green curtain wipe (≤ 800ms).
 - Fonts self-hosted via Fontsource: Cormorant Garamond (600, 700, 600 italic)
   and Source Sans 3 (400, 600).
 - Contact form via Web3Forms. Deploy target: Vercel.

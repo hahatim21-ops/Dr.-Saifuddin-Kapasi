@@ -3,6 +3,8 @@
 import { getImage } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Hero from '../components/home/Hero.astro';
+import Loader from '../components/Loader.astro';
+import Manifesto from '../components/home/Manifesto.astro';
 import Arc from '../components/home/Arc.astro';
 import Numbers from '../components/home/Numbers.astro';
 import Pillars from '../components/home/Pillars.astro';
@@ -35,8 +37,10 @@ const heroPreload = await getImage({
     imagesizes={heroPortrait.sizes}
     fetchpriority="high"
   />
+  <Loader />
   <main id="main">
     <Hero />
+    <Manifesto />
     <Arc />
     <Numbers />
     <Pillars />

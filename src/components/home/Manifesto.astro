@@ -1,0 +1,163 @@
+---
+/**
+ * Home §2 — Manifesto (new). A green band whose top edge is the inflection
+ * line: it is the "sheet" that slides over the pinned hero, starting flat and
+ * bending upward as it arrives.
+ * - Desktop: pinned for ~150vh; each word scrubs from dim light brass to full
+ *   ivory, with the travelling prism docked large behind the words.
+ * - Phones: no pin; the words light up as the paragraph passes through.
+ * Only opacity animates: a dim, aria-hidden brass copy of the text sits under
+ * the real (ivory) text, whose words fade from 0 to 1. With JS off or reduced
+ * motion the real text is simply fully visible.
+ */
+import home from '../../data/home.json';
+import Eyebrow from '../Eyebrow.astro';
+import InflectionEdge from '../InflectionEdge.astro';
+
+const m = home.manifesto;
+---
+
+<div class="mani-sheet" data-sheet>
+  <InflectionEdge class="mani-edge" />
+  <section id="manifesto" class="mani on-green" aria-labelledby="mani-title" data-section={m.eyebrow}>
+    <!-- Prism waypoint on the (unpinned) section, at the middle of the first screen
+         (where the pinned content sits while it is held for 150vh). It spans the
+         content column and the prism docks near its right edge, so the glass and
+         the beam stay clear of the quote at every desktop width. -->
+    <span class="container-content mani__stop" data-prism-stop="manifesto" data-prism-scale="1.9" data-prism-beam="0.55" data-prism-beam-to="1" data-prism-hold="150" data-prism-anchor="right" data-prism-dx="-190" aria-hidden="true"></span>
+    <div class="mani__pin" data-mani-pin>
+      <div class="container-content mani__inner">
+        <h2 id="mani-title" class="sr-only">{m.eyebrow}</h2>
+        <Eyebrow as="p">{m.eyebrow}</Eyebrow>
+        <blockquote class="mani__quote">
+          <p class="mani__ghost" aria-hidden="true">{m.quote}</p>
+          <p class="mani__text" data-mani-text>{m.quote}</p>
+          <footer class="mani__by">— {m.attribution}</footer>
+        </blockquote>
+        <p class="mani__signoff">{m.signOff}</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  /* The sheet here is the edge + band, not a rounded ivory card. */
+  .mani-sheet[data-sheet] {
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
+    /* No stacking context here, so the words (z 6) can sit above the travelling
+       prism (z 4) while the green band stays below it. */
+    z-index: auto;
+  }
+  .mani-sheet :global(.mani-edge) {
+    filter: drop-shadow(0 -14px 22px rgb(28 31 30 / 0.18));
+  }
+  .mani {
+    position: relative;
+    background-color: var(--color-green);
+    color: var(--color-ivory);
+  }
+  .mani__pin {
+    /* GSAP makes this position: fixed while pinned, which creates a stacking
+       context: its own z-index keeps the words above the prism layer (z 4). */
+    position: relative;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    min-height: 100dvh;
+    padding-block: clamp(4rem, 3rem + 6vw, 8rem);
+  }
+  .mani__inner {
+    position: relative;
+    z-index: 6; /* above the prism layer: the prism glows behind the words */
+  }
+  .mani__stop {
+    position: absolute;
+    inset-inline: 0;
+    top: 50vh;
+    display: block;
+    height: 1px;
+  }
+  .mani__quote {
+    position: relative;
+    margin: 1.75rem 0 0;
+  }
+  .mani__text,
+  .mani__ghost {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(2.25rem, 1.2rem + 4.6vw, 6rem);
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    max-width: 17ch;
+    text-wrap: balance;
+  }
+  .mani__text {
+    position: relative;
+    color: var(--color-ivory);
+  }
+  /* The dim layer the ivory words light up over (only seen once JS hides them). */
+  .mani__ghost {
+    position: absolute;
+    inset: 0 auto auto 0;
+    color: var(--color-brass-light);
+    opacity: 0.22;
+  }
+  .mani__by {
+    margin-top: 1.5rem;
+    font-size: var(--text-small);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--color-brass-light);
+  }
+  .mani__signoff {
+    margin-top: clamp(2rem, 4vw, 3.5rem);
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-brass-light);
+  }
+</style>
+
+<script>
+  import { gsap, splitText, registerScene } from '../../lib/scroll';
+
+  registerScene('manifesto', ({ reduce, desktop }) => {
+    const section = document.querySelector<HTMLElement>('#manifesto');
+    if (!section || reduce) return;
+    const text = section.querySelector<HTMLElement>('[data-mani-text]')!;
+    const pin = section.querySelector<HTMLElement>('[data-mani-pin]')!;
+
+    // Words (not lines), so wrapping changes don't matter; aria keeps the sentence whole.
+    const split = splitText(text, { type: 'words' });
+    gsap.set(split.words, { opacity: 0 });
+
+    if (desktop) {
+      // Pinned ~150vh: the words light up across the pin.
+      gsap.to(split.words, {
+        opacity: 1,
+        ease: 'none',
+        stagger: 0.1,
+        scrollTrigger: {
+          trigger: pin,
+          start: 'top top',
+          end: () => '+=' + window.innerHeight * 1.5,
+          pin: true,
+          scrub: 0.6,
+          invalidateOnRefresh: true,
+        },
+      });
+    } else {
+      // Phones/tablets: no pin; light up as the paragraph passes through.
+      gsap.to(split.words, {
+        opacity: 1,
+        ease: 'none',
+        stagger: 0.1,
+        scrollTrigger: { trigger: text, start: 'top 85%', end: 'bottom 40%', scrub: 0.6 },
+      });
+    }
+    return () => split.revert();
+  });
+</script>

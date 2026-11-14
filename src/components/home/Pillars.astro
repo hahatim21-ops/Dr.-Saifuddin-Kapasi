@@ -1,54 +1,89 @@
 ---
 /**
- * Home §4 — Four pillars as numbered editorial rows: (01)–(04), a hairline that
- * draws left → right above each row, and an arrow that nudges 4px on hover.
- * Each whole row is one link (to the service it maps to), so it works the same
- * by tap, click or keyboard — nothing is hover-only. CSS only, no JavaScript.
+ * Home §5 — Four pillars (Motion v2).
+ * - Big outlined brass numerals (01)–(04); rows stagger in as their hairlines
+ *   draw left → right (GSAP, once).
+ * - ≥768px: each row is one link. On hover or keyboard focus a green layer
+ *   floods in from the left (clip-path), carrying an ivory copy of the row, and
+ *   the arrow travels 12px. Only clip-path and transform animate; the copy is
+ *   aria-hidden.
+ * - Phones: each row is a native <details> that expands on tap to show the line,
+ *   the service and a link.
  */
 import { getCollection } from 'astro:content';
 import home from '../../data/home.json';
 import Icon from '../Icon.astro';
 import SectionHeader from '../SectionHeader.astro';
 
-const pillars = (await getCollection('pillars')).sort((a, b) => a.data.order - b.data.order);
+const pillars = (await getCollection('pillars'))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((p, i) => ({
+    ...p.data,
+    num: String(i + 1).padStart(2, '0'),
+    // Keep hyphenated words (Customer-Centric) on one line.
+    titleParts: p.data.title.split(' ').map((w) => ({ w, nowrap: w.includes('-') })),
+  }));
 ---
 
 <section id="pillars" class="pillars" aria-labelledby="pillars-title">
   <div class="container-content">
     <SectionHeader eyebrow={home.pillars.eyebrow} id="pillars-title" title={home.pillars.title} intro={home.pillars.intro} />
 
-    <ol class="pillars__list" role="list">
+    <ol class="pillars__list" role="list" data-pillars>
       {
-        pillars.map((p, i) => (
-          <li class="pillar">
-            <span class="pillar__rule" data-draw-x style={`--i:${i}`} aria-hidden="true" />
-            <a href={p.data.href} class="pillar__link" data-reveal style={`--i:${i}`}>
-              <span class="pillar__num" aria-hidden="true">
-                ({String(i + 1).padStart(2, '0')})
+        pillars.map((p) => (
+          <li class="pillar" data-pillar>
+            <span class="pillar__rule" data-pillar-rule aria-hidden="true" />
+
+            {/* ≥768px: one link per row, with the flood layer */}
+            <a href={p.href} class="pillar__row" data-cursor="Open" data-cursor-tone="light">
+              <span class="pillar__cols">
+                <span class="pillar__num" aria-hidden="true">{p.num}</span>
+                <h3 class="pillar__title">{p.titleParts.map((t, ti) => (<>{ti > 0 && ' '}{t.nowrap ? <span class="nowrap">{t.w}</span> : t.w}</>))}</h3>
+                <span class="pillar__body">
+                  <span class="pillar__line">{p.line}</span>
+                  <span class="pillar__service">
+                    <span class="sr-only">Service: </span>
+                    {p.service}
+                  </span>
+                </span>
+                <Icon name="arrow-right" size={26} class="pillar__arrow" />
               </span>
-              <h3 class="pillar__title">
-                {/* Keep hyphenated words (Customer-Centric) on one line. */}
-                {p.data.title.split(' ').map((w, wi) => (
-                  <>
-                    {wi > 0 && ' '}
-                    {w.includes('-') ? <span class="nowrap">{w}</span> : w}
-                  </>
-                ))}
-              </h3>
-              <span class="pillar__body">
-                <span class="pillar__line">{p.data.line}</span>
-                <span class="pillar__service">
-                  <span class="sr-only">Service: </span>
-                  {p.data.service}
+              <span class="pillar__flood" aria-hidden="true">
+                <span class="pillar__cols">
+                  <span class="pillar__num">{p.num}</span>
+                  <span class="pillar__title">{p.titleParts.map((t, ti) => (<>{ti > 0 && ' '}{t.nowrap ? <span class="nowrap">{t.w}</span> : t.w}</>))}</span>
+                  <span class="pillar__body">
+                    <span class="pillar__line">{p.line}</span>
+                    <span class="pillar__service">{p.service}</span>
+                  </span>
+                  <Icon name="arrow-right" size={26} class="pillar__arrow" />
                 </span>
               </span>
-              <Icon name="arrow-right" size={24} class="pillar__arrow" />
             </a>
+
+            {/* Phones: tap to expand */}
+            <details class="pillar__fold">
+              <summary class="pillar__summary">
+                <span class="pillar__num" aria-hidden="true">{p.num}</span>
+                <span class="pillar__title">{p.titleParts.map((t, ti) => (<>{ti > 0 && ' '}{t.nowrap ? <span class="nowrap">{t.w}</span> : t.w}</>))}</span>
+                <span class="pillar__toggle" aria-hidden="true">
+                  <Icon name="plus" size={20} />
+                </span>
+              </summary>
+              <div class="pillar__fold-body">
+                <p class="pillar__line">{p.line}</p>
+                <p class="pillar__service">{p.service}</p>
+                <a href={p.href} class="pillar__more">
+                  Learn more <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </details>
           </li>
         ))
       }
       <li class="pillar pillar--end" aria-hidden="true">
-        <span class="pillar__rule" data-draw-x style={`--i:${pillars.length}`} />
+        <span class="pillar__rule" data-pillar-rule />
       </li>
     </ol>
   </div>
@@ -69,46 +104,33 @@ const pillars = (await getCollection('pillars')).sort((a, b) => a.data.order - b
   .pillar__rule {
     position: absolute;
     inset: 0 0 auto 0;
+    z-index: 2;
     height: 1px;
     background: var(--color-hairline);
+    transform-origin: left center;
   }
   .pillar--end {
     height: 1px;
   }
 
-  /* ---------- Row: phones (stacked) ---------- */
-  .pillar__link {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    grid-template-areas:
-      'num   title arrow'
-      'body  body  body';
-    align-items: baseline;
-    column-gap: 1rem;
-    row-gap: 0.75rem;
-    padding-block: 1.75rem;
-    color: var(--color-ink);
-    text-decoration: none;
-  }
+  /* Outlined brass numerals. */
   .pillar__num {
-    grid-area: num;
-    font-size: var(--text-small);
-    color: var(--color-stone);
-    font-variant-numeric: tabular-nums;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(2.75rem, 1.8rem + 3vw, 5rem);
+    line-height: 0.9;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--color-brass);
+    font-variant-numeric: lining-nums tabular-nums;
   }
   .pillar__title {
-    grid-area: title;
+    font-family: var(--font-serif);
+    font-weight: 600;
     font-size: var(--text-h3);
-    line-height: 1.15;
-    transition: color var(--dur-tap) var(--ease);
+    line-height: 1.12;
   }
   .pillar__title .nowrap {
     white-space: nowrap;
-  }
-  .pillar__body {
-    grid-area: body;
-    display: grid;
-    gap: 0.4rem;
   }
   .pillar__line {
     max-width: 46ch;
@@ -118,43 +140,139 @@ const pillars = (await getCollection('pillars')).sort((a, b) => a.data.order - b
     font-weight: 600;
     color: var(--color-green);
   }
-  .pillar__link :global(.pillar__arrow) {
-    grid-area: arrow;
-    align-self: center;
-    color: var(--color-brass);
-    transition: transform var(--dur-tap) var(--ease);
-  }
 
-  /* ---------- Row: tablet & desktop (one line per pillar) ---------- */
+  /* ================= ≥768px: link rows with flood ================= */
+  .pillar__row {
+    position: relative;
+    display: none;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+  .pillar__fold {
+    display: block;
+  }
   @media (min-width: 768px) {
-    .pillar__link {
-      grid-template-columns: 4.5rem minmax(0, 1fr) minmax(0, 1.15fr) 2.5rem;
-      grid-template-areas: 'num title body arrow';
-      column-gap: 1.5rem;
-      padding-block: 2.25rem;
+    .pillar__row {
+      display: block;
     }
-    .pillar__link :global(.pillar__arrow) {
-      justify-self: end;
-    }
-    .pillar__line {
-      max-width: none;
+    .pillar__fold {
+      display: none;
     }
   }
-
-  /* Hover & focus: title turns green, arrow nudges 4px (150–200ms). */
-  .pillar__link:hover .pillar__title,
-  .pillar__link:focus-visible .pillar__title {
-    color: var(--color-green);
+  .pillar__cols {
+    display: grid;
+    grid-template-columns: 7rem minmax(0, 1fr) minmax(0, 1.15fr) 3rem;
+    align-items: center;
+    column-gap: 1.5rem;
+    padding: 2rem 1.25rem;
   }
-  .pillar__link:focus-visible :global(.pillar__arrow) {
-    transform: translateX(4px);
+  .pillar__body {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .pillar__cols :global(.pillar__arrow) {
+    justify-self: end;
+    color: var(--color-brass);
+  }
+  .pillar__flood {
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-green);
+    background-image: var(--grain);
+    color: var(--color-ivory);
+    clip-path: inset(0% 100% 0% 0%);
+    transition: clip-path 0.6s var(--ease-ui);
+    pointer-events: none;
+  }
+  .pillar__flood .pillar__num {
+    -webkit-text-stroke-color: var(--color-brass-light);
+  }
+  .pillar__flood .pillar__service {
+    color: var(--color-brass-light);
+  }
+  .pillar__flood :global(.pillar__arrow) {
+    color: var(--color-brass-light);
+    transition: transform 0.6s var(--ease-ui);
+  }
+  .pillar__row:focus-visible {
+    outline-offset: 4px;
+  }
+  .pillar__row:focus-visible .pillar__flood {
+    clip-path: inset(0% 0% 0% 0%);
+  }
+  .pillar__row:focus-visible .pillar__flood :global(.pillar__arrow) {
+    transform: translateX(12px);
   }
   @media (hover: hover) {
-    .pillar__link:hover :global(.pillar__arrow) {
-      transform: translateX(4px);
+    .pillar__row:hover .pillar__flood {
+      clip-path: inset(0% 0% 0% 0%);
+    }
+    .pillar__row:hover .pillar__flood :global(.pillar__arrow) {
+      transform: translateX(12px);
     }
   }
-  .pillar__link:focus-visible {
-    outline-offset: 6px;
+
+  /* ================= Phones: tap to expand ================= */
+  .pillar__summary {
+    display: grid;
+    grid-template-columns: 4.25rem minmax(0, 1fr) 2.75rem;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2.75rem;
+    padding-block: 1.25rem;
+    cursor: pointer;
+    list-style: none;
+  }
+  .pillar__summary::-webkit-details-marker {
+    display: none;
+  }
+  .pillar__toggle {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    color: var(--color-green);
+    transition:
+      transform var(--dur-tap) var(--ease),
+      background-color var(--dur-tap) var(--ease);
+  }
+  .pillar__fold[open] .pillar__toggle {
+    transform: rotate(45deg);
+    background: var(--color-green);
+    color: var(--color-ivory);
+  }
+  .pillar__fold-body {
+    display: grid;
+    gap: 0.6rem;
+    padding: 0 0 1.5rem 5rem;
+  }
+  .pillar__fold[open] .pillar__fold-body {
+    animation: fade-up var(--dur-reveal) var(--ease) both;
+  }
+  .pillar__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-green);
   }
 </style>
+
+<script>
+  import { gsap, registerScene } from '../../lib/scroll';
+  import { GS } from '../../lib/motion';
+
+  registerScene('pillars', ({ reduce }) => {
+    const list = document.querySelector<HTMLElement>('[data-pillars]');
+    if (!list || reduce) return;
+    const rules = list.querySelectorAll('[data-pillar-rule]');
+    const rows = list.querySelectorAll('[data-pillar]');
+    gsap
+      .timeline({ scrollTrigger: { trigger: list, start: 'top 80%', once: true } })
+      .fromTo(rules, { scaleX: 0 }, { scaleX: 1, duration: 1.1, ease: GS.ease.strong, stagger: GS.stagger.lines }, 0)
+      .from(rows, { opacity: 0, y: 24, duration: GS.dur.reveal, ease: GS.ease.reveal, stagger: GS.stagger.lines }, 0.1);
+  });
+</script>

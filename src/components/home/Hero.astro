@@ -1,29 +1,54 @@
 ---
 /**
- * Home §1 — Hero. No JavaScript framework; the load sequence is CSS:
- *   0ms     ivory + grain (page background, no flash)
- *   100ms   name sentence, word by word (blur 8→0, up 12px, 80ms apart)
- *   400ms   eyebrow and "Currently / Previously" fade up
- *   600ms   portrait settles 1.04 → 1 (scale only — never hidden, good for LCP)
- *   800ms   brass inflection line draws over 1.2s
- *   1000ms  buttons, credibility line (and the nav, via Base navIntro)
- * Phones: portrait on top. ≥768px: two columns; the serif sentence overlaps
- * the portrait's left edge.
+ * Home §1 — Hero (Motion v2).
+ * - The giant name is the h1; its letters rise out of masks (SplitText chars).
+ * - The existing sentence continues under it as the lead ("…is an architect of
+ *   enduring institutions."), "enduring" in green italic.
+ * - Eyebrow rotates Educator · Author · Advisor · Speaker (2.5s, mask slide,
+ *   pauses off-screen); screen readers get the full list once.
+ * - Portrait: clip-path wipe, then settles; warm duotone grade in CSS.
+ * - Live "Mumbai · 21:27 IST" clock, a "Scroll" cue, and the credibility names
+ *   as a slow marquee (stops on hover/focus; a plain list with JS off or
+ *   reduced motion).
+ * - Desktop: the hero pins and the next section ([data-sheet]) slides over it
+ *   like a sheet of paper while the hero scales to 0.94 and dims. Phones: no
+ *   pin; the sheet overlaps with a negative margin and a shadow.
+ * Everything is visible in the HTML; GSAP sets start states at runtime only.
+ * The intro waits for the loader (loader:done) when it is playing.
  */
 import site from '../../data/site.json';
 import { heroPortrait } from '../../lib/images';
 import BlurImage from '../BlurImage.astro';
-import Eyebrow from '../Eyebrow.astro';
 import Icon from '../Icon.astro';
 import InflectionLine from '../InflectionLine.astro';
-import RevealWords from '../RevealWords.astro';
+
+const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
 ---
 
-<section data-hero class="hero" aria-labelledby="hero-title">
-  <div class="hero__inner container-content">
-    <div class="hero__portrait">
-      <div class="hero__frame">
-        <div class="hero__settle" data-reveal="settle" data-reveal-now style="--delay:600ms">
+<section data-hero data-section="Introduction" class="hero" aria-labelledby="hero-title">
+  <div class="hero__inner" data-hero-inner>
+    <div class="hero__top container-content">
+      <p class="hero__eyebrow" data-intro>
+        <InflectionLine variant="glyph" />
+        <span class="sr-only">{site.heroRolesSr}</span>
+        <span class="hero__roles" aria-hidden="true" data-roles>
+          {site.heroRoles.map((r, i) => <span class:list={['hero__role', { 'is-active': i === 0 }]}>{r}</span>)}
+        </span>
+      </p>
+      <p class="hero__clock" data-intro>
+        <span>{site.clockCity}</span>
+        <span aria-hidden="true">·</span>
+        <time data-clock data-zone={site.clockZone}>{site.clockAbbr}</time>
+      </p>
+    </div>
+
+    <div class="hero__grid container-content">
+      <h1 id="hero-title" class="hero__name" data-hero-name data-intro>{site.heroName}</h1>
+      <!-- Travelling prism, first waypoint: small, beside the name, faint beam -->
+      <span class="hero__stop" data-prism-stop="hero" data-prism-scale="0.42" data-prism-beam="0.22" data-prism-anchor="right" data-prism-dx="-40" aria-hidden="true"></span>
+
+      <div class="hero__portrait">
+        <div class="hero__frame" data-hero-frame data-intro data-cursor="View">
           <BlurImage
             src={heroPortrait.src}
             alt={heroPortrait.alt}
@@ -33,133 +58,194 @@ import RevealWords from '../RevealWords.astro';
             priority
             class="hero__img"
           />
+          {heroPortrait.placeholder && <span class="placeholder-tag hero__ph">Placeholder portrait</span>}
         </div>
-        {heroPortrait.placeholder && <span class="placeholder-tag hero__ph">Placeholder portrait</span>}
+      </div>
+
+      <div class="hero__text">
+        <p class="hero__lead" data-hero-lead data-intro>
+          {leadParts.map((part) => (part.startsWith('*') ? <em class="accent">{part.slice(1, -1)}</em> : part))}
+        </p>
+
+        <dl class="hero__status" data-intro data-hero-later>
+          <div>
+            <dt>Currently:</dt>
+            <dd>{site.currently}</dd>
+          </div>
+          <div>
+            <dt>Previously:</dt>
+            <dd>{site.previously}</dd>
+          </div>
+        </dl>
+
+        <div class="hero__line" data-hero-line>
+          <InflectionLine variant="hero" draw={false} />
+        </div>
+
+        <div class="hero__actions" data-intro data-hero-later>
+          <a href={site.nav.cta.href} class="btn btn-primary" data-magnetic>
+            {site.nav.cta.label} <Icon name="arrow-right" size={18} class="btn-arrow" />
+          </a>
+          <a href="#books" class="btn btn-secondary">Explore the books</a>
+        </div>
       </div>
     </div>
 
-    <div class="hero__text">
-      <div data-reveal data-reveal-now style="--delay:400ms">
-        <Eyebrow>{site.heroEyebrow}</Eyebrow>
-      </div>
-
-      <RevealWords as="h1" id="hero-title" now delay={100} text={site.heroSentence} class="hero__title" />
-
-      <dl class="hero__status" data-reveal data-reveal-now style="--delay:400ms">
-        <div>
-          <dt>Currently:</dt>
-          <dd>{site.currently}</dd>
-        </div>
-        <div>
-          <dt>Previously:</dt>
-          <dd>{site.previously}</dd>
-        </div>
-      </dl>
-
-      <div class="hero__line">
-        <InflectionLine variant="hero" drawOnLoad delay={800} />
-      </div>
-
-      <div class="hero__actions" data-reveal data-reveal-now style="--delay:1000ms">
-        <a href={site.nav.cta.href} class="btn btn-primary">
-          {site.nav.cta.label} <Icon name="arrow-right" size={18} class="btn-arrow" />
-        </a>
-        <a href="#books" class="btn btn-secondary">Explore the books</a>
-      </div>
-
-      <div class="hero__cred" data-reveal="fade" data-reveal-now style="--delay:1000ms">
+    <div class="hero__bottom" data-intro data-hero-later>
+      <div class="hero__cred container-content">
         <p class="hero__cred-label">{site.credibilityLabel}</p>
-        <ul role="list">
-          {site.credibility.map((name) => <li>{name}</li>)}
-        </ul>
+        <div class="hero__marquee" data-marquee>
+          <ul class="hero__track" role="list" data-marquee-track>
+            {site.credibility.map((name) => <li>{name}</li>)}
+          </ul>
+        </div>
       </div>
+      <a href="#arc" class="hero__cue" data-scroll-cue>
+        <span>{site.scrollCue}</span>
+        <span class="hero__cue-line" aria-hidden="true"><span data-cue-pulse></span></span>
+      </a>
     </div>
   </div>
 </section>
 
 <style>
   .hero {
-    --header-space: 5rem;
+    position: relative;
+    z-index: 0; /* the sheet after it (DOM order) paints above */
     min-height: 100dvh;
-    padding-top: calc(var(--header-space) + env(safe-area-inset-top));
-    padding-bottom: clamp(3rem, 6vw, 5rem);
   }
-  @media (min-width: 1024px) {
-    .hero {
-      --header-space: 5.5rem;
-      display: flex;
-      align-items: center;
-    }
-  }
-
   .hero__inner {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    min-height: 100dvh;
+    padding-top: calc(4.75rem + env(safe-area-inset-top));
+    transform-origin: 50% 30%;
+  }
+  @media (min-width: 1024px) {
+    .hero__inner {
+      padding-top: calc(6rem + env(safe-area-inset-top));
+    }
   }
 
-  /* ---------- Portrait ---------- */
-  .hero__frame {
-    overflow: hidden; /* the 1.04 → 1 settle happens inside the frame */
-    border-radius: 8px;
-    /* Phones: short enough that the name starts in the first screen. */
-    height: clamp(12rem, 34dvh, 22rem);
+  /* ---------- Top row: rotating eyebrow + clock ---------- */
+  .hero__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .hero__eyebrow,
+  .hero__clock {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-stone);
+    font-variant-numeric: tabular-nums;
+  }
+  .hero__roles {
+    display: inline-grid;
+    overflow: hidden;
+    height: 1.3em;
+    line-height: 1.3;
+  }
+  .hero__role {
+    grid-area: 1 / 1;
+    opacity: 0;
+  }
+  .hero__role.is-active {
+    opacity: 1;
+  }
+
+  /* ---------- Name + portrait + text ---------- */
+  .hero__grid {
+    position: relative;
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+    flex: 1;
+    align-content: center;
+  }
+  .hero__name {
+    position: relative;
+    z-index: 2;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: clamp(4rem, 1.4rem + 10.6vw, 12rem);
+    line-height: 0.88;
+    letter-spacing: -0.025em;
+    color: var(--color-ink);
+    text-wrap: balance;
+  }
+  .hero__portrait {
+    order: -1; /* phones: portrait above the name */
+  }
+  .hero__stop {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 1px;
+    height: 1px;
   }
   .hero__frame {
     position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    height: clamp(11rem, 30dvh, 20rem);
   }
-  .hero__settle {
+  .hero__frame :global(.hero__img) {
     height: 100%;
+  }
+  /* Warm duotone grade (CSS only): mono → warm, then a brass/green wash. */
+  .hero__frame :global(.blur-img__img) {
+    filter: grayscale(1) sepia(0.42) saturate(1.15) contrast(1.04) brightness(1.02);
+  }
+  .hero__frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgb(212 180 131 / 0.35), rgb(31 61 51 / 0.38));
+    mix-blend-mode: soft-light;
+    pointer-events: none;
   }
   .hero__ph {
     position: absolute;
     top: 0.75rem;
     right: 0.75rem;
+    z-index: 1;
     background: var(--color-ivory);
   }
-  .hero__frame :global(.hero__img) {
-    height: 100%;
-  }
 
-  /* ---------- Text ---------- */
-  .hero__text {
-    position: relative;
-    z-index: 1;
-  }
-  .hero :global(.hero__title) {
-    margin-top: 1.25rem;
-    font-size: var(--text-hero);
-    line-height: var(--text-hero--line-height);
-    letter-spacing: -0.015em;
+  .hero__lead {
+    font-family: var(--font-serif);
     font-weight: 600;
+    font-size: clamp(1.75rem, 1.3rem + 1.9vw, 3rem);
+    line-height: 1.1;
+    max-width: 22ch;
     text-wrap: balance;
   }
-
   .hero__status {
-    margin-top: 1.5rem;
+    margin-top: 1.25rem;
     max-width: 36rem;
     display: grid;
-    gap: 0.35rem;
-  }
-  .hero__status div {
-    display: block;
+    gap: 0.3rem;
   }
   .hero__status dt {
     display: inline;
     font-weight: 600;
-    color: var(--color-ink);
   }
   .hero__status dd {
     display: inline;
     margin: 0 0 0 0.3em;
     color: var(--color-stone);
   }
-
   .hero__line {
-    margin-top: 1.5rem;
-    max-width: 26rem;
+    margin-top: 1.25rem;
+    max-width: 22rem;
   }
-
   .hero__actions {
     margin-top: 1.5rem;
     display: flex;
@@ -173,73 +259,250 @@ import RevealWords from '../RevealWords.astro';
     }
   }
 
-  .hero__cred {
+  /* ---------- Bottom: credibility marquee + scroll cue ---------- */
+  .hero__bottom {
+    position: relative;
     margin-top: 2rem;
-    padding-top: 1.25rem;
+    padding-bottom: 1.5rem;
     border-top: 1px solid var(--color-hairline);
-    max-width: 40rem;
+  }
+  .hero__cred {
+    display: grid;
+    gap: 0.35rem;
+    padding-top: 1rem;
     font-size: var(--text-small);
-    line-height: 1.5;
     color: var(--color-stone);
   }
   .hero__cred-label {
     font-weight: 600;
     color: var(--color-ink);
   }
-  .hero__cred ul {
+  .hero__marquee {
+    overflow: hidden;
+  }
+  .hero__track {
     display: flex;
     flex-wrap: wrap;
-    margin: 0.35rem 0 0;
+    margin: 0;
     padding: 0;
     list-style: none;
   }
-  /* Separator trails each name, so a wrapped line never starts with a dot. */
-  .hero__cred li:not(:last-child)::after {
+  .hero__track li:not(:last-child)::after {
     content: '·';
-    margin-inline: 0.55rem;
-    color: var(--color-stone);
+    margin-inline: 0.75rem;
+  }
+  /* Runtime marquee (added by JS when motion is allowed). */
+  .hero__marquee.is-marquee .hero__track {
+    flex-wrap: nowrap;
+    width: max-content;
+  }
+  .hero__marquee.is-marquee .hero__track li::after {
+    content: '·';
+    margin-inline: 0.75rem;
+  }
+  .hero__cue {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .hero__cue {
+      position: absolute;
+      right: max(var(--gutter), calc((100vw - 75rem) / 2));
+      bottom: 1.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-height: 2.75rem;
+      font-size: var(--text-eyebrow);
+      font-weight: 600;
+      letter-spacing: var(--tracking-eyebrow);
+      text-transform: uppercase;
+      color: var(--color-stone);
+      text-decoration: none;
+    }
+  }
+  .hero__cue-line {
+    position: relative;
+    width: 1px;
+    height: 2.5rem;
+    background: var(--color-hairline);
+    overflow: hidden;
+  }
+  .hero__cue-line span {
+    position: absolute;
+    inset: 0;
+    background: var(--color-brass);
+    transform-origin: top;
   }
 
-  /* ---------- Two columns from tablet up ---------- */
+  /* ---------- Tablet & desktop layout ---------- */
   @media (min-width: 768px) {
-    .hero__inner {
-      display: grid;
+    .hero__grid {
       grid-template-columns: repeat(12, minmax(0, 1fr));
+      grid-template-rows: auto auto;
       column-gap: 1.5rem;
-      align-items: center;
-      width: 100%;
+      row-gap: 0;
+      align-items: end;
     }
-    .hero__text {
-      grid-column: 1 / 9;
+    .hero__name {
+      grid-column: 1 / -1;
       grid-row: 1;
+      align-self: start;
     }
     .hero__portrait {
+      order: 0;
       grid-column: 8 / 13;
-      grid-row: 1;
+      grid-row: 1 / 3;
+      align-self: start;
+      margin-top: clamp(3rem, 8vw, 9rem); /* the name overlaps the portrait's top */
     }
     .hero__frame {
-      height: min(calc(100dvh - var(--header-space) - 6rem), 40rem);
-      min-height: 26rem;
-      aspect-ratio: auto;
+      height: min(calc(100dvh - 22rem), 34rem);
+      min-height: 18rem;
     }
-    /* Only the serif sentence reaches over the portrait edge; everything else
-       keeps clear of it. */
-    .hero__status,
-    .hero__line,
-    .hero__actions,
-    .hero__cred {
-      max-width: min(34rem, 85%);
-    }
-  }
-  /* Desktop: the portrait starts one column earlier, so the last line of the
-     88px sentence reaches ~75px over its left edge. On short laptop screens the
-     sentence also scales with the viewport height so the buttons stay in view. */
-  @media (min-width: 1024px) {
-    .hero__portrait {
-      grid-column: 7 / 13;
-    }
-    .hero :global(.hero__title) {
-      font-size: min(var(--text-hero), 10.6dvh);
+    .hero__text {
+      grid-column: 1 / 8;
+      grid-row: 2;
+      padding-top: 1.75rem;
+      padding-bottom: 0.5rem;
     }
   }
 </style>
+
+<script>
+  import { gsap, ScrollTrigger, SplitText, splitText, registerScene } from '../../lib/scroll';
+  import { GS } from '../../lib/motion';
+
+  /** Live local clock: "21:27 IST", refreshed every 20s. Runs in every context. */
+  function startClock(el: HTMLElement) {
+    const zone = el.dataset.zone || 'Asia/Kolkata';
+    const abbr = el.textContent?.trim() || 'IST';
+    const fmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: zone });
+    const tick = () => {
+      const now = new Date();
+      el.textContent = `${fmt.format(now)} ${abbr}`;
+      el.setAttribute('datetime', now.toISOString());
+    };
+    tick();
+    const id = window.setInterval(tick, 20000);
+    return () => {
+      window.clearInterval(id);
+      el.textContent = abbr;
+    };
+  }
+
+  registerScene('hero', ({ reduce, desktop }) => {
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    if (!hero) return;
+    const cleanups: Array<() => void> = [];
+    const clock = hero.querySelector<HTMLElement>('[data-clock]');
+    if (clock) cleanups.push(startClock(clock));
+    if (reduce) return () => cleanups.forEach((f) => f());
+
+    const q = <T extends Element = HTMLElement>(s: string) => hero.querySelector<T>(s)!;
+    const name = q('[data-hero-name]');
+    const lead = q('[data-hero-lead]');
+    const frame = q('[data-hero-frame]');
+    const img = frame.querySelector('img');
+    const linePath = q<SVGPathElement>('[data-hero-line] path');
+    // DrawSVG measures real length; the static component's pathLength=1 would skew it.
+    linePath.removeAttribute('pathLength');
+    const later = hero.querySelectorAll('[data-hero-later]');
+    const top = hero.querySelectorAll('.hero__top [data-intro]');
+    const nav = document.querySelector('[data-intro-nav]');
+
+    /* ---- Intro timeline (paused until the loader is done) ---- */
+    const nameSplit = SplitText.create(name, { type: 'lines,words,chars', mask: 'lines', aria: 'auto' });
+    const leadSplit = splitText(lead, { type: 'lines', mask: 'lines' });
+    const tl = gsap.timeline({
+      paused: true,
+      defaults: { ease: GS.ease.reveal },
+      onComplete: () => {
+        // Hand the text back to the browser so later resizes reflow naturally.
+        nameSplit.revert();
+        leadSplit.revert();
+      },
+    });
+    tl.from(nameSplit.chars, { yPercent: 110, duration: 1.1, stagger: GS.stagger.chars }, 0.1)
+      .from(top, { autoAlpha: 0, y: 12, duration: 0.8, stagger: 0.08 }, 0.35)
+      .fromTo(frame, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: GS.ease.strong }, 0.3)
+      .from(img, { scale: 1.15, duration: 1.7 }, 0.3)
+      .from(leadSplit.lines, { yPercent: 110, duration: 1, stagger: GS.stagger.lines }, 0.45)
+      .from(later, { autoAlpha: 0, y: 16, duration: 0.9, stagger: 0.08 }, 0.7)
+      .fromTo(linePath, { drawSVG: '0%' }, { drawSVG: '100%', duration: 1.2, ease: 'power2.inOut' }, 0.8);
+    if (nav) tl.from(nav, { autoAlpha: 0, y: -8, duration: 0.8 }, 1.0);
+
+    const play = () => {
+      tl.play();
+      ScrollTrigger.refresh();
+    };
+    if (document.documentElement.dataset.loaderState) {
+      document.addEventListener('loader:done', play, { once: true });
+      cleanups.push(() => document.removeEventListener('loader:done', play));
+    } else play();
+
+    /* ---- Rotating eyebrow (pauses off-screen) ---- */
+    const roles = [...hero.querySelectorAll<HTMLElement>('.hero__role')];
+    if (roles.length > 1) {
+      let i = 0;
+      gsap.set(roles, { opacity: 1, yPercent: (k: number) => (k === 0 ? 0 : 110) });
+      const swap = () => {
+        const cur = roles[i];
+        i = (i + 1) % roles.length;
+        const next = roles[i];
+        gsap.to(cur, { yPercent: -110, duration: 0.7, ease: GS.ease.strong });
+        gsap.fromTo(next, { yPercent: 110 }, { yPercent: 0, duration: 0.7, ease: GS.ease.strong });
+      };
+      const loop = gsap.timeline({ repeat: -1, delay: 2.5 }).call(swap).to({}, { duration: 2.5 });
+      ScrollTrigger.create({ trigger: hero, start: 'top bottom', end: 'bottom top', onToggle: (s) => (s.isActive ? loop.resume() : loop.pause()) });
+    }
+
+    /* ---- Credibility marquee (stops on hover / focus / off-screen) ---- */
+    const marquee = hero.querySelector<HTMLElement>('[data-marquee]');
+    const track = marquee?.querySelector<HTMLElement>('[data-marquee-track]');
+    if (marquee && track) {
+      const originals = [...track.children];
+      // A second copy makes the loop seamless; it is hidden from screen readers.
+      originals.forEach((li) => {
+        const c = li.cloneNode(true) as HTMLElement;
+        c.setAttribute('aria-hidden', 'true');
+        c.dataset.clone = '';
+        track.append(c);
+      });
+      marquee.classList.add('is-marquee');
+      const run = gsap.to(track, { xPercent: -50, duration: 38, ease: 'none', repeat: -1 });
+      const pause = () => run.pause();
+      const resume = () => run.resume();
+      marquee.addEventListener('pointerenter', pause);
+      marquee.addEventListener('pointerleave', resume);
+      hero.addEventListener('focusin', pause);
+      hero.addEventListener('focusout', resume);
+      ScrollTrigger.create({ trigger: hero, start: 'top bottom', end: 'bottom top', onToggle: (s) => (s.isActive ? run.resume() : run.pause()) });
+      cleanups.push(() => {
+        marquee.removeEventListener('pointerenter', pause);
+        marquee.removeEventListener('pointerleave', resume);
+        hero.removeEventListener('focusin', pause);
+        hero.removeEventListener('focusout', resume);
+        track.querySelectorAll('[data-clone]').forEach((c) => c.remove());
+        marquee.classList.remove('is-marquee');
+      });
+    }
+
+    /* ---- Scroll cue: a slow pulse ---- */
+    const pulse = hero.querySelector('[data-cue-pulse]');
+    if (pulse) gsap.fromTo(pulse, { scaleY: 0, transformOrigin: 'top' }, { scaleY: 1, duration: 1.6, ease: 'power2.inOut', repeat: -1, yoyo: true });
+
+    /* ---- Desktop: pin + sheet slides over; hero scales to 0.94 and dims ---- */
+    if (desktop) {
+      const inner = q('[data-hero-inner]');
+      // One trigger owns both the pin and the scale/dim, so they stay in step
+      // (a second trigger on a pinned element measures it after pinning).
+      gsap
+        .timeline({
+          scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', pin: true, pinSpacing: false, scrub: true },
+        })
+        .to(inner, { scale: 0.94, opacity: 0.35, ease: 'none' });
+    }
+
+    return () => cleanups.forEach((f) => f());
+  });
+</script>

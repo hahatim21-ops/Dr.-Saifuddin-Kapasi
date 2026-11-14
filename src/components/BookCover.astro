@@ -1,0 +1,93 @@
+---
+/**
+ * A book cover with a spine highlight, a page block behind it and a soft
+ * shadow (replaces the Book3D React island; no framework needed).
+ * - Scroll (GSAP, Motion v2): `.book3d__rise` rises and rotates in from 12° to
+ *   0, scrubbed — set up by the scene below for every [data-book-rise].
+ * - Pointer tilt, desktop fine pointers only: up to 6° on each axis, 180ms,
+ *   eases back to flat when the pointer leaves.
+ * Reduced motion: no rise, no tilt. JS off: a still cover.
+ */
+interface Props {
+  avifSrcset: string;
+  webpSrcset: string;
+  fallbackSrc: string;
+  width: number;
+  height: number;
+  alt: string;
+  sizes: string;
+  /** Load eagerly (book page hero). */
+  eager?: boolean;
+}
+const { avifSrcset, webpSrcset, fallbackSrc, width, height, alt, sizes, eager = false } = Astro.props;
+---
+
+<div class="book3d" data-book-rise data-cursor="View">
+  <div class="book3d__rise">
+    <div class="book3d__body" data-book-body>
+      <span class="book3d__pages" aria-hidden="true"></span>
+      <picture>
+        <source type="image/avif" srcset={avifSrcset} sizes={sizes} />
+        <source type="image/webp" srcset={webpSrcset} sizes={sizes} />
+        <img
+          class="book3d__cover"
+          src={fallbackSrc}
+          width={width}
+          height={height}
+          alt={alt}
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+        />
+      </picture>
+      <span class="book3d__spine" aria-hidden="true"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { gsap, registerScene } from '../lib/scroll';
+  import { TILT_MAX } from '../lib/motion';
+
+  registerScene('book-cover', ({ reduce, desktop }) => {
+    if (reduce) return;
+    const books = [...document.querySelectorAll<HTMLElement>('[data-book-rise]')];
+    const offs: Array<() => void> = [];
+    books.forEach((book) => {
+      const rise = book.querySelector<HTMLElement>('.book3d__rise')!;
+      const flip = book.closest('.book--flip') ? -1 : 1;
+      // Rises and rotates in from 12° to flat as it travels into view (scrubbed).
+      gsap.fromTo(
+        rise,
+        { y: 80, rotation: 12 * flip, transformOrigin: '50% 100%' },
+        {
+          y: 0,
+          rotation: 0,
+          ease: 'none',
+          scrollTrigger: { trigger: book, start: 'top 95%', end: 'top 40%', scrub: 0.8 },
+        }
+      );
+      if (!desktop) return;
+      const body = book.querySelector<HTMLElement>('[data-book-body]')!;
+      const move = (e: PointerEvent) => {
+        if (e.pointerType !== 'mouse') return;
+        const r = book.getBoundingClientRect();
+        const px = gsap.utils.clamp(-1, 1, ((e.clientX - r.left) / r.width - 0.5) * 2);
+        const py = gsap.utils.clamp(-1, 1, ((e.clientY - r.top) / r.height - 0.5) * 2);
+        body.style.transitionDuration = '180ms';
+        body.style.transform = `rotateX(${(-py * TILT_MAX).toFixed(2)}deg) rotateY(${(px * TILT_MAX).toFixed(2)}deg)`;
+      };
+      const leave = () => {
+        body.style.transitionDuration = '600ms';
+        body.style.transform = '';
+      };
+      book.addEventListener('pointermove', move);
+      book.addEventListener('pointerleave', leave);
+      offs.push(() => {
+        book.removeEventListener('pointermove', move);
+        book.removeEventListener('pointerleave', leave);
+        leave();
+      });
+    });
+    return () => offs.forEach((f) => f());
+  });
+</script>

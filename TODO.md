@@ -111,6 +111,57 @@ The "10% to under 3% delinquency" figure is **not** used until he confirms it.
 - [ ] **Contact**: the map link opens a Google Maps search for "South Mumbai"; swap for an exact pin if he wants one
 - [ ] **Insights**: newsletter sign-up later (inline only, never a pop-up)
 
+## Motion v2 (branch `motion-v2`; restore point: commit "v1-subtle" on `main`)
+
+- [x] Step 1 — engine (`src/lib/scroll.ts`), tokens, cursor, travelling prism, inflection edge; primitives demoed on /style-test
+- [x] Step 2 — loader (first home visit per session), hero (giant name h1, rotating eyebrow, clock, marquee,
+  pin + sheet), nav (progress hairline, "NN / 12 · Section", active link), cursor site-wide, curtain page transition
+- [x] `data-sheet` moved from the Arc to the manifesto (step 3)
+- [ ] Hero copy now in `site.json`: `heroName`, `heroLead`, `heroRoles`, `clockCity/Zone/Abbr`, `scrollCue`, `loaderCaption`
+- [ ] Accessibility note: the rotating eyebrow and the marquee are auto-moving content. Both pause off-screen, the
+  marquee also on hover/focus, and screen readers get static text. For strict WCAG 2.2.2 (pause/stop for content
+  that moves > 5s), consider stopping the eyebrow after a few cycles or adding a pause control — your call
+- [x] Step 3 — manifesto (new copy in `home.json` → `manifesto`), Arc (GSAP, Timeline.tsx removed), Numbers (odometers,
+  NumberTicker.tsx removed), Pillars (flood rows / phone details); TextReveal.tsx removed. The prism now runs on one
+  master timeline in scroll pixels (jumps and back/forward land on the right stop)
+- [ ] Manifesto copy (quote, attribution, sign-off) is new display text: confirm wording with him
+- [x] Step 4 — Books (green band, giant drifting word, covers rise + rotate 12° → 0, prism spectrum at Beyond Ideas;
+  Book3D.tsx replaced by `BookCover.astro`), Thinking tools (pinned stage-by-stage DrawSVG on desktop), Speaking
+  (pinned horizontal track with counter, progress bar, ≤3° velocity skew, drag; swipe row on phones/tablets)
+- [x] Step 5 — In the room (collage → grid), Testimonials (line reveal, drawn quote mark, 8s ring), Achievements (frames
+  drop in; Flip zoom into the viewer and back), Insights (hover preview card), Contact ("Let's build something
+  *enduring*." in `home.json` → `contact.display`, magnetic submit), footer (edge-to-edge name, word-by-word sign-off,
+  prism beside it). The Motion library is removed (`npm uninstall motion`)
+- [x] Step 6 — inner pages: split h1/h2 everywhere, clip + settle on the /about portrait, /achievements filter re-flows
+  with Flip, book pages use the rising cover, /frameworks has the stage-by-stage draw
+- [x] Step 7 — QA: see the Motion v2 QA notes below
+- [ ] /about "portrait gallery": only the hero portrait exists. When 2–3 more portraits arrive, wrap each in
+  `data-settle="-5"` (collage-to-grid settle primitive in `src/lib/scroll.ts`) and `BlurImage clip="up"`
+- [ ] Design decision: brass numerals in "In numbers" are 2.7:1 on ivory (WCAG asks 3:1 even for large text). The
+  accessible value is in an sr-only span, but sighted low-vision readers see the brass. Options: keep (brand rule
+  "brass for large numerals"), or use institution green for these four numbers
+- [ ] Home LCP (Lighthouse mobile, simulated) is ~2.9s against the 2.5s target. The LCP element is the hero portrait,
+  painted under the first-visit loader; the simulated time is mostly style/layout of the long single-page home.
+  Re-measure with the real portrait and on the deployed site (gzip/brotli + HTTP/2 there)
+- [ ] JS budget: home page graph is ~152KB gz including islands and the on-demand Flip (GSAP core 27KB,
+  ScrollTrigger 17KB, engine 11KB, React client 64KB for the two islands)
+- [x] Unfinished v1 Stage 5 work (JSON-LD, OG image, robots.txt, vercel.json, audit tools): Lighthouse run done in step 7
+- [ ] `public/og.jpg` is an interim card set in Georgia (`node scripts/make-og.mjs`); redo with the real portrait
+
+### Motion v2 QA notes (step 7, production build, headless Chrome)
+
+- Widths 375 / 390 / 412 / 768 / 1024 / 1280 / 1440 / 1920 (home) and 390 + 1440 (all 12 inner pages): no sideways
+  scroll, no console errors, nothing left hidden after scrolling through. Pins only from 1024px (5 on home).
+- Reduced motion and JS off on all 13 pages: no hidden text, no pins, no loader, no cursor, no Lenis.
+- Keyboard: every Tab stop on home lands on screen (78 desktop, 72 phone), including the pinned Speaking track.
+- Back/forward through the ClientRouter: pins rebuilt correctly every time, no stale spacers.
+- axe (WCAG 2.2 AA) on all pages: only the brass-numeral contrast item above.
+- Lighthouse mobile (median of 3): home Performance ~92, Accessibility 100, CLS 0, TBT ~90ms, LCP ~2.9s;
+  /about 97 / 100 / LCP 2.4s; books, speaking, insights 97–98 / 100. Scores vary ±20 between single runs on this
+  machine, so use medians.
+- 4× CPU throttle (headless, no real GPU, pessimistic): ~49fps phone, ~40fps desktop while scrolling. Fixed along the
+  way: refreshes on every lazy image (now only size-less images), per-frame layout reads in the nav and phone dock.
+
 ## Temporary build scaffolding (remove in later stages)
 
 - [ ] Delete `src/pages/style-test.astro` before launch (noindex and out of the sitemap, but still public)

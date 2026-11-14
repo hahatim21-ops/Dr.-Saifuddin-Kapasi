@@ -1,7 +1,10 @@
 ---
 /**
- * Green footer. The sign-off "Ideas are easy. Impact is earned." appears word by
- * word (CSS only — the footer is on every page, so no React here).
+ * Green footer (Motion v2). Links and details first; the footer then ends with
+ * "Saifuddin Kapasi" set edge to edge in huge Cormorant, revealed letter by
+ * letter (scrubbed) as you reach the bottom, then the sign-off "Ideas are easy.
+ * Impact is earned." word by word. On desktop the travelling prism reappears,
+ * small, beside the sign-off. "Back to top" scrolls with Lenis.
  * Small text on green uses light brass (6.0:1); body text is ivory (10.5:1).
  */
 import { getCollection } from 'astro:content';
@@ -23,17 +26,9 @@ const signOffText = `${first} ${second
 ---
 
 <footer class="on-green site-footer" data-site-footer>
+  <!-- Prism waypoint: it travels hidden down to here, then fades in by the sign-off. -->
+  <span class="footer-prism-in" data-prism-stop="footer-in" data-prism-opacity="0" data-prism-scale="0.3" data-prism-beam="0" data-prism-anchor="right" data-prism-dx="-260" aria-hidden="true"></span>
   <div class="container-content">
-    <RevealWords
-      as="p"
-      text={signOffText}
-      accentClass="signoff-accent"
-      class="signoff"
-    />
-    <div class="mt-10 sm:mt-14">
-      <InflectionLine variant="divider" />
-    </div>
-
     <div class="footer-grid">
       <div class="footer-about">
         <a href="/" class="footer-wordmark">{site.shortName}</a>
@@ -105,6 +100,27 @@ const signOffText = `${first} ${second
       </a>
     </div>
   </div>
+
+  <div class="footer-end">
+    <p class="footer-name" data-footer-name>{site.shortName}</p>
+    <div class="container-content footer-sign">
+      <div class="footer-sign__line">
+        <InflectionLine variant="divider" />
+      </div>
+      <div class="footer-sign__row">
+        <RevealWords as="p" text={signOffText} accentClass="signoff-accent" class="signoff" />
+        <span
+          class="footer-prism"
+          data-prism-stop="footer"
+          data-prism-scale="0.34"
+          data-prism-beam="0.35"
+          data-prism-spectrum="0.8"
+          data-prism-vy="0.72"
+          aria-hidden="true"
+        ></span>
+      </div>
+    </div>
+  </div>
 </footer>
 
 <style>
@@ -118,15 +134,59 @@ const signOffText = `${first} ${second
     color: var(--color-brass);
   }
 
+  .footer-prism-in {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+  }
+
+  /* ---------- The ending: giant name + sign-off ---------- */
+  .footer-end {
+    position: relative;
+    z-index: 2;
+    margin-top: clamp(3rem, 2rem + 4vw, 5rem);
+  }
+  .footer-name {
+    margin: 0;
+    padding-inline: clamp(0.5rem, 1.2vw, 1.25rem);
+    font-family: var(--font-serif);
+    font-weight: 700;
+    /* "Saifuddin Kapasi" fills the width, edge to edge. */
+    font-size: 15.6vw;
+    line-height: 0.86;
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+    text-align: center;
+    color: var(--color-ivory);
+  }
+  .footer-sign {
+    margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  }
+  .footer-sign__row {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+  .footer-prism {
+    flex: 0 0 9rem;
+    height: 1px;
+    margin-left: auto;
+  }
+  @media (max-width: 1023.98px) {
+    .footer-prism {
+      display: none;
+    }
+  }
+
   /* :global — the element is rendered inside RevealWords, outside this scope. */
   .site-footer :global(.signoff) {
     font-family: var(--font-serif);
     font-weight: 600;
-    font-size: var(--text-h1);
-    line-height: var(--text-h1--line-height);
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
     letter-spacing: -0.01em;
     color: var(--color-ivory);
-    max-width: 18ch;
     text-wrap: balance;
   }
   .site-footer :global(.signoff-accent) {
@@ -137,7 +197,6 @@ const signOffText = `${first} ${second
   .footer-grid {
     display: grid;
     gap: 2.75rem 2rem;
-    margin-top: 3rem;
   }
   @media (min-width: 640px) {
     .footer-grid {
@@ -150,7 +209,6 @@ const signOffText = `${first} ${second
   @media (min-width: 1024px) {
     .footer-grid {
       grid-template-columns: 1.5fr 1fr 1fr 1fr;
-      margin-top: 4rem;
     }
     .footer-about {
       grid-column: auto;
@@ -234,8 +292,30 @@ const signOffText = `${first} ${second
 </style>
 
 <script>
+  import { gsap, splitText, registerScene } from '../lib/scroll';
+  import { onPageLoad } from '../lib/page';
+
+  // The giant name: letters rise out of their masks, scrubbed, as the page
+  // reaches its end.
+  registerScene('footer-name', ({ reduce }) => {
+    const name = document.querySelector<HTMLElement>('[data-footer-name]');
+    if (!name || reduce) return;
+    const split = splitText(name, { type: 'chars', mask: 'chars' });
+    gsap.fromTo(
+      split.chars,
+      { yPercent: 105 },
+      {
+        yPercent: 0,
+        ease: 'none',
+        stagger: 0.06,
+        scrollTrigger: { trigger: name, start: 'top bottom', end: () => 'bottom bottom-=' + Math.min(160, window.innerHeight * 0.18), scrub: 0.6 },
+      }
+    );
+    return () => split.revert();
+  });
+
   // "Back to top": smooth with Lenis on desktop, native jump elsewhere; focus moves to main.
-  document.addEventListener('astro:page-load', () => {
+  onPageLoad(() => {
     document.querySelector('[data-to-top]')?.addEventListener('click', (e) => {
       e.preventDefault();
       const lenis = (window as any).__lenis;

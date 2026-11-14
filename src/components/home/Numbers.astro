@@ -1,11 +1,11 @@
 ---
 /**
  * Home §3 — Numbers strip (author-stats row). Four large brass Cormorant
- * numerals that count up once. 2 × 2 on phones, 4 in a row from 768px.
+ * numerals whose digits roll into place once (engine odometer, scale 0.9 → 1).
+ * 2 × 2 on phones, 4 in a row from 768px. The real number is in the HTML.
  * Figures come from stats.json and stay flagged until he confirms them.
  */
 import { getCollection } from 'astro:content';
-import NumberTicker from '../../islands/NumberTicker.tsx';
 import Eyebrow from '../Eyebrow.astro';
 import home from '../../data/home.json';
 
@@ -14,6 +14,8 @@ const unconfirmed = stats.some((s) => s.data.placeholder);
 ---
 
 <section class="numbers" aria-labelledby="numbers-title">
+  <!-- Prism waypoint: it fades out after the Arc and travels hidden until the Books band. -->
+  <span class="numbers__stop" data-prism-stop="numbers" data-prism-scale="0.5" data-prism-beam="0.3" data-prism-opacity="0" aria-hidden="true"></span>
   <div class="container-content">
     <div class="numbers__head" data-reveal="fade">
       <Eyebrow as="h2" class="numbers__title"><span id="numbers-title">{home.numbers.eyebrow}</span></Eyebrow>
@@ -26,7 +28,9 @@ const unconfirmed = stats.some((s) => s.data.placeholder);
           <div class="numbers__item" data-reveal style={`--i:${i}`}>
             <dt class="numbers__label">{s.data.label}</dt>
             <dd class="numbers__value">
-              <NumberTicker client:visible={{ rootMargin: '300px' }} value={s.data.value} suffix={s.data.suffix} delay={i * 0.07} />
+              <span class="sr-only">{s.data.value}{s.data.suffix}</span>
+              {/* Decorative brass numerals (rolled by the odometer); the value above is the accessible one. */}
+              <span aria-hidden="true"><span class="numbers__odo" data-odometer>{s.data.value}</span>{s.data.suffix}</span>
             </dd>
           </div>
         ))
@@ -106,10 +110,18 @@ const unconfirmed = stats.some((s) => s.data.placeholder);
     line-height: 1.4;
   }
 
-  .numbers :global(.ticker__digits) {
-    display: inline-block;
-    text-align: right;
+  .numbers {
+    position: relative;
   }
-  /* The final value is never hidden: the island hydrates ~300px before the strip
-     scrolls in and resets to 0 off-screen, so a failed script can't leave blanks. */
+  .numbers__stop {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1px;
+    height: 1px;
+  }
+  .numbers__odo {
+    display: inline-block;
+    transform-origin: left bottom;
+  }
 </style>

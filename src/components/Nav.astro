@@ -33,10 +33,11 @@ const { contact } = site;
 
 <header class="site-header" data-site-header>
   <div class="site-header__bg" aria-hidden="true"></div>
+  <span class="nav-progress" data-nav-progress aria-hidden="true"></span>
   <nav
     aria-label="Main"
     class="site-header__inner container-content"
-    {...intro ? { 'data-reveal': 'fade', 'data-reveal-now': '', style: '--delay:1000ms' } : {}}
+    {...intro ? { 'data-intro-nav': '' } : {}}
   >
     <ul class="nav-links nav-links--left" role="list">
       {
@@ -50,7 +51,10 @@ const { contact } = site;
       }
     </ul>
 
-    <a href="/" class="wordmark" aria-label={`${site.name}, home`}>{site.shortName}</a>
+    <div class="wordmark-wrap">
+      <a href="/" class="wordmark" aria-label={`${site.name}, home`}>{site.shortName}</a>
+      <span class="nav-section" data-nav-section aria-hidden="true"><span data-nav-count></span><span class="nav-section__sep">·</span><span class="nav-section__name" data-nav-name></span></span>
+    </div>
 
     <div class="nav-end">
       <ul class="nav-links nav-links--right" role="list">
@@ -75,7 +79,7 @@ const { contact } = site;
           ))
         }
       </ul>
-      <a href={cta.href} class="btn btn-primary nav-cta">
+      <a href={cta.href} class="btn btn-primary nav-cta" data-magnetic>
         <span class="xl:hidden">{cta.short}</span><span class="hidden xl:inline">{cta.label}</span>
       </a>
       <button
@@ -211,8 +215,65 @@ const { contact } = site;
   @media (min-width: 1024px) {
     .wordmark {
       font-size: 1.875rem;
+    }
+  }
+  .wordmark-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .wordmark-wrap {
       justify-self: center;
     }
+  }
+
+  /* Desktop: current section + counter under the name ("03 / 12 · The Arc"). */
+  .nav-section {
+    position: absolute;
+    top: calc(100% - 0.35rem);
+    display: none;
+    gap: 0.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-stone);
+    font-variant-numeric: tabular-nums;
+  }
+  .nav-section.is-on {
+    display: inline-flex;
+  }
+  .nav-section__sep {
+    color: var(--color-brass);
+  }
+  .nav-section__name {
+    display: inline-block;
+  }
+
+  /* Brass scroll-progress hairline along the header's bottom edge. */
+  .nav-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: var(--color-brass);
+    transform: scaleX(0);
+    transform-origin: left center;
+    pointer-events: none;
+  }
+
+  /* Active section (home page, desktop). */
+  .nav-link.is-active {
+    color: var(--color-green);
+  }
+  .nav-link.is-active::after {
+    transform: scaleX(1);
+    background: var(--color-brass);
   }
 
   /* ---------- Links ---------- */
@@ -436,6 +497,75 @@ const { contact } = site;
 </style>
 
 <script>
+
+  import { onPageLoad } from '../lib/page';
+  import { gsap, ScrollTrigger, registerScene } from '../lib/scroll';
+
+  /**
+   * Motion v2 nav: a brass hairline shows reading progress; on desktop the
+   * current section and a counter ("03 / 12 · The Arc") sit under the name, and
+   * the matching link gets an active state. Section names come from each
+   * top-level section's data-section or its eyebrow label. Decorative only
+   * (aria-hidden); nothing here under reduced motion.
+   */
+  const SECTION_LINKS: Record<string, string> = {
+    arc: '/about',
+    books: '/#books',
+    frameworks: '/frameworks',
+    speaking: '/speaking',
+    insights: '/insights',
+  };
+
+  registerScene('nav', ({ reduce, desktop }) => {
+    if (reduce) return;
+    const header = document.querySelector<HTMLElement>('[data-site-header]');
+    if (!header) return;
+    const progress = header.querySelector('[data-nav-progress]');
+    if (progress)
+      gsap.fromTo(progress, { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: 0.3 } });
+
+    if (!desktop) return;
+    const sections = [...document.querySelectorAll<HTMLElement>('main > section, main [data-section]')]
+      .map((el) => ({ el, name: el.dataset.section || el.querySelector('.eyebrow')?.textContent?.trim() || '' }))
+      .filter((s) => s.name);
+    const indicator = header.querySelector<HTMLElement>('[data-nav-section]');
+    if (!indicator || sections.length < 3) return;
+    const count = indicator.querySelector<HTMLElement>('[data-nav-count]')!;
+    const label = indicator.querySelector<HTMLElement>('[data-nav-name]')!;
+    const links = [...header.querySelectorAll<HTMLAnchorElement>('.nav-links--left a, .nav-links--right a')];
+    const total = String(sections.length).padStart(2, '0');
+    let current = -1;
+
+    const show = (i: number) => {
+      if (i === current) return;
+      current = i;
+      count.textContent = `${String(i + 1).padStart(2, '0')} / ${total}`;
+      label.textContent = sections[i].name;
+      gsap.fromTo(label, { yPercent: 100, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.5, ease: 'power3.out', overwrite: true });
+      const href = SECTION_LINKS[sections[i].el.id];
+      links.forEach((a) => a.classList.toggle('is-active', !!href && a.getAttribute('href') === href));
+    };
+
+    indicator.classList.add('is-on');
+    const triggers = sections.map((s, i) =>
+      ScrollTrigger.create({
+        trigger: s.el,
+        start: 'top 45%',
+        end: 'bottom 45%',
+        onToggle: (self) => self.isActive && show(i),
+      })
+    );
+    // A restored scroll position (back/forward) may already sit mid-page.
+    const y = window.scrollY;
+    const active = triggers.findLastIndex((t) => y >= t.start && y <= t.end);
+    show(Math.max(0, active));
+
+    return () => {
+      indicator.classList.remove('is-on');
+      links.forEach((a) => a.classList.remove('is-active'));
+    };
+  });
+
   const THRESHOLD = 80; // px before the nav gets its ivory background
   const DELTA = 6; // px of travel before hide/show reacts (ignores jitter)
   const desktop = window.matchMedia('(min-width: 1024px)');
@@ -445,11 +575,14 @@ const { contact } = site;
   const header = () => document.querySelector<HTMLElement>('[data-site-header]');
   const menuOpen = () => !!document.querySelector('.site-menu[open]');
 
+  // Read in the scroll event (layout is clean there) and applied in the next
+  // frame, so the frame never forces a layout after GSAP has written styles.
+  let pendingY = 0;
   function update() {
     ticking = false;
     const el = header();
     if (!el) return;
-    const y = Math.max(0, window.scrollY);
+    const y = Math.max(0, pendingY);
     el.toggleAttribute('data-scrolled', y > THRESHOLD);
 
     const dy = y - lastY;
@@ -467,6 +600,7 @@ const { contact } = site;
   window.addEventListener(
     'scroll',
     () => {
+      pendingY = window.scrollY;
       if (!ticking) {
         ticking = true;
         requestAnimationFrame(update);
@@ -502,8 +636,8 @@ const { contact } = site;
     dialog.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => dialog.close()));
   }
 
-  document.addEventListener('astro:page-load', () => {
-    lastY = window.scrollY;
+  onPageLoad(() => {
+    lastY = pendingY = window.scrollY;
     update();
     setupMenu();
   });
