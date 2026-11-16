@@ -1,6 +1,6 @@
 ---
 /**
- * Home §3 — Numbers strip (author-stats row). Four large brass Cormorant
+ * Home §3 — Numbers strip (author-stats row). Four large green Cormorant
  * numerals whose digits roll into place once (engine odometer, scale 0.9 → 1).
  * 2 × 2 on phones, 4 in a row from 768px. The real number is in the HTML.
  * Figures come from stats.json and stay flagged until he confirms them.
@@ -29,7 +29,7 @@ const unconfirmed = stats.some((s) => s.data.placeholder);
             <dt class="numbers__label">{s.data.label}</dt>
             <dd class="numbers__value">
               <span class="sr-only">{s.data.value}{s.data.suffix}</span>
-              {/* Decorative brass numerals (rolled by the odometer); the value above is the accessible one. */}
+              {/* Rolled by the odometer; the value above is the one screen readers get. */}
               <span aria-hidden="true"><span class="numbers__odo" data-odometer>{s.data.value}</span>{s.data.suffix}</span>
             </dd>
           </div>
@@ -100,7 +100,7 @@ const unconfirmed = stats.some((s) => s.data.placeholder);
     font-weight: 600;
     font-size: var(--text-numeral);
     line-height: 1;
-    color: var(--color-brass); /* large decorative numerals only */
+    color: var(--color-green); /* ~10:1 on ivory (brass was 2.7:1) */
     font-variant-numeric: lining-nums tabular-nums;
     letter-spacing: -0.01em;
   }

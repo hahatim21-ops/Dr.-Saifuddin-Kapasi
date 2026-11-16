@@ -116,11 +116,31 @@ const ogIsDefault = ogImage === '/og.jpg';
     <script>
 
       import { onPageLoad } from '../lib/page';
-      // Motion v2 engine: GSAP + ScrollTrigger + Lenis (desktop), scenes, cursor, prism.
-      import '../lib/scroll';
-      import '../lib/cursor';
-      import '../lib/prism';
-      import '../lib/transition';
+
+      /* ---- Motion v2 engine (GSAP + ScrollTrigger + Lenis, scenes, cursor,
+              prism, curtain), downloaded only after the first paint of the
+              hero portrait (the LCP image) so it never competes with it.
+              Component scripts register their scenes meanwhile (lib/scenes);
+              until the engine runs, html.motion-pending keeps reveal targets
+              hidden (2.5s failsafe). ---- */
+      let engineRequested = false;
+      const loadEngine = () => {
+        if (engineRequested) return;
+        engineRequested = true;
+        import('../lib/engine');
+      };
+      (() => {
+        const img = document.querySelector<HTMLImageElement>('[data-hero] img');
+        if (!img) return loadEngine();
+        // Two frames after the image has loaded, it has been painted.
+        const afterPaint = () => requestAnimationFrame(() => requestAnimationFrame(loadEngine));
+        if (img.complete) afterPaint();
+        else {
+          img.addEventListener('load', afterPaint, { once: true });
+          img.addEventListener('error', loadEngine, { once: true });
+        }
+        setTimeout(loadEngine, 1200); // never wait longer (slow image, background tab)
+      })();
 
       const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 

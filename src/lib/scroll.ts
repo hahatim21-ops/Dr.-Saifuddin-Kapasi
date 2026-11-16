@@ -24,6 +24,8 @@ import { CustomEase } from 'gsap/CustomEase';
 import Lenis from 'lenis';
 import { GS } from './motion';
 import { onPageLoad } from './page';
+import { sceneRegistry, registerScene, type MotionMode, type Scene, type SceneContext } from './scenes';
+import { provide } from './tools';
 
 gsap.registerPlugin(ScrollTrigger, SplitText, DrawSVGPlugin, CustomEase);
 CustomEase.create('inflect', '0.22,1,0.36,1');
@@ -54,28 +56,14 @@ export const MQ = {
   reduce: '(prefers-reduced-motion: reduce)',
 } as const;
 
-export type MotionMode = 'desktop' | 'touch' | 'reduce';
+export type { MotionMode, SceneContext, Scene } from './scenes';
+export { registerScene } from './scenes';
 
-export interface SceneContext {
-  mode: MotionMode;
-  desktop: boolean;
-  touch: boolean;
-  reduce: boolean;
-  /** Lenis instance when active (desktop, motion allowed). */
-  lenis: Lenis | null;
-}
-
-/** A scene sets up animations for one feature; returns an optional cleanup. */
-export type Scene = (ctx: SceneContext) => void | (() => void);
-
-const scenes = new Map<string, Scene>();
-
-/** Register a scene by name (idempotent). Runs on every page load. */
-export function registerScene(name: string, scene: Scene) {
-  scenes.set(name, scene);
-  // A scene registered after the page has loaded (e.g. a late island) runs now.
+const scenes = sceneRegistry.scenes;
+// Scenes registered after start-up (a late island, a lazily loaded module) run now.
+sceneRegistry.onRegister = (name, scene) => {
   if (mm) runScene(name, scene);
-}
+};
 
 let mm: gsap.MatchMedia | null = null;
 let current: SceneContext | null = null;
@@ -547,3 +535,6 @@ registerScene('edge', ({ reduce }) => {
     );
   });
 });
+
+/* Hand the tools to component scripts (src/lib/tools.ts live bindings). */
+provide({ gsap, ScrollTrigger, SplitText, splitText, createOdometer, getLenis, scrollToTarget, loadFlip });

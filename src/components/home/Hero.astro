@@ -5,7 +5,8 @@
  * - The existing sentence continues under it as the lead ("…is an architect of
  *   enduring institutions."), "enduring" in green italic.
  * - Eyebrow rotates Educator · Author · Advisor · Speaker (2.5s, mask slide,
- *   pauses off-screen); screen readers get the full list once.
+ *   pauses off-screen), twice through, then rests on "Educator" (WCAG 2.2.2:
+ *   no motion longer than ~20s without a stop); screen readers get the list once.
  * - Portrait: clip-path wipe, then settles; warm duotone grade in CSS.
  * - Live "Mumbai · 21:27 IST" clock, a "Scroll" cue, and the credibility names
  *   as a slow marquee (stops on hover/focus; a plain list with JS off or
@@ -369,7 +370,7 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
 </style>
 
 <script>
-  import { gsap, ScrollTrigger, SplitText, splitText, registerScene } from '../../lib/scroll';
+  import { gsap, ScrollTrigger, SplitText, splitText, registerScene } from '../../lib/tools';
   import { GS } from '../../lib/motion';
 
   /** Live local clock: "21:27 IST", refreshed every 20s. Runs in every context. */
@@ -440,7 +441,7 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
       cleanups.push(() => document.removeEventListener('loader:done', play));
     } else play();
 
-    /* ---- Rotating eyebrow (pauses off-screen) ---- */
+    /* ---- Rotating eyebrow: two cycles, then it rests on the first role (pauses off-screen) ---- */
     const roles = [...hero.querySelectorAll<HTMLElement>('.hero__role')];
     if (roles.length > 1) {
       let i = 0;
@@ -452,7 +453,8 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
         gsap.to(cur, { yPercent: -110, duration: 0.7, ease: GS.ease.strong });
         gsap.fromTo(next, { yPercent: 110 }, { yPercent: 0, duration: 0.7, ease: GS.ease.strong });
       };
-      const loop = gsap.timeline({ repeat: -1, delay: 2.5 }).call(swap).to({}, { duration: 2.5 });
+      const swaps = roles.length * 2; // ends back on roles[0]
+      const loop = gsap.timeline({ repeat: swaps - 1, delay: 2.5 }).call(swap).to({}, { duration: 2.5 });
       ScrollTrigger.create({ trigger: hero, start: 'top bottom', end: 'bottom top', onToggle: (s) => (s.isActive ? loop.resume() : loop.pause()) });
     }
 

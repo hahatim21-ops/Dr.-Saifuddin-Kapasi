@@ -194,7 +194,7 @@ const firstLine = (a: CollectionEntry<'insights'>) => {
 </style>
 
 <script>
-  import { gsap, registerScene } from '../lib/scroll';
+  import { gsap, registerScene } from '../lib/tools';
 
   registerScene('insights-preview', ({ desktop }) => {
     const links = [...document.querySelectorAll<HTMLAnchorElement>('.idx__link[data-preview-line]')];

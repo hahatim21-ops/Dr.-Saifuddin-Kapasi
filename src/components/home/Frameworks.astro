@@ -344,7 +344,7 @@ const frameworks = (await getCollection('frameworks')).sort((a, b) => a.data.ord
 </style>
 
 <script>
-  import { gsap, registerScene } from '../../lib/scroll';
+  import { gsap, registerScene } from '../../lib/tools';
 
   registerScene('frameworks', ({ reduce, desktop }) => {
     if (reduce) return;

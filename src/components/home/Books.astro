@@ -384,7 +384,7 @@ const isLive = (url: string) => url && url !== '#';
 </style>
 
 <script>
-  import { gsap, registerScene } from '../../lib/scroll';
+  import { gsap, registerScene } from '../../lib/tools';
 
   registerScene('books', ({ reduce }) => {
     const word = document.querySelector<HTMLElement>('[data-books-word]');

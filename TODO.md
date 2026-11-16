@@ -118,9 +118,8 @@ The "10% to under 3% delinquency" figure is **not** used until he confirms it.
   pin + sheet), nav (progress hairline, "NN / 12 · Section", active link), cursor site-wide, curtain page transition
 - [x] `data-sheet` moved from the Arc to the manifesto (step 3)
 - [ ] Hero copy now in `site.json`: `heroName`, `heroLead`, `heroRoles`, `clockCity/Zone/Abbr`, `scrollCue`, `loaderCaption`
-- [ ] Accessibility note: the rotating eyebrow and the marquee are auto-moving content. Both pause off-screen, the
-  marquee also on hover/focus, and screen readers get static text. For strict WCAG 2.2.2 (pause/stop for content
-  that moves > 5s), consider stopping the eyebrow after a few cycles or adding a pause control — your call
+- [x] WCAG 2.2.2: the rotating eyebrow now runs two cycles (~22s) and rests on "Educator". The marquee stops on
+  hover/focus and off-screen and is a plain list with reduced motion
 - [x] Step 3 — manifesto (new copy in `home.json` → `manifesto`), Arc (GSAP, Timeline.tsx removed), Numbers (odometers,
   NumberTicker.tsx removed), Pillars (flood rows / phone details); TextReveal.tsx removed. The prism now runs on one
   master timeline in scroll pixels (jumps and back/forward land on the right stop)
@@ -137,14 +136,15 @@ The "10% to under 3% delinquency" figure is **not** used until he confirms it.
 - [x] Step 7 — QA: see the Motion v2 QA notes below
 - [ ] /about "portrait gallery": only the hero portrait exists. When 2–3 more portraits arrive, wrap each in
   `data-settle="-5"` (collage-to-grid settle primitive in `src/lib/scroll.ts`) and `BlurImage clip="up"`
-- [ ] Design decision: brass numerals in "In numbers" are 2.7:1 on ivory (WCAG asks 3:1 even for large text). The
-  accessible value is in an sr-only span, but sighted low-vision readers see the brass. Options: keep (brand rule
-  "brass for large numerals"), or use institution green for these four numbers
-- [ ] Home LCP (Lighthouse mobile, simulated) is ~2.9s against the 2.5s target. The LCP element is the hero portrait,
-  painted under the first-visit loader; the simulated time is mostly style/layout of the long single-page home.
-  Re-measure with the real portrait and on the deployed site (gzip/brotli + HTTP/2 there)
-- [ ] JS budget: home page graph is ~152KB gz including islands and the on-demand Flip (GSAP core 27KB,
-  ScrollTrigger 17KB, engine 11KB, React client 64KB for the two islands)
+- [x] "In numbers" figures are institution green (~10:1); brass failed contrast at 2.7:1. axe: 0 violations site-wide
+- [ ] Home LCP (Lighthouse mobile, simulated). The engine (GSAP, ~60KB gz) now downloads only after the hero
+  portrait has painted (`Base.astro` → dynamic `import('../lib/engine')`; components register scenes through
+  `lib/scenes` and get GSAP from `lib/tools` live bindings). Same-session A/B, 5 runs each: LCP median 3.3s → 2.5s.
+  What remains is main-thread style/layout of the long home page before the first paint. Tried and reverted:
+  content-visibility on later sections (moved the cost into TBT, 400–1,200ms). Re-measure on the deployed site
+  with the real portrait; scores on this machine vary ±20 between runs
+- [ ] JS budget: ~19KB gz loads with the page; the engine (~60KB: GSAP core 27KB, ScrollTrigger 17KB, engine 13KB)
+  follows after the first paint; React (64KB) only when an island scrolls near; Flip on first use
 - [x] Unfinished v1 Stage 5 work (JSON-LD, OG image, robots.txt, vercel.json, audit tools): Lighthouse run done in step 7
 - [ ] `public/og.jpg` is an interim card set in Georgia (`node scripts/make-og.mjs`); redo with the real portrait
 
@@ -155,7 +155,7 @@ The "10% to under 3% delinquency" figure is **not** used until he confirms it.
 - Reduced motion and JS off on all 13 pages: no hidden text, no pins, no loader, no cursor, no Lenis.
 - Keyboard: every Tab stop on home lands on screen (78 desktop, 72 phone), including the pinned Speaking track.
 - Back/forward through the ClientRouter: pins rebuilt correctly every time, no stale spacers.
-- axe (WCAG 2.2 AA) on all pages: only the brass-numeral contrast item above.
+- axe (WCAG 2.2 AA) on all pages: no violations (after the green numerals).
 - Lighthouse mobile (median of 3): home Performance ~92, Accessibility 100, CLS 0, TBT ~90ms, LCP ~2.9s;
   /about 97 / 100 / LCP 2.4s; books, speaking, insights 97–98 / 100. Scores vary ±20 between single runs on this
   machine, so use medians.
