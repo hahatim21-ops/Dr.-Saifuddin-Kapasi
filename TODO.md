@@ -134,6 +134,10 @@ The "10% to under 3% delinquency" figure is **not** used until he confirms it.
 - [x] Step 6 — inner pages: split h1/h2 everywhere, clip + settle on the /about portrait, /achievements filter re-flows
   with Flip, book pages use the rising cover, /frameworks has the stage-by-stage draw
 - [x] Step 7 — QA: see the Motion v2 QA notes below
+- [x] Motion additions (after step 7): the brass thread down the home page's left gutter (desktop; `src/lib/thread.ts`,
+  numbered nodes light as the tip passes), the Beyond Ideas cover opening on scroll to an inside page (BookCover
+  `inside` prop; the page shows the excerpt, so it becomes real when the excerpt does), and inflection-curve edges on
+  the way out of the manifesto and Books bands and into the footer
 - [ ] /about "portrait gallery": only the hero portrait exists. When 2–3 more portraits arrive, wrap each in
   `data-settle="-5"` (collage-to-grid settle primitive in `src/lib/scroll.ts`) and `BlurImage clip="up"`
 - [x] "In numbers" figures are institution green (~10:1); brass failed contrast at 2.7:1. axe: 0 violations site-wide

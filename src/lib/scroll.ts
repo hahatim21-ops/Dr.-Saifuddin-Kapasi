@@ -457,6 +457,7 @@ export function createOdometer(el: HTMLElement, initial?: string) {
   const restore = () => {
     if (el.dataset.odoOriginal !== undefined) el.innerHTML = el.dataset.odoOriginal;
   };
+  set(text, { immediate: true }); // start by showing the element's own value
   return { set, restore, width };
 }
 

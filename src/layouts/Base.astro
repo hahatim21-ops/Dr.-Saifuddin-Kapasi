@@ -182,6 +182,25 @@ const ogIsDefault = ogImage === '/og.jpg';
       }
 
       onPageLoad(() => setupReveals());
+
+      // Safety net: an instant long jump (End key, anchor link) on a busy main
+      // thread can skip an element's observer crossing. When scrolling stops,
+      // anything already above the bottom of the screen is revealed.
+      const sweepReveals = () => {
+        const pending = document.querySelectorAll<Element>(
+          '[data-reveal]:not(.is-in), [data-reveal-words]:not(.is-in), [data-draw-x]:not(.is-in), [data-draw-y]:not(.is-in), [data-draw-path]:not(.is-in)'
+        );
+        if (!pending.length) return;
+        const vh = window.innerHeight;
+        pending.forEach((el) => {
+          if (el.hasAttribute('data-reveal-now')) return;
+          if (el.getBoundingClientRect().top < vh) {
+            el.classList.add('is-in');
+            io?.unobserve(el);
+          }
+        });
+      };
+      window.addEventListener('scrollend', sweepReveals, { passive: true });
     </script>
   </body>
 </html>

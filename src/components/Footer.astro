@@ -10,6 +10,7 @@
 import { getCollection } from 'astro:content';
 import site from '../data/site.json';
 import Icon from './Icon.astro';
+import InflectionEdge from './InflectionEdge.astro';
 import InflectionLine from './InflectionLine.astro';
 import RevealWords from './RevealWords.astro';
 
@@ -25,6 +26,8 @@ const signOffText = `${first} ${second
   .join(' ')}`;
 ---
 
+<!-- Way in: the green footer rises along the inflection curve. -->
+<InflectionEdge class="footer-edge" />
 <footer class="on-green site-footer" data-site-footer>
   <!-- Prism waypoint: it travels hidden down to here, then fades in by the sign-off. -->
   <span class="footer-prism-in" data-prism-stop="footer-in" data-prism-opacity="0" data-prism-scale="0.3" data-prism-beam="0" data-prism-anchor="right" data-prism-dx="-260" aria-hidden="true"></span>

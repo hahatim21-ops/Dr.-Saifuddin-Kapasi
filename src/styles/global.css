@@ -366,6 +366,10 @@
     perspective: 1400px;
     width: 100%;
   }
+  /* Keeps the 3D tilt and the opening cover in perspective (.book3d). */
+  .book3d__rise {
+    transform-style: preserve-3d;
+  }
   .book3d__body {
     position: relative;
     transform-style: preserve-3d;
@@ -1096,6 +1100,100 @@ html.has-cursor [contenteditable='true'] {
 .cursor-ring.is-label .cursor-ring__label {
   opacity: 1;
 }
+/* Brass thread (home, desktop; built by src/lib/thread.ts). */
+.thread {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5; /* above section backgrounds and the prism, below the nav */
+  pointer-events: none;
+}
+.thread svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: visible;
+}
+/* The drawn line: its own layer, revealed by a rectangular clip. */
+.thread__reveal {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  clip-path: inset(0 0 100% 0);
+}
+.thread__guide,
+.thread__line {
+  fill: none;
+  stroke: var(--color-brass);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+.thread__guide {
+  opacity: 0.18;
+  stroke-dasharray: 2 6;
+}
+/* The tip: a small light and a breathing halo, moved by transform only. */
+.thread__tip,
+.thread__halo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-ui);
+  will-change: transform;
+}
+.thread__tip {
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  background: var(--color-brass-light);
+  box-shadow: 0 0 6px 1px rgb(212 180 131 / 0.9);
+}
+.thread__halo {
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+}
+.thread__halo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(212 180 131 / 0.22);
+  animation: thread-breath 3.2s ease-in-out infinite alternate;
+}
+@keyframes thread-breath {
+  from { transform: scale(0.8); }
+  to { transform: scale(1.25); }
+}
+.thread__node circle {
+  fill: var(--color-ivory);
+  stroke: var(--color-brass);
+  stroke-width: 1.25;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    fill 0.4s var(--ease-ui),
+    transform 0.5s var(--ease-ui);
+}
+.thread__node.is-lit circle {
+  fill: var(--color-brass);
+  transform: scale(1.35);
+}
+.thread__node text {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  fill: var(--color-brass);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-ui);
+}
+.thread__node.is-lit text {
+  opacity: 1;
+}
+
 /* Insights hover preview (desktop; appended to body by InsightsList). */
 .idx-preview {
   position: fixed;

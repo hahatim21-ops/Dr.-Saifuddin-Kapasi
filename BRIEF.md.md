@@ -225,6 +225,12 @@ This section replaces the earlier "subtle by design" motion system. The site kee
 - **GSAP owns all motion.** The Motion library is no longer used: the Book3D island became `BookCover.astro` (scroll rise + pointer tilt), and the Testimonials and AchievementLightbox islands animate with GSAP (SplitText lines, a drawn quote mark, Flip). React remains only for those two interactive islands.
 - `ScrollTrigger.config({ ignoreMobileResize: true })`; no normalizeScroll.
 
+### Added after the first review
+
+- **Brass thread** (home, desktop): one brass line runs down the left gutter from the manifesto to the footer, bending like the inflection curve at each section; its glowing tip stays ~60% down the screen and each section's numbered node lights as it passes. Drawn once and revealed with a clip, so it costs almost nothing per frame.
+- **Opening book**: the Beyond Ideas cover swings open on its spine (scrubbed, ≤100° so it never covers the text) to an inside page carrying the excerpt.
+- **Curve-shaped transitions both ways**: green bands begin and end on the inflection curve (manifesto, Books, footer), each bending into shape as it scrolls in.
+
 ### Tokens (CSS in `global.css`, GSAP in `src/lib/motion.ts` → `GS`)
 
 | Token | Value |

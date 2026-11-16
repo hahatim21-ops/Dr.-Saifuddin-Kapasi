@@ -79,7 +79,7 @@ const isLive = (url: string) => url && url !== '#';
                       data-prism-beam="0.85"
                       data-prism-spectrum="1"
                       data-prism-anchor="left"
-                      data-prism-dx="-120"
+                      data-prism-dx="-170"
                       data-prism-hold="45"
                       aria-hidden="true"
                     />
@@ -94,7 +94,14 @@ const isLive = (url: string) => url && url !== '#';
                       aria-hidden="true"
                     />
                   )}
-                  {cover && <BookCover {...cover} alt={d.coverAlt} sizes={COVER_SIZES} />}
+                  {cover && (
+                    <BookCover
+                      {...cover}
+                      alt={d.coverAlt}
+                      sizes={COVER_SIZES}
+                      inside={i === 0 && d.excerpt ? { title: `${d.title} ${d.titleAccent}`, text: d.excerpt, note: home.books.excerptEyebrow } : undefined}
+                    />
+                  )}
                 </div>
 
                 <div class="book__text">
@@ -178,6 +185,8 @@ const isLive = (url: string) => url && url !== '#';
         </div>
       )
     }
+    <!-- Way out: ivory rises into the green along the inflection curve. -->
+    <InflectionEdge color="var(--color-ivory)" class="band-out" />
   </section>
 </div>
 

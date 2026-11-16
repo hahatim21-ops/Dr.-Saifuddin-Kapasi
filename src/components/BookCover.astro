@@ -4,9 +4,13 @@
  * shadow (replaces the Book3D React island; no framework needed).
  * - Scroll (GSAP, Motion v2): `.book3d__rise` rises and rotates in from 12° to
  *   0, scrubbed — set up by the scene below for every [data-book-rise].
+ * - `inside` (the home page's Beyond Ideas): once it has risen, the cover
+ *   swings open in 3D (scrubbed) and the inside page carries a short passage.
+ *   The page is a decorative copy (aria-hidden): the same words are in the
+ *   excerpt below.
  * - Pointer tilt, desktop fine pointers only: up to 6° on each axis, 180ms,
  *   eases back to flat when the pointer leaves.
- * Reduced motion: no rise, no tilt. JS off: a still cover.
+ * Reduced motion: no rise, no tilt, the book stays closed. JS off: a still cover.
  */
 interface Props {
   avifSrcset: string;
@@ -18,31 +22,121 @@ interface Props {
   sizes: string;
   /** Load eagerly (book page hero). */
   eager?: boolean;
+  /** Inside page shown when the cover opens on scroll. */
+  inside?: { title: string; text: string; note?: string };
 }
-const { avifSrcset, webpSrcset, fallbackSrc, width, height, alt, sizes, eager = false } = Astro.props;
+const { avifSrcset, webpSrcset, fallbackSrc, width, height, alt, sizes, eager = false, inside } = Astro.props;
 ---
 
-<div class="book3d" data-book-rise data-cursor="View">
+<div class="book3d" data-book-rise data-cursor="View" {...inside ? { 'data-book-open': '' } : {}}>
   <div class="book3d__rise">
     <div class="book3d__body" data-book-body>
       <span class="book3d__pages" aria-hidden="true"></span>
-      <picture>
-        <source type="image/avif" srcset={avifSrcset} sizes={sizes} />
-        <source type="image/webp" srcset={webpSrcset} sizes={sizes} />
-        <img
-          class="book3d__cover"
-          src={fallbackSrc}
-          width={width}
-          height={height}
-          alt={alt}
-          loading={eager ? 'eager' : 'lazy'}
-          decoding="async"
-        />
-      </picture>
-      <span class="book3d__spine" aria-hidden="true"></span>
+      {
+        inside && (
+          <div class="book3d__inside" aria-hidden="true">
+            <p class="book3d__inside-title">{inside.title}</p>
+            <span class="book3d__inside-rule" />
+            <p class="book3d__inside-text">{inside.text}</p>
+            {inside.note && <p class="book3d__inside-note">{inside.note}</p>}
+            <span class="book3d__inside-shade" data-book-shade />
+          </div>
+        )
+      }
+      <div class="book3d__board" data-book-board>
+        <picture>
+          <source type="image/avif" srcset={avifSrcset} sizes={sizes} />
+          <source type="image/webp" srcset={webpSrcset} sizes={sizes} />
+          <img
+            class="book3d__cover"
+            src={fallbackSrc}
+            width={width}
+            height={height}
+            alt={alt}
+            loading={eager ? 'eager' : 'lazy'}
+            decoding="async"
+          />
+        </picture>
+        <span class="book3d__spine" aria-hidden="true"></span>
+        {inside && <span class="book3d__board-back" aria-hidden="true" />}
+      </div>
     </div>
   </div>
 </div>
+
+<style>
+  /* Front board: hinged at the spine. Its back face is plain board. */
+  .book3d__board {
+    position: relative;
+    transform-style: preserve-3d;
+    transform-origin: left center;
+  }
+  .book3d__board picture,
+  .book3d__board :global(.book3d__cover) {
+    backface-visibility: hidden;
+  }
+  .book3d__board-back {
+    position: absolute;
+    inset: 0;
+    border-radius: 6px 2px 2px 6px;
+    background: linear-gradient(to left, #e9e1cf, #f3ede0 60%, #e6dcc7);
+    transform: rotateY(180deg);
+    backface-visibility: hidden;
+  }
+
+  /* The first page, revealed as the cover swings open. */
+  .book3d__inside {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.7rem;
+    padding: 12% 11% 12% 14%;
+    border-radius: 2px 6px 6px 2px;
+    background-color: #fbf8f1;
+    background-image: var(--grain);
+    color: var(--color-ink);
+    transform: translateZ(-1px);
+    overflow: hidden;
+  }
+  .book3d__inside-title {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(1rem, 0.7rem + 0.9vw, 1.375rem);
+    line-height: 1.15;
+    color: var(--color-green);
+  }
+  .book3d__inside-rule {
+    width: 2.5rem;
+    height: 1px;
+    background: var(--color-brass);
+  }
+  .book3d__inside-text {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 600;
+    font-size: clamp(0.8125rem, 0.65rem + 0.45vw, 1.0625rem);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 9;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .book3d__inside-note {
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+  /* Shadow cast by the cover near the spine; fades as it opens. */
+  .book3d__inside-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgb(28 31 30 / 0.35), rgb(28 31 30 / 0) 45%);
+    pointer-events: none;
+  }
+</style>
 
 <script>
   import { gsap, registerScene } from '../lib/tools';
@@ -66,6 +160,15 @@ const { avifSrcset, webpSrcset, fallbackSrc, width, height, alt, sizes, eager = 
           scrollTrigger: { trigger: book, start: 'top 95%', end: 'top 40%', scrub: 0.8 },
         }
       );
+      // Beyond Ideas: once risen, the cover swings open on its spine (scrubbed)
+      // and the inside page comes out of the cover's shadow.
+      const board = book.querySelector<HTMLElement>('[data-book-board]');
+      if (book.hasAttribute('data-book-open') && board) {
+        gsap
+          .timeline({ scrollTrigger: { trigger: book, start: 'center 62%', end: 'center 28%', scrub: 0.8 } })
+          .fromTo(board, { rotationY: 0 }, { rotationY: -100, ease: 'power1.inOut' }, 0)
+          .fromTo(book.querySelector('[data-book-shade]'), { opacity: 1 }, { opacity: 0.2, ease: 'none' }, 0);
+      }
       if (!desktop) return;
       const body = book.querySelector<HTMLElement>('[data-book-body]')!;
       const move = (e: PointerEvent) => {
