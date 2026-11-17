@@ -166,6 +166,55 @@ The "10% to under 3% delinquency" figure is **not** used until he confirms it.
 - 4× CPU throttle (headless, no real GPU, pessimistic): ~49fps phone, ~40fps desktop while scrolling. Fixed along the
   way: refreshes on every lazy image (now only size-less images), per-frame layout reads in the nav and phone dock.
 
+## Motion v3 (branch `motion-v3`; restore point: tag/commit "motion-v2-final")
+
+Brief: MOTION_V3_PROMPT.md — edit, don't add; calmer, faster to read, smoother.
+
+- [x] Step 0 — restore point committed and tagged `motion-v2-final`; work on `motion-v3`
+- [x] Step 1 — nav: desktop About · Speaking | name | Books · Insights + brass "Invite to speak"; tablet unchanged;
+  menu trimmed to 6 (About, Speaking & Training, Books, Frameworks, Insights, Contact); the bar now stays in view
+  while scrolling (no hide-on-scroll). Fewer pages, by your choice of 7: Home, About, Speaking, Books, Frameworks,
+  Insights, Contact. /achievements → About #recognition (full wall + filters), /students → About #students,
+  /books/beyond-ideas and /books/beyond-satisfaction → one /books page (index of both covers, then each book in
+  full). Old URLs 301 to the new spots (vercel.json). Footer Explore keeps Achievements and Students links (to About)
+- [x] Step 2 — home trimmed from 13 to 10 sections (approved): Hero · Manifesto · Arc (+ Numbers as its closing
+  row) · Pillars · Books (+ two-line Thinking-tools teaser → /frameworks) · Speaking · In the room · What people say
+  (+ 3 newest recognition frames, "See all" → About) · Insights · Contact. Home pins: 5 → 3
+- [x] Step 3 — one signature (the travelling prism): brass thread removed (`src/lib/thread.ts`, in git history),
+  green-band grain is a still texture, cursor labels only on the Speaking track ("Drag") and gallery photos ("View"),
+  loader ≤1.2s and shown only on the first home visit on a device (`localStorage` `sk:cached` after a full load).
+  The hero portrait is never hidden before the engine runs (it is the LCP image): it wipes in only under the loader
+- [x] Step 4 — pins on home: hero sheet (short), Manifesto 1.5 → 1.0vh, Speaking 1.5vh; the two Thinking-tools pins
+  left home (on /frameworks they are shorter: 0.4vh per stage). `anticipatePin: 1` on every pin. Arc: 0.96vh per
+  chapter; the year snaps to each entry (0.45s roll) and that entry's dot fills. Keyboard PageDown: 0 stuck presses
+  (2 before); home length 30.9 → 23.2 screens
+- [x] Step 5 — three tiers (src/lib/motion.ts, BRIEF 5b). Tier 1 scrubbed: prism, Manifesto, Arc, book covers,
+  Speaking track. Tier 2 one-shot: SplitText lines only on h1 + section h2s (0.9s); everything else fades up 16px,
+  0.6s, expo-out (CSS [data-reveal]); clip wipes only on large photos (hero under the loader, gallery, about
+  portrait). Demoted from scrub to one-shot: gallery collage (now a clip wipe + slight settle, no column parallax),
+  section-edge bends, footer name (fade-up, no letter split), About portrait settle. Giant "Books"/"In the room"
+  words are still. Split removed from: book h3 titles, excerpt, contact display line, footer sign-off, hero lead,
+  testimonial quotes. Achievement frames: fade-up instead of the rotating drop-in
+- [x] Step 6 — one-shot reveals start at 'top 80%' (capped below max scroll), fastScrollEnd + preventOverlaps;
+  groups capped at 0.4s of stagger; headings 0.9s, body 0.6s; on-load reveals (page-header h1, hero intro) wait for
+  the page-transition curtain (`<html data-curtain-state>` → `curtain:done`); nav hairline scrub: true; Tier 1 scrub
+  0.8. Curtain now 690–740ms (was ~940ms after a regression found and fixed: the flag matched `[data-curtain]`)
+- [x] Step 7 — Lenis lerp 0.12 (chosen by measurement: stops gliding ~680ms after the last input vs ~755ms for the
+  duration setup and ~840ms for lerp 0.10). Anchors offset by the nav height (Lenis + scroll-padding-top); Lenis stops
+  while the menu and the lightbox are open
+- [x] Step 8 — prism glow is a pre-blurred gradient and the beam glow a wide faint stroke (no CSS/SVG blur filters);
+  prism breathing pauses while it is faded out; clock pauses off-screen / tab hidden; scroll-cue pulse pauses
+  off-screen; magnetic buttons measure on enter, not per move; prism gets will-change only while it moves; nav bar
+  has no backdrop blur (it now stays on screen, so the blur was recomputed every frame); Speaking track and gallery
+  are built only when near (one refresh after the pin is added)
+- [ ] Step 8 targets not verified: interleaved 4× throttle runs moved desktop 26 → 38fps and phone 35 → 41fps
+  (medians), short of 55 / 50; and this session's Lighthouse runs scored v3 lower (median 73 → 65, TBT 0.86 → 2.09s)
+  although a traced throttled load shows v3's long tasks are smaller (largest 411 → 180ms). Re-measure on the
+  deployed preview with PageSpeed Insights before concluding
+- [ ] Step 9 — phones: no pins, fade-ups only, dock / tagline bar overlap check
+- Measuring note: this machine is heavily loaded during v3 (old build's TBT 3–4s vs ~0.1s two days ago), so
+  before → after numbers come from interleaved runs of both builds, not absolute scores
+
 ## Temporary build scaffolding (remove in later stages)
 
 - [ ] Delete `src/pages/style-test.astro` before launch (noindex and out of the sitemap, but still public)

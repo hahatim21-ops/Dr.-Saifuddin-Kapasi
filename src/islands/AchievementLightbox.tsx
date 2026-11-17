@@ -43,7 +43,7 @@ const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('
 /**
  * Achievements wall + viewer (Motion v2: GSAP, no Motion library).
  * Wall: framed images (thin frame, matte, soft shadow). As the wall enters, the
- * frames drop in with a slight rotation and settle straight, 80ms apart.
+ * frames fade up together (Motion v3, Tier 2).
  * On /achievements the Awards / Honours / Features filter re-flows the wall
  * with Flip. JS off: every frame is visible (start states are runtime only).
  * Viewer: a native <dialog> opened with showModal() — focus is trapped by the
@@ -80,19 +80,19 @@ export default function AchievementLightbox({
     loadFlip().then((F) => (flip.current = F));
   }, []);
 
-  // Frames drop in with a slight rotation and settle straight, 80ms apart.
+  // Frames fade up as the wall enters.
   useEffect(() => {
     const ul = list.current;
     if (!ul || reducedMotion()) return;
     const frames = ul.querySelectorAll('.aw__item');
     const tween = gsap.from(frames, {
-      y: -36,
-      rotation: (i: number) => (i % 2 ? 3 : -3.5),
+      // Motion v3 (Tier 2): a plain fade-up; the whole group lands within ~1s.
+      y: 16,
       opacity: 0,
-      duration: GS.dur.reveal,
-      ease: 'back.out(1.4)',
-      stagger: GS.stagger.frames,
-      scrollTrigger: { trigger: ul, start: 'top 85%', once: true },
+      duration: GS.dur.body,
+      ease: GS.ease.reveal,
+      stagger: frames.length > 1 ? { amount: Math.min(0.4, GS.stagger.frames * (frames.length - 1)) } : 0,
+      scrollTrigger: { trigger: ul, start: 'top 80%', once: true, fastScrollEnd: true, preventOverlaps: true },
     });
     return () => {
       tween.scrollTrigger?.kill();
@@ -235,7 +235,6 @@ export default function AchievementLightbox({
               className="aw__frame"
               onClick={(e) => show(i, e.currentTarget.querySelector('img'))}
               aria-haspopup="dialog"
-              data-cursor="View"
             >
               <span className="aw__matte">
                 <picture>

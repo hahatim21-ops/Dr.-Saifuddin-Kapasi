@@ -3,7 +3,7 @@
  * Home §2 — Manifesto (new). A green band whose top edge is the inflection
  * line: it is the "sheet" that slides over the pinned hero, starting flat and
  * bending upward as it arrives.
- * - Desktop: pinned for ~150vh; each word scrubs from dim light brass to full
+ * - Desktop: pinned for ~100vh; each word scrubs from dim light brass to full
  *   ivory, with the travelling prism docked large behind the words.
  * - Phones: no pin; the words light up as the paragraph passes through.
  * Only opacity animates: a dim, aria-hidden brass copy of the text sits under
@@ -21,10 +21,10 @@ const m = home.manifesto;
   <InflectionEdge class="mani-edge" />
   <section id="manifesto" class="mani on-green" aria-labelledby="mani-title" data-section={m.eyebrow}>
     <!-- Prism waypoint on the (unpinned) section, at the middle of the first screen
-         (where the pinned content sits while it is held for 150vh). It spans the
+         (where the pinned content sits while it is held for 100vh). It spans the
          content column and the prism docks near its right edge, so the glass and
          the beam stay clear of the quote at every desktop width. -->
-    <span class="container-content mani__stop" data-prism-stop="manifesto" data-prism-scale="1.9" data-prism-beam="0.55" data-prism-beam-to="1" data-prism-hold="150" data-prism-anchor="right" data-prism-dx="-190" aria-hidden="true"></span>
+    <span class="container-content mani__stop" data-prism-stop="manifesto" data-prism-scale="1.9" data-prism-beam="0.55" data-prism-beam-to="1" data-prism-hold="100" data-prism-anchor="right" data-prism-dx="-190" aria-hidden="true"></span>
     <div class="mani__pin" data-mani-pin>
       <div class="container-content mani__inner">
         <h2 id="mani-title" class="sr-only">{m.eyebrow}</h2>
@@ -137,7 +137,7 @@ const m = home.manifesto;
     gsap.set(split.words, { opacity: 0 });
 
     if (desktop) {
-      // Pinned ~150vh: the words light up across the pin.
+      // Pinned ~100vh: the words light up across the pin.
       gsap.to(split.words, {
         opacity: 1,
         ease: 'none',
@@ -145,9 +145,10 @@ const m = home.manifesto;
         scrollTrigger: {
           trigger: pin,
           start: 'top top',
-          end: () => '+=' + window.innerHeight * 1.5,
+          end: () => '+=' + window.innerHeight, // Motion v3: ~100vh (was 150)
           pin: true,
-          scrub: 0.6,
+          anticipatePin: 1,
+          scrub: 0.8,
           invalidateOnRefresh: true,
         },
       });
@@ -157,7 +158,7 @@ const m = home.manifesto;
         opacity: 1,
         ease: 'none',
         stagger: 0.1,
-        scrollTrigger: { trigger: text, start: 'top 85%', end: 'bottom 40%', scrub: 0.6 },
+        scrollTrigger: { trigger: text, start: 'top 85%', end: 'bottom 40%', scrub: 0.8 },
       });
     }
     return () => split.revert();

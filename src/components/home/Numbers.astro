@@ -13,12 +13,13 @@ const stats = (await getCollection('stats')).sort((a, b) => a.data.order - b.dat
 const unconfirmed = stats.some((s) => s.data.placeholder);
 ---
 
-<section class="numbers" aria-labelledby="numbers-title">
+<!-- Motion v3: the closing row of The Arc, not a section of its own. -->
+<div class="numbers" role="group" aria-labelledby="numbers-title">
   <!-- Prism waypoint: it fades out after the Arc and travels hidden until the Books band. -->
   <span class="numbers__stop" data-prism-stop="numbers" data-prism-scale="0.5" data-prism-beam="0.3" data-prism-opacity="0" aria-hidden="true"></span>
   <div class="container-content">
     <div class="numbers__head" data-reveal="fade">
-      <Eyebrow as="h2" class="numbers__title"><span id="numbers-title">{home.numbers.eyebrow}</span></Eyebrow>
+      <Eyebrow as="h3" class="numbers__title"><span id="numbers-title">{home.numbers.eyebrow}</span></Eyebrow>
       {unconfirmed && <span class="placeholder-tag">Figures to be confirmed</span>}
     </div>
 
@@ -37,11 +38,11 @@ const unconfirmed = stats.some((s) => s.data.placeholder);
       }
     </dl>
   </div>
-</section>
+</div>
 
 <style>
   .numbers {
-    padding-block: clamp(3.5rem, 2rem + 5vw, 6rem);
+    padding-block: 0 clamp(3.5rem, 2rem + 5vw, 6rem);
   }
   .numbers__head {
     display: flex;

@@ -143,7 +143,7 @@
     "links": [
       { "label": "Home", "href": "/" },
       { "label": "Speaking & training", "href": "/speaking" },
-      { "label": "Books", "href": "/#books" },
+      { "label": "Books", "href": "/books" },
       { "label": "Contact", "href": "/contact" }
     ]
   }

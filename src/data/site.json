@@ -71,16 +71,12 @@
       {
         "label": "Speaking",
         "href": "/speaking"
-      },
-      {
-        "label": "Books",
-        "href": "/#books"
       }
     ],
     "right": [
       {
-        "label": "Frameworks",
-        "href": "/frameworks"
+        "label": "Books",
+        "href": "/books"
       },
       {
         "label": "Insights",
@@ -94,7 +90,7 @@
       },
       {
         "label": "Books",
-        "href": "/#books"
+        "href": "/books"
       },
       {
         "label": "Insights",
@@ -112,23 +108,15 @@
       },
       {
         "label": "Books",
-        "href": "/#books"
+        "href": "/books"
       },
       {
         "label": "Frameworks",
         "href": "/frameworks"
       },
       {
-        "label": "Achievements",
-        "href": "/achievements"
-      },
-      {
         "label": "Insights",
         "href": "/insights"
-      },
-      {
-        "label": "Students",
-        "href": "/students"
       },
       {
         "label": "Contact",

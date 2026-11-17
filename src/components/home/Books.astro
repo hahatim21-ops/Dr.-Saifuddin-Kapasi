@@ -1,13 +1,13 @@
 ---
 /**
  * Home §6 — Books (Motion v2). A green band with the inflection-shaped top edge.
- * - A giant "Books" word drifts horizontally behind the covers (scrubbed).
+ * - A giant "Books" word sits behind the covers (still, Motion v3).
  * - Covers rise and rotate in from 12° to 0 (scrubbed); pointer tilt on desktop
  *   (BookCover.astro).
  * - Desktop: the travelling prism docks beside the Beyond Ideas cover and splits
  *   its beam into the full spectrum across the band, then fades out by the next
  *   book. Phones/tablets: a still prism sits beside the excerpt instead.
- * - The excerpt reveals line by line.
+ * - Titles and the excerpt fade up (Tier 2).
  * Per book: "New release" pill, two-tone serif title, pitch, one quote, buy
  * links and the bulk-order line. Phones: cover above text; ≥768px: side by
  * side, alternating (Beyond Ideas has its cover on the right, so the spectrum
@@ -110,7 +110,7 @@ const isLive = (url: string) => url && url !== '#';
                       <span class="pill">{home.books.newRelease}</span>
                     </p>
                   )}
-                  <h3 id={`book-${book.id}`} class="book__title" data-split="lines">
+                  <h3 id={`book-${book.id}`} class="book__title" data-reveal>
                     {d.title} <span class="book__accent">{d.titleAccent}</span>
                   </h3>
                   <p class="book__subtitle" data-reveal style="--i:1">
@@ -140,7 +140,7 @@ const isLive = (url: string) => url && url !== '#';
                         <Icon name="arrow-right" size={18} class="btn-arrow" />
                       </a>
                     ))}
-                    <a href={`/books/${book.id}`} class="btn btn-secondary">
+                    <a href={`/books/#${book.id}`} class="btn btn-secondary">
                       {home.books.readMore}
                     </a>
                   </div>
@@ -174,7 +174,7 @@ const isLive = (url: string) => url && url !== '#';
                 <Eyebrow>{home.books.excerptEyebrow}</Eyebrow>
               </div>
               <blockquote class="excerpt__text">
-                <p data-split="lines">{excerptBook.data.excerpt}</p>
+                <p data-reveal>{excerptBook.data.excerpt}</p>
               </blockquote>
               <figcaption class="excerpt__source" data-reveal style="--i:2">
                 {excerptBook.data.title} {excerptBook.data.titleAccent}
@@ -185,12 +185,54 @@ const isLive = (url: string) => url && url !== '#';
         </div>
       )
     }
+    <!-- Thinking tools teaser (Motion v3: the full stage-by-stage draw lives on /frameworks). -->
+    <div class="container-content fw-teaser" data-reveal>
+      <p class="eyebrow">{home.frameworks.eyebrow}</p>
+      <h3 class="fw-teaser__title">
+        {home.frameworks.title.split(/(\*[^*]+\*)/).map((t) => (t.startsWith('*') ? <em>{t.slice(1, -1)}</em> : t))}
+      </h3>
+      <p class="fw-teaser__line">{home.frameworks.intro}</p>
+      <a href={home.frameworks.linkHref} class="fw-teaser__link link-grow-line">
+        {home.frameworks.link} <span aria-hidden="true">→</span>
+      </a>
+    </div>
+
     <!-- Way out: ivory rises into the green along the inflection curve. -->
     <InflectionEdge color="var(--color-ivory)" class="band-out" />
   </section>
 </div>
 
 <style>
+  /* Thinking tools teaser at the end of the band. */
+  .fw-teaser {
+    position: relative;
+    z-index: 6;
+    display: grid;
+    gap: 0.75rem;
+    justify-items: start;
+    padding-block: clamp(3rem, 2rem + 4vw, 5rem) clamp(1rem, 2vw, 2rem);
+    border-top: 1px solid var(--color-hairline-on-green);
+  }
+  .fw-teaser__title {
+    font-size: var(--text-h3);
+    color: var(--color-ivory);
+  }
+  .fw-teaser__title em {
+    color: var(--color-brass-light);
+  }
+  .fw-teaser__line {
+    max-width: 56ch;
+    color: rgb(246 241 231 / 0.78);
+  }
+  .fw-teaser__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-brass-light);
+  }
+
   .books {
     position: relative;
     background-color: var(--color-green);
@@ -392,21 +434,3 @@ const isLive = (url: string) => url && url !== '#';
   }
 </style>
 
-<script>
-  import { gsap, registerScene } from '../../lib/tools';
-
-  registerScene('books', ({ reduce }) => {
-    const word = document.querySelector<HTMLElement>('[data-books-word]');
-    if (!word || reduce) return;
-    // The giant word drifts right → left behind the covers as the band passes.
-    gsap.fromTo(
-      word,
-      { xPercent: 8 },
-      {
-        xPercent: -45,
-        ease: 'none',
-        scrollTrigger: { trigger: word.closest('section'), start: 'top bottom', end: 'bottom top', scrub: 1 },
-      }
-    );
-  });
-</script>

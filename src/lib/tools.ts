@@ -23,6 +23,10 @@ export let createOdometer: typeof Engine.createOdometer;
 export let getLenis: typeof Engine.getLenis;
 export let scrollToTarget: typeof Engine.scrollToTarget;
 export let loadFlip: typeof Engine.loadFlip;
+export let revealTrigger: typeof Engine.revealTrigger;
+export let groupStagger: typeof Engine.groupStagger;
+export let afterCurtain: typeof Engine.afterCurtain;
+export let whenNear: typeof Engine.whenNear;
 
 /** Called once by the engine when it loads. */
 export function provide(t: {
@@ -34,6 +38,10 @@ export function provide(t: {
   getLenis: typeof Engine.getLenis;
   scrollToTarget: typeof Engine.scrollToTarget;
   loadFlip: typeof Engine.loadFlip;
+  revealTrigger: typeof Engine.revealTrigger;
+  groupStagger: typeof Engine.groupStagger;
+  afterCurtain: typeof Engine.afterCurtain;
+  whenNear: typeof Engine.whenNear;
 }) {
-  ({ gsap, ScrollTrigger, SplitText, splitText, createOdometer, getLenis, scrollToTarget, loadFlip } = t);
+  ({ gsap, ScrollTrigger, SplitText, splitText, createOdometer, getLenis, scrollToTarget, loadFlip, revealTrigger, groupStagger, afterCurtain, whenNear } = t);
 }

@@ -784,15 +784,18 @@
   }
 }
 
-/* Only hide things when JS is running and motion is allowed. */
+/* Only hide things when JS is running and motion is allowed.
+   Motion v3, Tier 2 (body copy, cards, small images): a plain fade-up —
+   16px → 0, opacity 0 → 1, 0.6s, expo-out. A group's stagger is capped at
+   0.4s, so the whole group lands within ~1s whatever its size. */
 html.js [data-reveal] {
   opacity: 0;
-  transform: translate3d(0, var(--reveal-y, var(--move-md)), 0);
+  transform: translate3d(0, var(--reveal-y, 16px), 0);
   transition:
-    opacity var(--dur-reveal) var(--ease),
-    transform var(--dur-reveal) var(--ease),
-    filter var(--dur-reveal) var(--ease);
-  transition-delay: calc(var(--delay, 0ms) + var(--i, 0) * var(--stagger));
+    opacity 0.6s var(--ease-expo),
+    transform 0.6s var(--ease-expo),
+    filter 0.6s var(--ease-expo);
+  transition-delay: calc(var(--delay, 0ms) + min(var(--i, 0) * var(--stagger), 400ms));
 }
 html.js [data-reveal='blur'] {
   filter: blur(var(--blur-max));
@@ -979,32 +982,15 @@ html.motion-pending:not([data-loader-state]) [data-hero-line] {
   border-color: var(--color-brass-light);
 }
 
-/* Film grain on green bands only: the paper grain tile, shifted at 8fps with
-   steps() — a transform on an oversized layer, so it never repaints. */
+/* Paper grain on green bands: a static texture (Motion v3 stopped animating it). */
 .on-green::after {
   content: '';
   position: absolute;
-  inset: -120px;
+  inset: 0;
   z-index: 1;
   background-image: var(--grain);
   opacity: 0.55;
   pointer-events: none;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .on-green::after {
-    animation: grain 1s steps(1, end) infinite;
-  }
-}
-@keyframes grain {
-  0% { transform: translate(0, 0); }
-  12.5% { transform: translate(-42px, 18px); }
-  25% { transform: translate(31px, -27px); }
-  37.5% { transform: translate(-17px, 44px); }
-  50% { transform: translate(52px, 9px); }
-  62.5% { transform: translate(-36px, -40px); }
-  75% { transform: translate(14px, 33px); }
-  87.5% { transform: translate(-55px, -12px); }
-  100% { transform: translate(0, 0); }
 }
 
 /* Still prisms (phones/tablets, reduced motion) step aside while the
@@ -1100,100 +1086,6 @@ html.has-cursor [contenteditable='true'] {
 .cursor-ring.is-label .cursor-ring__label {
   opacity: 1;
 }
-/* Brass thread (home, desktop; built by src/lib/thread.ts). */
-.thread {
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 5; /* above section backgrounds and the prism, below the nav */
-  pointer-events: none;
-}
-.thread svg {
-  position: absolute;
-  inset: 0;
-  display: block;
-  overflow: visible;
-}
-/* The drawn line: its own layer, revealed by a rectangular clip. */
-.thread__reveal {
-  position: absolute;
-  inset: 0;
-  will-change: transform;
-  clip-path: inset(0 0 100% 0);
-}
-.thread__guide,
-.thread__line {
-  fill: none;
-  stroke: var(--color-brass);
-  stroke-width: 1.25;
-  stroke-linecap: round;
-}
-.thread__guide {
-  opacity: 0.18;
-  stroke-dasharray: 2 6;
-}
-/* The tip: a small light and a breathing halo, moved by transform only. */
-.thread__tip,
-.thread__halo {
-  position: absolute;
-  left: 0;
-  top: 0;
-  border-radius: 999px;
-  opacity: 0;
-  transition: opacity 0.3s var(--ease-ui);
-  will-change: transform;
-}
-.thread__tip {
-  width: 7px;
-  height: 7px;
-  margin: -3.5px 0 0 -3.5px;
-  background: var(--color-brass-light);
-  box-shadow: 0 0 6px 1px rgb(212 180 131 / 0.9);
-}
-.thread__halo {
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
-}
-.thread__halo::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: rgb(212 180 131 / 0.22);
-  animation: thread-breath 3.2s ease-in-out infinite alternate;
-}
-@keyframes thread-breath {
-  from { transform: scale(0.8); }
-  to { transform: scale(1.25); }
-}
-.thread__node circle {
-  fill: var(--color-ivory);
-  stroke: var(--color-brass);
-  stroke-width: 1.25;
-  transform-box: fill-box;
-  transform-origin: center;
-  transition:
-    fill 0.4s var(--ease-ui),
-    transform 0.5s var(--ease-ui);
-}
-.thread__node.is-lit circle {
-  fill: var(--color-brass);
-  transform: scale(1.35);
-}
-.thread__node text {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  fill: var(--color-brass);
-  opacity: 0;
-  transition: opacity 0.4s var(--ease-ui);
-}
-.thread__node.is-lit text {
-  opacity: 1;
-}
-
 /* Insights hover preview (desktop; appended to body by InsightsList). */
 .idx-preview {
   position: fixed;

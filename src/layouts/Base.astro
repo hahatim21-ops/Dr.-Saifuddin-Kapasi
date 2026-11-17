@@ -147,6 +147,11 @@ const ogIsDefault = ogImage === '/og.jpg';
       /* ---- v1 reveals still used by sections not yet moved to GSAP:
               CSS-driven, IntersectionObserver adds .is-in once ---- */
       let io: IntersectionObserver | null = null;
+      /** Run fn now, or when the page-transition curtain has finished lifting. */
+      const afterCurtain = (fn: () => void) => {
+        if (document.documentElement.dataset.curtainState) document.addEventListener('curtain:done', fn, { once: true });
+        else fn();
+      };
       function setupReveals() {
         io?.disconnect();
         const targets = document.querySelectorAll<Element>(
@@ -167,14 +172,17 @@ const ogIsDefault = ogImage === '/og.jpg';
               io?.unobserve(entry.target); // play once
             }
           },
-          // The root reaches one screen above the viewport, so an element that
-          // jumps from below to above between two frames still crosses it.
-          { rootMargin: '100% 0px -8% 0px', threshold: 0.12 }
+          // Motion v3: reveal as the top crosses 80% of the screen, so it has
+          // finished moving before it reaches reading height. The root also
+          // reaches one screen above the viewport, so an element that jumps
+          // from below to above between two frames still crosses it.
+          { rootMargin: '100% 0px -20% 0px', threshold: 0 }
         );
         targets.forEach((el) => {
-          // [data-reveal-now] plays on load (hero), on the next frame so the start state paints.
+          // [data-reveal-now] plays on load, on the next frame so the start state
+          // paints — and after a page transition, only once the curtain has lifted.
           if (el.hasAttribute('data-reveal-now')) {
-            requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('is-in')));
+            afterCurtain(() => requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('is-in'))));
           } else {
             io!.observe(el);
           }

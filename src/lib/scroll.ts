@@ -98,7 +98,13 @@ function lenisTick(time: number) {
 function setupLenis() {
   const want = matchMedia(MQ.desktop).matches && !matchMedia(MQ.reduce).matches;
   if (want && !lenis) {
-    lenis = new Lenis({ autoRaf: false, lerp: 0.1, anchors: true, smoothWheel: true });
+    // Motion v3: lerp 0.12. Measured against lerp 0.10 and a duration-based
+    // setup (1.1s, expo easing) with trackpad-like input, it stops gliding
+    // soonest after the last input (~680ms vs ~755ms and ~840ms): the least
+    // floaty, and it follows a trackpad's stream of small deltas continuously.
+    // Anchor links land below the fixed nav.
+    const navH = document.querySelector<HTMLElement>('[data-site-header]')?.offsetHeight ?? 88;
+    lenis = new Lenis({ autoRaf: false, lerp: 0.12, smoothWheel: true, anchors: { offset: -(navH + 16) } });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(lenisTick);
     gsap.ticker.lagSmoothing(0);
@@ -259,6 +265,64 @@ type SplitVars = NonNullable<Parameters<typeof SplitText.create>[1]>;
 const HEADING = /^H[1-6]$/;
 
 /**
+ * Motion v3 one-shot reveal trigger: starts as the element's top crosses 80% of
+ * the screen (so it has finished moving before reading height), capped just
+ * below the page's maximum scroll (a line at the very end still plays).
+ * fastScrollEnd + preventOverlaps: a fast scroll completes it instantly
+ * instead of leaving half-faded content behind.
+ */
+export function revealTrigger(el: Element) {
+  return {
+    trigger: el,
+    start: () => Math.min(ScrollTrigger.maxScroll(window) - 1, el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.8),
+    once: true,
+    fastScrollEnd: true,
+    preventOverlaps: true,
+  } satisfies ScrollTrigger.Vars;
+}
+
+/** A stagger whose whole group always finishes within `amount` seconds. */
+export const groupStagger = (count: number, each: number, amount = 0.4) =>
+  count > 1 ? { amount: Math.min(amount, each * (count - 1)) } : 0;
+
+/** Run fn now, or once the page-transition curtain has finished lifting. */
+export function afterCurtain(fn: () => void) {
+  if (document.documentElement.dataset.curtainState) document.addEventListener('curtain:done', fn, { once: true });
+  else fn();
+}
+
+/**
+ * Build a heavy scene only when it comes near the viewport (one screen ahead),
+ * inside its own context so the page's cleanup reverts it. `pins` → one
+ * ScrollTrigger.refresh() afterwards, because a new pin adds spacing.
+ */
+export function whenNear(el: Element, build: () => void | (() => void), { pins = false } = {}) {
+  const ctx = gsap.context(() => {});
+  let cleanup: void | (() => void);
+  let reverted = false;
+  ScrollTrigger.create({
+    trigger: el,
+    start: 'top bottom+=100%',
+    once: true,
+    // Built on the next tick, outside ScrollTrigger's update loop: creating
+    // triggers (and refreshing) while it iterates its triggers breaks it.
+    onEnter: () =>
+      gsap.delayedCall(0, () => {
+        if (reverted) return;
+        ctx.add(() => {
+          cleanup = build();
+        });
+        if (pins) ScrollTrigger.refresh();
+      }),
+  });
+  return () => {
+    reverted = true;
+    cleanup?.();
+    ctx.revert();
+  };
+}
+
+/**
  * SplitText with accessible output everywhere. Headings may carry an
  * aria-label, so they use aria: 'auto'. Other elements (a <p> may not be
  * named) get aria: 'hidden' on the split pieces plus a screen-reader-only copy
@@ -302,26 +366,19 @@ registerScene('split', ({ reduce }) => {
         linesClass: 'split-line',
         onSplit(self) {
           const targets = kind === 'chars' ? self.chars : kind === 'words' ? self.words : self.lines;
-          return gsap.from(targets, {
+          const each = kind === 'chars' ? GS.stagger.chars : kind === 'words' ? GS.stagger.words : GS.stagger.lines;
+          const tween = gsap.from(targets, {
             yPercent: 110,
-            duration: kind === 'chars' ? GS.dur.chars : GS.dur.reveal,
+            duration: GS.dur.heading,
             ease: GS.ease.reveal,
-            stagger: kind === 'chars' ? GS.stagger.chars : kind === 'words' ? GS.stagger.words : GS.stagger.lines,
+            stagger: groupStagger(targets.length, each),
             delay,
-            // Capped just below the page's maximum scroll, so a line at the very
-            // end of the page (the footer sign-off) still plays.
-            scrollTrigger: immediate
-              ? undefined
-              : {
-                  trigger: el,
-                  start: () =>
-                    Math.min(
-                      ScrollTrigger.maxScroll(window) - 1,
-                      el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.88
-                    ),
-                  once: true,
-                },
+            paused: immediate,
+            scrollTrigger: immediate ? undefined : revealTrigger(el),
           });
+          // On load (page headers): only once the curtain has lifted.
+          if (immediate) afterCurtain(() => tween.play());
+          return tween;
         },
       })
     );
@@ -352,7 +409,7 @@ registerScene('clip', ({ reduce, desktop }) => {
     const from = insets[wrap.dataset.clip || 'up'] ?? insets.up;
     const img = wrap.querySelector('img, svg, picture');
     const tl = gsap.timeline({
-      scrollTrigger: wrap.hasAttribute('data-clip-now') ? undefined : { trigger: wrap, start: 'top 85%', once: true },
+      scrollTrigger: wrap.hasAttribute('data-clip-now') ? undefined : revealTrigger(wrap),
       delay: Number(wrap.dataset.clipDelay || 0),
     });
     tl.fromTo(wrap, { clipPath: from }, { clipPath: 'inset(0% 0% 0% 0%)', duration: GS.dur.revealLong, ease: GS.ease.strong });
@@ -374,33 +431,15 @@ registerScene('clip', ({ reduce, desktop }) => {
 });
 
 /**
- * Settle: [data-settle="-5"] — a photo that starts tilted like a print on a
- * desk (the value is its start angle in degrees) and straightens as it scrolls
- * into place: scrubbed on desktop, once on entry elsewhere.
+ * Settle: [data-settle="-5"] — a photo that starts slightly tilted (the value
+ * is its start angle in degrees) and straightens once as it enters (Motion v3:
+ * one-shot, not scrubbed — only Tier 1 scenes scrub).
  */
 registerScene('settle', ({ reduce, desktop }) => {
   if (reduce) return;
   document.querySelectorAll<HTMLElement>('[data-settle]').forEach((el) => {
-    const r = Number(el.dataset.settle || -5);
-    if (desktop)
-      gsap.fromTo(
-        el,
-        { rotation: r, y: 60, scale: 0.95 },
-        {
-          rotation: 0,
-          y: 0,
-          scale: 1,
-          ease: 'none',
-          scrollTrigger: { trigger: el, start: 'top bottom', end: 'top 30%', scrub: GS.scrub },
-        }
-      );
-    else
-      gsap.from(el, {
-        rotation: r * 0.6,
-        y: 24,
-        duration: GS.dur.revealLong,
-        scrollTrigger: { trigger: el, start: 'top 92%', once: true },
-      });
+    const r = Number(el.dataset.settle || -5) * (desktop ? 1 : 0.5);
+    gsap.from(el, { rotation: r, y: 16, duration: GS.dur.heading, ease: GS.ease.reveal, scrollTrigger: revealTrigger(el) });
   });
 });
 
@@ -468,8 +507,8 @@ registerScene('odometer', ({ reduce }) => {
     const value = el.textContent?.trim() ?? '0';
     const o = createOdometer(el, value);
     o.set('0'.repeat(o.width), { immediate: true });
-    gsap.fromTo(el, { scale: 0.9 }, { scale: 1, duration: GS.dur.count, ease: GS.ease.reveal, scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
-    ScrollTrigger.create({ trigger: el, start: 'top 88%', once: true, onEnter: () => o.set(value) });
+    gsap.fromTo(el, { scale: 0.9 }, { scale: 1, duration: GS.dur.count, ease: GS.ease.reveal, scrollTrigger: revealTrigger(el) });
+    ScrollTrigger.create({ ...revealTrigger(el), onEnter: () => o.set(value) });
     return o;
   });
   return () => odos.forEach((o) => o.restore());
@@ -485,8 +524,13 @@ registerScene('magnetic', ({ desktop }) => {
     const max = Number(el.dataset.magnetic || GS.magnetic);
     const xTo = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'inflect' });
     const yTo = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'inflect' });
+    // Measured once on enter (the button doesn't move while hovered), never per frame.
+    let r = el.getBoundingClientRect();
+    const enter = () => {
+      gsap.set(el, { x: 0, y: 0 });
+      r = el.getBoundingClientRect();
+    };
     const move = (e: PointerEvent) => {
-      const r = el.getBoundingClientRect();
       const dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
       const dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
       xTo(gsap.utils.clamp(-1, 1, dx) * max);
@@ -496,9 +540,11 @@ registerScene('magnetic', ({ desktop }) => {
       xTo(0);
       yTo(0);
     };
+    el.addEventListener('pointerenter', enter);
     el.addEventListener('pointermove', move);
     el.addEventListener('pointerleave', leave);
     offs.push(() => {
+      el.removeEventListener('pointerenter', enter);
       el.removeEventListener('pointermove', move);
       el.removeEventListener('pointerleave', leave);
       gsap.set(el, { clearProps: 'x,y' });
@@ -510,10 +556,10 @@ registerScene('magnetic', ({ desktop }) => {
 /* ---------------- Inflection edge ---------------- */
 
 /**
- * [data-edge] (InflectionEdge.astro): the top edge of a green band. The HTML
- * ships the finished curve; at runtime it starts flat and bends upward,
- * scrubbed as the band scrolls into view. Only the path's numbers change, so
- * GSAP interpolates the d attribute directly (no morph plugin needed).
+ * [data-edge] (InflectionEdge.astro): the edge of a green band. The HTML ships
+ * the finished curve; at runtime it starts flat and bends upward once as the
+ * edge enters (Motion v3: one-shot, not scrubbed). Only the path's numbers
+ * change, so GSAP interpolates the d attribute directly.
  */
 registerScene('edge', ({ reduce }) => {
   if (reduce) return;
@@ -525,17 +571,26 @@ registerScene('edge', ({ reduce }) => {
       { attr: { d: flat } },
       {
         attr: { d: curved },
-        ease: 'none',
-        scrollTrigger: {
-          trigger: path.closest('[data-edge]'),
-          start: 'top bottom',
-          end: 'top 35%',
-          scrub: GS.scrub,
-        },
+        duration: GS.dur.heading,
+        ease: GS.ease.reveal,
+        scrollTrigger: revealTrigger(path.closest('[data-edge]')!),
       }
     );
   });
 });
 
 /* Hand the tools to component scripts (src/lib/tools.ts live bindings). */
-provide({ gsap, ScrollTrigger, SplitText, splitText, createOdometer, getLenis, scrollToTarget, loadFlip });
+provide({
+  gsap,
+  ScrollTrigger,
+  SplitText,
+  splitText,
+  createOdometer,
+  getLenis,
+  scrollToTarget,
+  loadFlip,
+  revealTrigger,
+  groupStagger,
+  afterCurtain,
+  whenNear,
+});

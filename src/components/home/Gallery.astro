@@ -3,12 +3,11 @@
  * Home §9 — In the room. Real session photos with quiet captions
  * ("Kampala convocation / 2026"). Each photo sharpens from a blurred
  * placeholder as it loads (BlurImage, lazy below the fold).
- * Motion v2 (the collage):
- * - A huge "In the room" word sits behind the photos.
- * - Desktop: the photos start scattered and tilted (±4–8°) like prints on a
- *   desk and straighten into the grid as you scroll; the two columns move at
- *   different parallax speeds and the captions slide in.
- * - Phones: the swipe row; each photo straightens as it enters.
+ * Motion v3:
+ * - A huge "In the room" word sits still behind the photos.
+ * - Desktop: each large photo wipes up once (clip-path) out of a slight tilt
+ *   and settles; its caption follows. No scrub, no column parallax.
+ * - Phones: the swipe row; each photo fades up as it enters.
  * Layout: ≥768px a staggered two-column grid; phones one scroll-snap row (the
  * column wrappers switch to display: contents, `order` keeps the sequence).
  * JS off / reduced motion: the tidy grid, nothing hidden.
@@ -188,7 +187,7 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
 </style>
 
 <script>
-  import { gsap, registerScene } from '../../lib/tools';
+  import { gsap, registerScene, revealTrigger, whenNear } from '../../lib/tools';
   import { GS } from '../../lib/motion';
 
   // Deterministic "prints on a desk" offsets: rotation (°), x and y (px).
@@ -206,54 +205,27 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
     if (!track || reduce) return;
     const photos = [...track.querySelectorAll<HTMLElement>('[data-photo]')];
 
+    // Phones/tablets (Tier 2): each photo simply fades up as it enters.
     if (!desktop) {
-      // Phones/tablets: each photo straightens as it enters (the row may be
-      // swiped, so the trigger watches the photo itself).
-      photos.forEach((ph) => {
-        const [r] = SCATTER[Number(ph.dataset.photo) % SCATTER.length];
-        gsap.from(ph, {
-          rotation: r * 0.6,
-          y: 24,
-          duration: GS.dur.revealLong,
-          ease: GS.ease.reveal,
-          scrollTrigger: { trigger: ph, start: 'top 92%', once: true },
-        });
-      });
+      photos.forEach((ph) =>
+        gsap.from(ph, { autoAlpha: 0, y: 12, duration: 0.5, ease: GS.ease.reveal, scrollTrigger: revealTrigger(ph) })
+      );
       return;
     }
 
-    // Desktop: scattered → straight, scrubbed per photo.
-    photos.forEach((ph) => {
-      const [r, x, y] = SCATTER[Number(ph.dataset.photo) % SCATTER.length];
-      gsap.fromTo(
-        ph,
-        { rotation: r, x, y, scale: 0.94 },
-        {
-          rotation: 0,
-          x: 0,
-          y: 0,
-          scale: 1,
-          ease: 'none',
-          scrollTrigger: { trigger: ph, start: 'top bottom', end: 'top 35%', scrub: GS.scrub },
-        }
-      );
-      const cap = ph.querySelector('figcaption');
-      if (cap)
-        gsap.from(cap, {
-          x: -24,
-          autoAlpha: 0,
-          duration: GS.dur.reveal,
-          scrollTrigger: { trigger: ph, start: 'top 60%', once: true },
-        });
+    // Desktop (Motion v3: one-shot, not scrubbed): built when the gallery comes
+    // near. Each large photo wipes up (clip-path) out of a slight tilt and
+    // settles; its caption follows.
+    return whenNear(track, () => {
+      photos.forEach((ph) => {
+        const [r] = SCATTER[Number(ph.dataset.photo) % SCATTER.length];
+        const img = ph.querySelector('img');
+        const cap = ph.querySelector('figcaption');
+        const tl = gsap.timeline({ scrollTrigger: revealTrigger(ph), defaults: { ease: GS.ease.reveal } });
+        tl.fromTo(ph, { clipPath: 'inset(100% 0% 0% 0%)', rotation: r * 0.4 }, { clipPath: 'inset(0% 0% 0% 0%)', rotation: 0, duration: GS.dur.heading, ease: GS.ease.strong }, 0);
+        if (img) tl.from(img, { scale: 1.12, duration: GS.dur.revealLong }, 0);
+        if (cap) tl.from(cap, { autoAlpha: 0, y: 12, duration: GS.dur.body }, 0.35);
+      });
     });
-    // Columns at different parallax speeds.
-    const [a, b] = [...track.querySelectorAll<HTMLElement>('[data-gallery-col]')];
-    const st = () => ({ trigger: track, start: 'top bottom', end: 'bottom top', scrub: GS.scrub });
-    if (a) gsap.fromTo(a, { y: 40 }, { y: -40, ease: 'none', scrollTrigger: st() });
-    if (b) gsap.fromTo(b, { y: 140 }, { y: -140, ease: 'none', scrollTrigger: st() });
-    // The big word drifts slowly the other way.
-    const word = document.querySelector<HTMLElement>('[data-gallery-word]');
-    if (word)
-      gsap.fromTo(word, { xPercent: 8 }, { xPercent: -8, ease: 'none', scrollTrigger: { trigger: track, start: 'top bottom', end: 'bottom top', scrub: 1 } });
   });
 </script>

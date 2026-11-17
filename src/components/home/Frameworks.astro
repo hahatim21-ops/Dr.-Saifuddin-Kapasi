@@ -59,7 +59,7 @@ const frameworks = (await getCollection('frameworks')).sort((a, b) => a.data.ord
               <p class="fw__source" data-reveal="fade">
                 {fw.data.source}
               </p>
-              <TitleTag id={`fw-${fw.id}`} class="fw__title" data-split="lines">
+              <TitleTag id={`fw-${fw.id}`} class="fw__title" {...(standalone ? { 'data-split': 'lines' } : { 'data-reveal': '' })}>
                 {fw.data.title}
               </TitleTag>
               <p class="fw__summary" data-reveal style="--i:1">
@@ -398,9 +398,10 @@ const frameworks = (await getCollection('frameworks')).sort((a, b) => a.data.ord
         scrollTrigger: {
           trigger: fw,
           start: () => (fw.offsetHeight < window.innerHeight * 0.9 ? 'center center' : 'top 12%'),
-          end: () => '+=' + window.innerHeight * 0.55 * n,
+          end: () => '+=' + window.innerHeight * 0.4 * n, // Motion v3: shorter (was 0.55 per stage)
           pin: true,
-          scrub: 0.6,
+          anticipatePin: 1,
+          scrub: 0.8,
           invalidateOnRefresh: true,
           onUpdate: (self) => light(Math.min(n - 1, Math.floor(self.progress * n * 0.999))),
         },

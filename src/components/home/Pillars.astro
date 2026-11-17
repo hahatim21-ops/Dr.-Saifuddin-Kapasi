@@ -36,7 +36,7 @@ const pillars = (await getCollection('pillars'))
             <span class="pillar__rule" data-pillar-rule aria-hidden="true" />
 
             {/* ≥768px: one link per row, with the flood layer */}
-            <a href={p.href} class="pillar__row" data-cursor="Open" data-cursor-tone="light">
+            <a href={p.href} class="pillar__row">
               <span class="pillar__cols">
                 <span class="pillar__num" aria-hidden="true">{p.num}</span>
                 <h3 class="pillar__title">{p.titleParts.map((t, ti) => (<>{ti > 0 && ' '}{t.nowrap ? <span class="nowrap">{t.w}</span> : t.w}</>))}</h3>
@@ -262,7 +262,7 @@ const pillars = (await getCollection('pillars'))
 </style>
 
 <script>
-  import { gsap, registerScene } from '../../lib/tools';
+  import { gsap, registerScene, revealTrigger, groupStagger } from '../../lib/tools';
   import { GS } from '../../lib/motion';
 
   registerScene('pillars', ({ reduce }) => {
@@ -271,8 +271,8 @@ const pillars = (await getCollection('pillars'))
     const rules = list.querySelectorAll('[data-pillar-rule]');
     const rows = list.querySelectorAll('[data-pillar]');
     gsap
-      .timeline({ scrollTrigger: { trigger: list, start: 'top 80%', once: true } })
-      .fromTo(rules, { scaleX: 0 }, { scaleX: 1, duration: 1.1, ease: GS.ease.strong, stagger: GS.stagger.lines }, 0)
-      .from(rows, { opacity: 0, y: 24, duration: GS.dur.reveal, ease: GS.ease.reveal, stagger: GS.stagger.lines }, 0.1);
+      .timeline({ scrollTrigger: revealTrigger(list) })
+      .fromTo(rules, { scaleX: 0 }, { scaleX: 1, duration: GS.dur.heading, ease: GS.ease.strong, stagger: groupStagger(rules.length, 0.08) }, 0)
+      .from(rows, { opacity: 0, y: 16, duration: GS.dur.body, ease: GS.ease.reveal, stagger: groupStagger(rows.length, 0.08) }, 0.1);
   });
 </script>

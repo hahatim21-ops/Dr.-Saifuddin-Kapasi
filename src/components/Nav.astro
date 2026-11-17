@@ -2,8 +2,9 @@
 /**
  * Site navigation (BRIEF §5b "Navigation behaviour", §7 responsive table).
  * - Top of page: transparent. After 80px: ivory, backdrop blur, hairline.
- * - Desktop (≥1024px): links split either side of the centred name; hides on
- *   scroll down, returns on scroll up (never while it holds keyboard focus).
+ * - The bar stays fixed at the top while scrolling (Motion v3: it never hides).
+ * - Desktop (≥1024px): About · Speaking | name | Books · Insights + the brass
+ *   "Invite to speak" button.
  * - Tablet (768–1023px): name + 3 links + menu button.
  * - Phone (<768px): name + menu button; full-screen menu (native <dialog>:
  *   focus is trapped, Esc closes, focus returns to the button).
@@ -161,23 +162,19 @@ const { contact } = site;
     inset: 0 0 auto 0;
     z-index: 50;
     padding-top: env(safe-area-inset-top);
-    transition: transform 500ms var(--ease);
   }
   @media (min-width: 1024px) {
     .site-header {
       --header-h: 5.5rem;
     }
   }
-  .site-header[data-hidden] {
-    transform: translate3d(0, -100%, 0);
-  }
   /* The ivory/blur/hairline layer fades in after 80px — opacity only. */
   .site-header__bg {
     position: absolute;
     inset: 0;
-    background: rgb(246 241 231 / 0.93);
-    -webkit-backdrop-filter: blur(12px) saturate(1.1);
-    backdrop-filter: blur(12px) saturate(1.1);
+    /* Motion v3: no backdrop blur. The bar stays on screen for the whole
+       scroll, and a blur behind it is recomputed on every frame. */
+    background: rgb(246 241 231 / 0.97);
     border-bottom: 1px solid var(--color-hairline);
     opacity: 0;
     transition: opacity 500ms var(--ease);
@@ -322,11 +319,17 @@ const { contact } = site;
     justify-content: flex-end;
     gap: clamp(1.25rem, 2vw, 2rem);
   }
+  /* The brass call to action (ink on brass, 5.5:1). */
   .nav-cta {
     display: none;
     min-height: 2.75rem;
     padding: 0.6rem 1.15rem;
     font-size: 1rem;
+    background: var(--color-brass);
+    color: var(--color-ink);
+  }
+  .nav-cta:hover {
+    background: var(--color-brass-light);
   }
   @media (min-width: 1024px) {
     .nav-cta {
@@ -510,8 +513,7 @@ const { contact } = site;
    */
   const SECTION_LINKS: Record<string, string> = {
     arc: '/about',
-    books: '/#books',
-    frameworks: '/frameworks',
+    books: '/books',
     speaking: '/speaking',
     insights: '/insights',
   };
@@ -522,7 +524,7 @@ const { contact } = site;
     if (!header) return;
     const progress = header.querySelector('[data-nav-progress]');
     if (progress)
-      gsap.fromTo(progress, { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: 0.3 } });
+      gsap.fromTo(progress, { scaleX: 0 }, { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: true } }); // no lag (UI)
 
     if (!desktop) return;
     const sections = [...document.querySelectorAll<HTMLElement>('main > section, main [data-section]')]
@@ -567,34 +569,19 @@ const { contact } = site;
   });
 
   const THRESHOLD = 80; // px before the nav gets its ivory background
-  const DELTA = 6; // px of travel before hide/show reacts (ignores jitter)
-  const desktop = window.matchMedia('(min-width: 1024px)');
-  let lastY = 0;
   let ticking = false;
 
   const header = () => document.querySelector<HTMLElement>('[data-site-header]');
-  const menuOpen = () => !!document.querySelector('.site-menu[open]');
 
-  // Read in the scroll event (layout is clean there) and applied in the next
-  // frame, so the frame never forces a layout after GSAP has written styles.
+  // The bar always stays in view; scrolling only switches on its ivory
+  // background. Read in the scroll event (layout is clean there) and applied
+  // in the next frame, so the frame never forces a layout after GSAP writes.
   let pendingY = 0;
   function update() {
     ticking = false;
     const el = header();
     if (!el) return;
-    const y = Math.max(0, pendingY);
-    el.toggleAttribute('data-scrolled', y > THRESHOLD);
-
-    const dy = y - lastY;
-    if (y <= THRESHOLD) {
-      el.removeAttribute('data-hidden');
-      lastY = y;
-      return;
-    }
-    if (Math.abs(dy) < DELTA) return;
-    const hide = dy > 0 && desktop.matches && !el.matches(':focus-within') && !menuOpen();
-    el.toggleAttribute('data-hidden', hide);
-    lastY = y;
+    el.toggleAttribute('data-scrolled', Math.max(0, pendingY) > THRESHOLD);
   }
 
   window.addEventListener(
@@ -608,13 +595,6 @@ const { contact } = site;
     },
     { passive: true }
   );
-  desktop.addEventListener('change', () => header()?.removeAttribute('data-hidden'));
-
-  // Keyboard users always see the nav when tabbing into it.
-  document.addEventListener('focusin', (e) => {
-    const el = header();
-    if (el && e.target instanceof Node && el.contains(e.target)) el.removeAttribute('data-hidden');
-  });
 
   function setupMenu() {
     const dialog = document.querySelector<HTMLDialogElement>('#site-menu');
@@ -637,7 +617,7 @@ const { contact } = site;
   }
 
   onPageLoad(() => {
-    lastY = pendingY = window.scrollY;
+    pendingY = window.scrollY;
     update();
     setupMenu();
   });

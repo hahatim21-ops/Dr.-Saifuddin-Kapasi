@@ -172,7 +172,27 @@ registerScene('prism', ({ desktop }) => {
     if (immediate) {
       gsap.killTweensOf(master);
       master.time(t);
-    } else gsap.to(master, { time: t, duration: GS.scrub, ease: 'power3.out', overwrite: true });
+    } else {
+      // Composited only while it moves (will-change during the tween, off after).
+      fly.style.willChange = 'transform';
+      gsap.to(master, {
+        time: t,
+        duration: GS.scrub,
+        ease: 'power3.out',
+        overwrite: true,
+        onComplete: () => {
+          fly.style.willChange = '';
+        },
+      });
+    }
+  };
+
+  // The only idle loop: a slow 6s breath on the glow — paused while the prism
+  // is faded out between stops (Motion v3: no idle work nobody can see).
+  const breathing = gsap.fromTo(breath, { opacity: 0.55, scale: 0.94 }, { opacity: 1, scale: 1.06, duration: 3, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+  const breathCheck = () => {
+    const visible = Number(gsap.getProperty(fly, 'opacity')) > 0.05;
+    if (visible === breathing.paused()) breathing.paused(!visible);
   };
 
   ScrollTrigger.create({
@@ -184,13 +204,14 @@ registerScene('prism', ({ desktop }) => {
       sync(true);
     },
     // self.scroll() is ScrollTrigger's cached value: no forced layout per frame.
-    onUpdate: (self) => sync(false, self.scroll()),
+    onUpdate: (self) => {
+      sync(false, self.scroll());
+      breathCheck();
+    },
   });
   build();
   sync(true);
-
-  // The only idle loop: a slow 6s breath on the glow.
-  gsap.fromTo(breath, { opacity: 0.55, scale: 0.94 }, { opacity: 1, scale: 1.06, duration: 3, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+  breathCheck();
 
   return () => {
     if (master) {
@@ -199,6 +220,7 @@ registerScene('prism', ({ desktop }) => {
       master = null;
     }
     gsap.set([fly, beam, spectrum, ...rays], { clearProps: 'all' });
+    fly.style.willChange = '';
     layer.classList.remove('is-active');
     document.documentElement.classList.remove('has-prism');
   };

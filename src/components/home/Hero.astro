@@ -49,7 +49,8 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
       <span class="hero__stop" data-prism-stop="hero" data-prism-scale="0.42" data-prism-beam="0.22" data-prism-anchor="right" data-prism-dx="-40" aria-hidden="true"></span>
 
       <div class="hero__portrait">
-        <div class="hero__frame" data-hero-frame data-intro data-cursor="View">
+        <!-- Never hidden before the engine runs: the portrait is the LCP image. -->
+        <div class="hero__frame" data-hero-frame>
           <BlurImage
             src={heroPortrait.src}
             alt={heroPortrait.alt}
@@ -370,10 +371,13 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
 </style>
 
 <script>
-  import { gsap, ScrollTrigger, SplitText, splitText, registerScene } from '../../lib/tools';
+  import { gsap, ScrollTrigger, SplitText, registerScene, afterCurtain } from '../../lib/tools';
   import { GS } from '../../lib/motion';
 
-  /** Live local clock: "21:27 IST", refreshed every 20s. Runs in every context. */
+  /**
+   * Live local clock: "21:27 IST", refreshed every 20s. Runs in every context,
+   * but only while it is on screen and the tab is visible (Motion v3).
+   */
   function startClock(el: HTMLElement) {
     const zone = el.dataset.zone || 'Asia/Kolkata';
     const abbr = el.textContent?.trim() || 'IST';
@@ -383,9 +387,28 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
       el.textContent = `${fmt.format(now)} ${abbr}`;
       el.setAttribute('datetime', now.toISOString());
     };
-    tick();
-    const id = window.setInterval(tick, 20000);
+    let id = 0;
+    let onScreen = true;
+    const sync = () => {
+      const run = onScreen && document.visibilityState === 'visible';
+      if (run && !id) {
+        tick();
+        id = window.setInterval(tick, 20000);
+      } else if (!run && id) {
+        window.clearInterval(id);
+        id = 0;
+      }
+    };
+    const io = new IntersectionObserver(([e]) => {
+      onScreen = e.isIntersecting;
+      sync();
+    });
+    io.observe(el);
+    document.addEventListener('visibilitychange', sync);
+    sync();
     return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', sync);
       window.clearInterval(id);
       el.textContent = abbr;
     };
@@ -402,6 +425,7 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
     const q = <T extends Element = HTMLElement>(s: string) => hero.querySelector<T>(s)!;
     const name = q('[data-hero-name]');
     const lead = q('[data-hero-lead]');
+    const underLoader = !!document.documentElement.dataset.loaderState;
     const frame = q('[data-hero-frame]');
     const img = frame.querySelector('img');
     const linePath = q<SVGPathElement>('[data-hero-line] path');
@@ -413,29 +437,36 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
 
     /* ---- Intro timeline (paused until the loader is done) ---- */
     const nameSplit = SplitText.create(name, { type: 'lines,words,chars', mask: 'lines', aria: 'auto' });
-    const leadSplit = splitText(lead, { type: 'lines', mask: 'lines' });
     const tl = gsap.timeline({
       paused: true,
       defaults: { ease: GS.ease.reveal },
       onComplete: () => {
         // Hand the text back to the browser so later resizes reflow naturally.
         nameSplit.revert();
-        leadSplit.revert();
       },
     });
+    // Portrait: under the first-visit loader (which covers the page) it wipes
+    // in; on every other visit it has already painted and simply stays put —
+    // it is never hidden, so the LCP image is never delayed.
+    if (underLoader)
+      tl.fromTo(frame, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: GS.ease.strong }, 0.3).from(
+        img,
+        { scale: 1.15, duration: 1.7 },
+        0.3
+      );
     tl.from(nameSplit.chars, { yPercent: 110, duration: 1.1, stagger: GS.stagger.chars }, 0.1)
-      .from(top, { autoAlpha: 0, y: 12, duration: 0.8, stagger: 0.08 }, 0.35)
-      .fromTo(frame, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: GS.ease.strong }, 0.3)
-      .from(img, { scale: 1.15, duration: 1.7 }, 0.3)
-      .from(leadSplit.lines, { yPercent: 110, duration: 1, stagger: GS.stagger.lines }, 0.45)
-      .from(later, { autoAlpha: 0, y: 16, duration: 0.9, stagger: 0.08 }, 0.7)
+      .from(top, { autoAlpha: 0, y: 12, duration: GS.dur.body, stagger: { amount: 0.2 } }, 0.35)
+      .from(lead, { autoAlpha: 0, y: 16, duration: GS.dur.body }, 0.45)
+      .from(later, { autoAlpha: 0, y: 16, duration: GS.dur.body, stagger: { amount: 0.3 } }, 0.6)
       .fromTo(linePath, { drawSVG: '0%' }, { drawSVG: '100%', duration: 1.2, ease: 'power2.inOut' }, 0.8);
     if (nav) tl.from(nav, { autoAlpha: 0, y: -8, duration: 0.8 }, 1.0);
 
-    const play = () => {
-      tl.play();
-      ScrollTrigger.refresh();
-    };
+    // Never under the loader or the page-transition curtain (Motion v3).
+    const play = () =>
+      afterCurtain(() => {
+        tl.play();
+        ScrollTrigger.refresh();
+      });
     if (document.documentElement.dataset.loaderState) {
       document.addEventListener('loader:done', play, { once: true });
       cleanups.push(() => document.removeEventListener('loader:done', play));
@@ -491,7 +522,10 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
 
     /* ---- Scroll cue: a slow pulse ---- */
     const pulse = hero.querySelector('[data-cue-pulse]');
-    if (pulse) gsap.fromTo(pulse, { scaleY: 0, transformOrigin: 'top' }, { scaleY: 1, duration: 1.6, ease: 'power2.inOut', repeat: -1, yoyo: true });
+    if (pulse) {
+      const beat = gsap.fromTo(pulse, { scaleY: 0, transformOrigin: 'top' }, { scaleY: 1, duration: 1.6, ease: 'power2.inOut', repeat: -1, yoyo: true });
+      ScrollTrigger.create({ trigger: hero, start: 'top bottom', end: 'bottom top', onToggle: (st) => (st.isActive ? beat.resume() : beat.pause()) });
+    }
 
     /* ---- Desktop: pin + sheet slides over; hero scales to 0.94 and dims ---- */
     if (desktop) {
@@ -500,7 +534,7 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
       // (a second trigger on a pinned element measures it after pinning).
       gsap
         .timeline({
-          scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', pin: true, pinSpacing: false, scrub: true },
+          scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', pin: true, pinSpacing: false, anticipatePin: 1, scrub: true },
         })
         .to(inner, { scale: 0.94, opacity: 0.35, ease: 'none' });
     }

@@ -8,6 +8,8 @@ import { getCollection } from 'astro:content';
 import home from '../../data/home.json';
 import Testimonials, { type Quote } from '../../islands/Testimonials.tsx';
 import SectionHeader from '../SectionHeader.astro';
+import AchievementLightbox from '../../islands/AchievementLightbox.tsx';
+import { toAchievements } from '../../lib/achievements';
 
 const quotes: Quote[] = (await getCollection('testimonials'))
   // Real quotes need permission; placeholders stay visible until replaced.
@@ -20,6 +22,14 @@ const quotes: Quote[] = (await getCollection('testimonials'))
     placeholder: t.data.placeholder,
   }));
 const t = home.testimonials;
+const a = home.achievements;
+// Motion v3: the three newest featured frames (the full wall is on /about#recognition).
+const recent = await toAchievements(
+  (await getCollection('achievements'))
+    .filter((x) => x.data.featured)
+    .sort((x, y) => y.data.date.getTime() - x.data.date.getTime())
+    .slice(0, 3)
+);
 ---
 
 <section id="testimonials" class="testimonials" aria-labelledby="testimonials-title">
@@ -32,10 +42,51 @@ const t = home.testimonials;
         </div>
       )
     }
+
+    <div class="recog">
+      <div class="recog__head">
+        <h3 class="recog__title">{a.eyebrow}</h3>
+        <a href={a.seeAllHref} class="recog__all link-grow-line">
+          {a.seeAll} <span aria-hidden="true">→</span>
+        </a>
+      </div>
+      <AchievementLightbox client:visible={{ rootMargin: '300px' }} items={recent} label={a.wallLabel} placeholderLabel={a.placeholderLabel} />
+    </div>
   </div>
 </section>
 
 <style>
+  /* Recognition row (3 newest frames). */
+  .recog {
+    margin-top: clamp(4rem, 3rem + 4vw, 6rem);
+    padding-top: clamp(2rem, 4vw, 3rem);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .recog__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
+    margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  }
+  .recog__title {
+    font-family: var(--font-sans);
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+  .recog__all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+
   .testimonials {
     padding-block: var(--section-space);
     border-top: 1px solid var(--color-hairline);

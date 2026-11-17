@@ -1,13 +1,22 @@
 /**
- * Motion v2 tokens for GSAP (BRIEF §5b "Motion v2"). Mirrored as CSS custom
- * properties in src/styles/global.css (--ease-expo, --dur-reveal-v2, …).
- * - UI ease "inflect" = cubic-bezier(0.22,1,0.36,1) (registered with CustomEase)
- * - Reveal eases: expo.out (default) and power4.out (clip wipes, odometers)
- * - Reveals 0.9–1.2s · char stagger 0.025s · line stagger 0.08s · scrub 0.6–1
+ * Motion tokens for GSAP (BRIEF §5b). Mirrored as CSS custom properties in
+ * src/styles/global.css (--ease-expo, --ease-ui, …).
+ *
+ * Motion v3 — three tiers, applied consistently:
+ *   Tier 1 · cinematic, scrubbed (scrub 0.8): only the travelling prism, the
+ *            Manifesto, the Arc, the book covers and the Speaking track.
+ *   Tier 2 · section reveals, one-shot at 'top 80%': SplitText line reveals
+ *            only on h1 and section h2s (0.9s); everything else (body, cards,
+ *            small images) a fade-up 16px → 0, opacity 0 → 1, 0.6s, expo.out
+ *            (CSS [data-reveal]); clip-path wipes only on large photos (hero,
+ *            gallery, about portrait). Any group finishes within 0.6s of
+ *            stagger + its duration (stagger amount ≤ 0.4s). fastScrollEnd.
+ *   Tier 3 · UI feedback: 0.15–0.2s, the "inflect" ease.
+ * Characters split only on the hero name.
  */
 export const GS = {
   ease: { ui: 'inflect', reveal: 'expo.out', strong: 'power4.out' },
-  dur: { ui: 0.18, reveal: 1.0, revealLong: 1.2, chars: 0.9, count: 1.2, curtain: 0.8, loaderMax: 1.8 },
+  dur: { ui: 0.18, heading: 0.9, body: 0.6, reveal: 1.0, revealLong: 1.2, chars: 0.9, count: 1.2, curtain: 0.8, loaderMax: 1.2 },
   stagger: { chars: 0.025, words: 0.04, lines: 0.08, frames: 0.08 },
   /** Scrub smoothing in seconds (0.6–1). */
   scrub: 0.8,

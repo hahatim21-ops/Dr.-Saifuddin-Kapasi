@@ -3,17 +3,70 @@
   "framework": "astro",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/achievements",
+      "destination": "/about/#recognition",
+      "permanent": true
+    },
+    {
+      "source": "/achievements/",
+      "destination": "/about/#recognition",
+      "permanent": true
+    },
+    {
+      "source": "/students",
+      "destination": "/about/#students",
+      "permanent": true
+    },
+    {
+      "source": "/students/",
+      "destination": "/about/#students",
+      "permanent": true
+    },
+    {
+      "source": "/books/beyond-ideas",
+      "destination": "/books/#beyond-ideas",
+      "permanent": true
+    },
+    {
+      "source": "/books/beyond-ideas/",
+      "destination": "/books/#beyond-ideas",
+      "permanent": true
+    },
+    {
+      "source": "/books/beyond-satisfaction",
+      "destination": "/books/#beyond-satisfaction",
+      "permanent": true
+    },
+    {
+      "source": "/books/beyond-satisfaction/",
+      "destination": "/books/#beyond-satisfaction",
+      "permanent": true
+    }
+  ],
   "trailingSlash": true,
   "headers": [
     {
       "source": "/_astro/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
       ]
     }
   ]

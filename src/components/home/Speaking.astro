@@ -296,7 +296,7 @@ const total = String(programmes.length).padStart(2, '0');
 </style>
 
 <script>
-  import { gsap, registerScene, getLenis } from '../../lib/tools';
+  import { gsap, registerScene, getLenis, whenNear } from '../../lib/tools';
   import { GS } from '../../lib/motion';
 
   registerScene('speaking', ({ desktop }) => {
@@ -326,6 +326,8 @@ const total = String(programmes.length).padStart(2, '0');
     }
 
     /* ---------- Desktop: pinned horizontal track ---------- */
+    // Motion v3: built only when the track comes near (it is heavy and adds a pin).
+    return whenNear(stage, () => {
     wrap.classList.add('is-pinned');
     const distance = () => Math.max(0, track.scrollWidth - wrap.clientWidth);
     const skewTo = gsap.quickTo(cards, 'skewX', { duration: 0.5, ease: 'power3' });
@@ -339,6 +341,7 @@ const total = String(programmes.length).padStart(2, '0');
         start: () => (stage.offsetHeight > window.innerHeight ? 'bottom bottom' : 'center center'),
         end: () => '+=' + distance(),
         pin: true,
+        anticipatePin: 1,
         scrub: GS.scrub,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
@@ -419,5 +422,6 @@ const total = String(programmes.length).padStart(2, '0');
       track.removeEventListener('dragstart', noDrag);
       gsap.set(cards, { clearProps: 'transform' });
     };
+    }, { pins: true });
   });
 </script>

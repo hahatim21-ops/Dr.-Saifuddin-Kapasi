@@ -205,6 +205,14 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
     border: 1px solid var(--color-brass);
     border-radius: 999px;
     background: var(--color-ivory);
+    transition:
+      background-color 0.2s var(--ease-ui),
+      transform 0.2s var(--ease-ui);
+  }
+  /* The entry driving the year right now (set by the scene). */
+  .arc__entry.is-current .arc__dot {
+    background: var(--color-brass);
+    transform: scale(1.25);
   }
   .arc__years {
     display: flex;
@@ -377,7 +385,7 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
 </style>
 
 <script>
-  import { gsap, ScrollTrigger, registerScene, createOdometer } from '../../lib/tools';
+  import { gsap, ScrollTrigger, registerScene, createOdometer, revealTrigger } from '../../lib/tools';
   import { GS } from '../../lib/motion';
 
   registerScene('arc', ({ reduce }) => {
@@ -416,12 +424,20 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
         .fromTo(summaryEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.6 }, '<');
     };
 
+    // Motion v3: the year snaps to each entry (a short, decisive roll) and
+    // that entry's dot fills, instead of a long drift between years.
+    let currentEntry: HTMLElement | null = null;
     const activate = (entry: HTMLElement) => {
+      if (currentEntry !== entry) {
+        currentEntry?.classList.remove('is-current');
+        entry.classList.add('is-current');
+        currentEntry = entry;
+      }
       const y = entry.dataset.year ?? '';
       if (y !== currentYear) {
         currentYear = y;
-        year.set(y, { duration: 0.9, stagger: 0.05 });
-        chip.set(y, { duration: 0.7, stagger: 0.04 });
+        year.set(y, { duration: 0.45, stagger: 0.025 });
+        chip.set(y, { duration: 0.35, stagger: 0.02 });
       }
       setChapter(entry.closest<HTMLElement>('[data-arc-chapter]')!);
     };
@@ -434,12 +450,7 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
         end: 'bottom 55%',
         onToggle: (self) => self.isActive && activate(entry),
       });
-      gsap.from(entry, {
-        autoAlpha: 0,
-        y: 24,
-        duration: GS.dur.reveal,
-        scrollTrigger: { trigger: entry, start: 'top 88%', once: true },
-      });
+      gsap.from(entry, { opacity: 0, y: 16, duration: GS.dur.body, scrollTrigger: revealTrigger(entry) });
     });
 
     // The brass line fills with reading progress.
@@ -456,12 +467,13 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
       const rules = box.querySelectorAll('.arc__rule');
       const underline = box.querySelector('[data-arc-underline]');
       gsap
-        .timeline({ scrollTrigger: { trigger: box, start: 'top 80%', once: true } })
-        .from(rules, { drawSVG: '0%', duration: 1.1, ease: 'power2.inOut', stagger: 0.08 })
-        .fromTo(underline, { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: GS.ease.strong }, 0.5);
+        .timeline({ scrollTrigger: revealTrigger(box) })
+        .from(rules, { drawSVG: '0%', duration: GS.dur.heading, ease: 'power2.inOut', stagger: { amount: 0.3 } })
+        .fromTo(underline, { scaleX: 0 }, { scaleX: 1, duration: GS.dur.body, ease: GS.ease.strong }, 0.4);
     });
 
     return () => {
+      currentEntry?.classList.remove('is-current');
       grid.classList.remove('is-live');
       year.restore();
       chip.restore();

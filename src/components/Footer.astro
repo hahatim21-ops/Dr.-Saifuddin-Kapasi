@@ -1,9 +1,8 @@
 ---
 /**
- * Green footer (Motion v2). Links and details first; the footer then ends with
- * "Saifuddin Kapasi" set edge to edge in huge Cormorant, revealed letter by
- * letter (scrubbed) as you reach the bottom, then the sign-off "Ideas are easy.
- * Impact is earned." word by word. On desktop the travelling prism reappears,
+ * Green footer. Links and details first; the footer then ends with
+ * "Saifuddin Kapasi" set edge to edge in huge Cormorant, rising into place as
+ * you reach the bottom, then the sign-off "Ideas are easy. Impact is earned." On desktop the travelling prism reappears,
  * small, beside the sign-off. "Back to top" scrolls with Lenis.
  * Small text on green uses light brass (6.0:1); body text is ivory (10.5:1).
  */
@@ -49,6 +48,9 @@ const signOffText = `${first} ${second
         <p id="footer-explore" class="eyebrow">Explore</p>
         <ul class="footer-list" role="list">
           {nav.menu.map((l) => <li><a href={l.href} class="footer-link link-grow-line">{l.label}</a></li>)}
+          {/* Folded into About in Motion v3; still one click from every page. */}
+          <li><a href="/about/#recognition" class="footer-link link-grow-line">Achievements</a></li>
+          <li><a href="/about/#students" class="footer-link link-grow-line">Students</a></li>
         </ul>
       </nav>
 
@@ -58,7 +60,7 @@ const signOffText = `${first} ${second
           {
             books.map((b) => (
               <li>
-                <a href={`/books/${b.id}`} class="footer-link link-grow-line">
+                <a href={`/books/#${b.id}`} class="footer-link link-grow-line">
                   {b.data.title} {b.data.titleAccent}
                 </a>
               </li>
@@ -295,26 +297,15 @@ const signOffText = `${first} ${second
 </style>
 
 <script>
-  import { gsap, splitText, registerScene } from '../lib/tools';
+  import { gsap, registerScene, revealTrigger } from '../lib/tools';
   import { onPageLoad } from '../lib/page';
 
-  // The giant name: letters rise out of their masks, scrubbed, as the page
-  // reaches its end.
+  // The giant name rises into place once as the page reaches its end
+  // (Motion v3: a fade-up — characters split only on the hero name).
   registerScene('footer-name', ({ reduce }) => {
     const name = document.querySelector<HTMLElement>('[data-footer-name]');
     if (!name || reduce) return;
-    const split = splitText(name, { type: 'chars', mask: 'chars' });
-    gsap.fromTo(
-      split.chars,
-      { yPercent: 105 },
-      {
-        yPercent: 0,
-        ease: 'none',
-        stagger: 0.06,
-        scrollTrigger: { trigger: name, start: 'top bottom', end: () => 'bottom bottom-=' + Math.min(160, window.innerHeight * 0.18), scrub: 0.6 },
-      }
-    );
-    return () => split.revert();
+    gsap.from(name, { autoAlpha: 0, y: 24, duration: 0.9, ease: 'expo.out', scrollTrigger: revealTrigger(name) });
   });
 
   // "Back to top": smooth with Lenis on desktop, native jump elsewhere; focus moves to main.

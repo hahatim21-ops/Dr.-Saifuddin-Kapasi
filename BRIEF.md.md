@@ -231,6 +231,15 @@ This section replaces the earlier "subtle by design" motion system. The site kee
 - **Opening book**: the Beyond Ideas cover swings open on its spine (scrubbed, ≤100° so it never covers the text) to an inside page carrying the excerpt.
 - **Curve-shaped transitions both ways**: green bands begin and end on the inflection curve (manifesto, Books, footer), each bending into shape as it scrolls in.
 
+### Motion v3: three tiers (calmer, faster to read)
+
+Motion v3 (MOTION_V3_PROMPT.md) edits v2 rather than adding to it. One signature motion — the travelling prism — and every other effect sits in one of three tiers:
+
+- **Tier 1 · cinematic, scrubbed (scrub 0.8):** only the prism, the Manifesto (pinned ~100vh), the Arc (year snaps to each entry), the book covers (rise; Beyond Ideas opens) and the Speaking track (pinned horizontal).
+- **Tier 2 · section reveals, one-shot as the top crosses 80% of the screen:** SplitText line reveals only on h1 and section h2s (0.9s). Everything else — body copy, cards, small images, h3s, display lines — fades up 16px → 0 over 0.6s (expo-out). Clip-path wipes only on large photos (hero portrait under the first-visit loader, gallery photos, About portrait). Any staggered group finishes its stagger within 0.4s. `fastScrollEnd` and `preventOverlaps`, so a fast scroll completes reveals instantly. Characters are split only on the hero name. On-load reveals wait for the page-transition curtain to lift.
+- **Tier 3 · UI feedback:** 0.15–0.2s with the "inflect" ease (hovers, taps, menus, cursor, magnetic buttons).
+- **Budgets:** at most 3 long pins on the home page (hero sheet, Manifesto, Speaking), each with `anticipatePin`; no pins on phones; the nav bar always stays in view; loader ≤1.2s and only on a first visit per device; idle loops pause off-screen or when the tab is hidden; Lenis lerp 0.12.
+
 ### Tokens (CSS in `global.css`, GSAP in `src/lib/motion.ts` → `GS`)
 
 | Token | Value |

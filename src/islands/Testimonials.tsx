@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
 import gsap from 'gsap';
-import { SplitText } from 'gsap/SplitText';
 import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin';
 
 // Same GSAP instance as the engine (src/lib/scroll.ts); registering twice is a no-op.
-gsap.registerPlugin(SplitText, DrawSVGPlugin);
+gsap.registerPlugin(DrawSVGPlugin);
 import { GS, TESTIMONIAL_INTERVAL } from '../lib/motion';
 
 export type Quote = {
@@ -23,7 +22,7 @@ interface Props {
 
 /**
  * One large centred quote at a time, crossfading (700ms, opacity only) every 8s.
- * Motion v2: each new quote rises line by line out of masks (GSAP SplitText),
+ * Motion v3: each new quote fades up (Tier 2),
  * a big brass quote mark draws itself, and a thin ring around the pause button
  * shows the 8s timer (the ring's CSS animation *is* the timer, so pausing
  * freezes both together).
@@ -86,15 +85,11 @@ export default function Testimonials({ quotes, label, placeholderLabel }: Props)
         0.7
       );
     }
-    let split: SplitText | null = null;
-    if (p) {
-      split = SplitText.create(p, { type: 'lines', mask: 'lines', aria: 'none', linesClass: 'split-line' }); // temporary (reverted after ~1s); lines keep whole words
-      tl.from(split.lines, { yPercent: 110, duration: GS.dur.reveal, ease: GS.ease.reveal, stagger: GS.stagger.lines }, 0.1);
-      tl.add(() => split?.revert());
-    }
+    // Motion v3 (Tier 2): the new quote fades up — line splits are for headings.
+    if (p) tl.from(p, { opacity: 0, y: 16, duration: GS.dur.body, ease: GS.ease.reveal, clearProps: 'opacity,transform' }, 0.1);
     return () => {
       tl.kill();
-      split?.revert();
+      if (p) gsap.set(p, { clearProps: 'opacity,transform' });
     };
   }, [index, seen, reduce]);
 

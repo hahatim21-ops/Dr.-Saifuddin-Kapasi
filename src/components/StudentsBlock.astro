@@ -1,0 +1,124 @@
+---
+/**
+ * "For students" — pro-bono counselling, mentoring, live projects and how to
+ * reach him. Lives on /about (#students) since Motion v3 folded the separate
+ * /students page into it; /students redirects here.
+ */
+import Icon from './Icon.astro';
+import RevealWords from './RevealWords.astro';
+import pages from '../data/pages.json';
+
+const p = pages.students;
+---
+
+<section id="students" class="page-section container-content students" aria-labelledby="students-title">
+  <p class="eyebrow">{p.eyebrow}</p>
+  <RevealWords as="h2" id="students-title" text={p.title} class="page-section__title students__title" />
+  <p class="students__intro" data-reveal>{p.intro}</p>
+  {p.placeholder && <p class="mt-3" data-reveal><span class="placeholder-tag">Draft copy — to approve</span></p>}
+
+  <ol class="students-ways" role="list">
+    {
+      p.sections.map((s, i) => (
+        <li class="students-way" data-reveal style={`--i:${i}`}>
+          <span class="students-way__num" aria-hidden="true">({String(i + 1).padStart(2, '0')})</span>
+          <h3 class="students-way__title">{s.title}</h3>
+          <p class="students-way__text">{s.text}</p>
+        </li>
+      ))
+    }
+  </ol>
+
+  <h3 class="students__sub" data-reveal>{p.coursesTitle}</h3>
+  <dl class="students-courses">
+    {
+      p.courses.map((c, i) => (
+        <div data-reveal style={`--i:${i}`}>
+          <dt>{c.where}</dt>
+          <dd>{c.what}</dd>
+        </div>
+      ))
+    }
+  </dl>
+
+  <div class="students-reach" data-reveal>
+    <h3 class="students__sub">{p.reachTitle}</h3>
+    <p class="mt-4 prose-measure">{p.reach}</p>
+    <a href={p.ctaHref} class="btn btn-primary mt-8">
+      {p.cta} <Icon name="arrow-right" size={18} class="btn-arrow" />
+    </a>
+  </div>
+</section>
+
+<style>
+  .students__title {
+    margin-top: 0.75rem;
+  }
+  .students__intro {
+    margin-top: 1.25rem;
+    max-width: var(--container-prose);
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+    color: var(--color-stone);
+  }
+  .students-ways {
+    display: grid;
+    gap: 2.5rem;
+    margin: clamp(2rem, 4vw, 3rem) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 768px) {
+    .students-ways {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2rem;
+    }
+  }
+  .students-way {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-hairline);
+  }
+  .students-way__num {
+    font-size: var(--text-small);
+    color: var(--color-stone);
+  }
+  .students-way__title {
+    margin-top: 0.5rem;
+    font-size: var(--text-h3);
+  }
+  .students-way__text {
+    margin-top: 0.75rem;
+    color: var(--color-stone);
+  }
+  .students__sub {
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+    font-size: var(--text-h3);
+  }
+  .students-reach .students__sub {
+    margin-top: 0;
+  }
+  .students-courses {
+    display: grid;
+    gap: 1.5rem;
+    margin: 1.25rem 0 0;
+  }
+  @media (min-width: 768px) {
+    .students-courses {
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+    }
+  }
+  .students-courses dt {
+    font-weight: 600;
+  }
+  .students-courses dd {
+    margin: 0.4rem 0 0;
+    color: var(--color-stone);
+  }
+  .students-reach {
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+    padding: clamp(1.75rem, 4vw, 3rem);
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+  }
+</style>

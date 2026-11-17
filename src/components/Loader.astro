@@ -1,6 +1,9 @@
 ---
 /**
- * Loader (home page only, first visit per session, never with reduced motion).
+ * Loader (home page only, never with reduced motion). Motion v3: it plays only
+ * on the first home visit on a device — once the home page has fully loaded
+ * (portrait + fonts in the browser cache), later visits skip it — and lasts
+ * 1.2s at most.
  * Full-screen institution green; brass Cormorant numerals count 000 → 100 at
  * bottom-left; the inflection line draws across the bottom as the progress bar;
  * "Pioneering possibilities." in light brass. At 100 the panel lifts away like a
@@ -8,10 +11,11 @@
  *
  * - Hidden by default: an inline script shows it before first paint only when it
  *   should play, so with JS off it never appears and the hero is always there.
- * - Failsafe: if the engine hasn't taken over within 4s, the inline script
+ * - Failsafe: if the engine hasn't taken over within 2.2s, the inline script
  *   removes it, so the page can never be stuck behind it.
  * - Progress is real (web fonts + the hero image), capped so the whole thing
- *   finishes within 1.8s. A click or any key skips it. No ENTER gate.
+ *   finishes within 1.2s. A click or any key skips it. No ENTER gate.
+ * - It never delays LCP: the hero paints underneath it from the start.
  */
 import site from '../data/site.json';
 ---
@@ -34,8 +38,15 @@ import site from '../data/site.json';
     var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     var seen = false;
     try {
-      seen = sessionStorage.getItem('sk:loader') === '1';
+      // Seen this session, or the home page's assets are already cached.
+      seen = sessionStorage.getItem('sk:loader') === '1' || localStorage.getItem('sk:cached') === '1';
     } catch (e) {}
+    // Once this page has fully loaded, its portrait and fonts are cached.
+    addEventListener('load', function () {
+      try {
+        localStorage.setItem('sk:cached', '1');
+      } catch (e) {}
+    });
     if (!el || reduce || seen) return;
     el.classList.add('is-on');
     d.dataset.loaderState = 'on';
@@ -45,7 +56,7 @@ import site from '../data/site.json';
         el.classList.remove('is-on');
         delete d.dataset.loaderState;
       }
-    }, 4000);
+    }, 2200);
   })();
 </script>
 
@@ -146,9 +157,9 @@ import site from '../data/site.json';
 
     // Timed against the page's own clock (performance.now() starts at
     // navigation), so the whole loader — however late this script starts —
-    // is finished by ~1.75s: the count ends by COUNT_END, then a 0.6s lift.
-    const LIFT = 0.6;
-    const COUNT_END = 1.75 - LIFT;
+    // is finished by ~1.2s: the count ends by COUNT_END, then a 0.4s lift.
+    const LIFT = 0.4;
+    const COUNT_END = 1.2 - LIFT;
     const now = () => performance.now() / 1000;
     let target = 0;
     let lifting = false;
@@ -160,14 +171,14 @@ import site from '../data/site.json';
       tween?.kill();
       gsap
         .timeline({ onComplete: finish })
-        .to(state, { v: 100, duration: fast ? 0.12 : 0.18, ease: 'power2.out', onUpdate: render })
-        .to(el, { clipPath: 'inset(0% 0% 100% 0%)', duration: fast ? 0.45 : LIFT, ease: 'power4.inOut' }, '>-0.05');
+        .to(state, { v: 100, duration: fast ? 0.08 : 0.12, ease: 'power2.out', onUpdate: render })
+        .to(el, { clipPath: 'inset(0% 0% 100% 0%)', duration: fast ? 0.3 : LIFT, ease: 'power4.inOut' }, '>-0.04');
     };
 
     const push = (to: number) => {
       target = Math.max(target, to);
       // Use the time left before COUNT_END so it reads as a count, not a flash.
-      const duration = Math.max(0.2, Math.min(0.7, COUNT_END - now()));
+      const duration = Math.max(0.15, Math.min(0.5, COUNT_END - now()));
       tween?.kill();
       tween = gsap.to(state, {
         v: target,
@@ -185,8 +196,8 @@ import site from '../data/site.json';
     document.fonts?.ready.then(() => push(target + 44));
     imgReady.then(() => push(target + 44));
     Promise.all([document.fonts?.ready, imgReady]).then(() => push(100));
-    // Hard cap: lift at COUNT_END whatever happens (total ≤ 1.8s).
-    const cap = gsap.delayedCall(Math.max(0.2, COUNT_END - now()), () => lift());
+    // Hard cap: lift at COUNT_END whatever happens (total ≤ 1.2s).
+    const cap = gsap.delayedCall(Math.max(0.15, COUNT_END - now()), () => lift());
 
     const skip = () => lift(true);
     window.addEventListener('pointerdown', skip, { once: true });

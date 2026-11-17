@@ -1,9 +1,9 @@
 ---
 /**
- * Motion v2 heading reveal. Renders the text as plain HTML (fully visible with
- * JS off) and marks it for the engine's SplitText primitive:
- *   - headings (h1/h2/h3): lines rise out of masks (yPercent 110 → 0, 0.08s apart)
- *   - other tags: words rise out of masks
+ * Heading reveal. Renders the text as plain HTML (fully visible with JS off).
+ * Motion v3 tiers: only h1 and section h2s get the SplitText line reveal
+ * (lines rise out of masks); anything else (h3, display lines, sign-offs) gets
+ * the plain Tier 2 fade-up instead.
  * `now` plays on load instead of on scroll-in. SplitText's aria option keeps the
  * sentence whole for screen readers. Wrap one word in *asterisks* for the
  * italic green accent.
@@ -21,12 +21,17 @@ interface Props {
   /** Class applied to the accent word (defaults to italic green). */
   accentClass?: string;
   id?: string;
-  /** Override the split kind. */
-  split?: 'lines' | 'words' | 'chars';
 }
 
-const { text, as: Tag = 'p', class: className, delay = 0, now = false, accentClass = 'accent', id, split } = Astro.props;
-const kind = split ?? (Tag === 'h1' || Tag === 'h2' || Tag === 'h3' ? 'lines' : 'words');
+const { text, as: Tag = 'p', class: className, delay = 0, now = false, accentClass = 'accent', id } = Astro.props;
+const isSplit = Tag === 'h1' || Tag === 'h2';
+const motion = isSplit
+  ? {
+      'data-split': 'lines',
+      ...(now ? { 'data-split-now': '' } : {}),
+      ...(delay ? { 'data-split-delay': String(delay / 1000) } : {}),
+    }
+  : { 'data-reveal': '', ...(now ? { 'data-reveal-now': '' } : {}), ...(delay ? { style: `--delay:${delay}ms` } : {}) };
 
 const parts = text
   .split(/(\*[^*]+\*)/)
@@ -37,7 +42,5 @@ const parts = text
 <Tag
   class:list={['reveal-split', className]}
   id={id}
-  data-split={kind}
-  {...now ? { 'data-split-now': '' } : {}}
-  {...delay ? { 'data-split-delay': String(delay / 1000) } : {}}
+  {...motion}
 >{parts.map((p) => (p.accent ? <em class={accentClass}>{p.text}</em> : p.text))}</Tag>

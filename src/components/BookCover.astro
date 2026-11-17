@@ -28,7 +28,7 @@ interface Props {
 const { avifSrcset, webpSrcset, fallbackSrc, width, height, alt, sizes, eager = false, inside } = Astro.props;
 ---
 
-<div class="book3d" data-book-rise data-cursor="View" {...inside ? { 'data-book-open': '' } : {}}>
+<div class="book3d" data-book-rise {...inside ? { 'data-book-open': '' } : {}}>
   <div class="book3d__rise">
     <div class="book3d__body" data-book-body>
       <span class="book3d__pages" aria-hidden="true"></span>

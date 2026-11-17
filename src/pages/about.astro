@@ -1,7 +1,9 @@
 ---
 /**
- * /about — full story, values, roots, education, honours and bios for organisers.
- * All copy lives in src/data/pages.json (about) and the honours collection.
+ * /about — full story, values, roots, education, honours, the Recognition wall
+ * (#recognition, formerly /achievements), For students (#students, formerly
+ * /students) and bios for organisers. Copy lives in src/data/pages.json and the
+ * honours / achievements collections.
  */
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
@@ -12,9 +14,18 @@ import pages from '../data/pages.json';
 import site from '../data/site.json';
 import { heroPortrait } from '../lib/images';
 import { personSchema } from '../lib/schema';
+import AchievementLightbox from '../islands/AchievementLightbox.tsx';
+import RevealWords from '../components/RevealWords.astro';
+import StudentsBlock from '../components/StudentsBlock.astro';
+import home from '../data/home.json';
+import { toAchievements } from '../lib/achievements';
 
 const p = pages.about;
 const honours = await getCollection('honours');
+const ach = pages.achievements;
+const achievements = await toAchievements(
+  (await getCollection('achievements')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+);
 ---
 
 <Base title="About" description={p.meta} ogType="profile" jsonLd={personSchema()}>
@@ -24,7 +35,7 @@ const honours = await getCollection('honours');
     <!-- Story -->
     <section class="page-section container-content" aria-labelledby="story-title">
       <div class="about-story">
-        <div class="about-story__portrait" data-settle="-5">
+        <div class="about-story__portrait">
           <BlurImage
             src={heroPortrait.src}
             alt={heroPortrait.alt}
@@ -104,9 +115,31 @@ const honours = await getCollection('honours');
       </ul>
       <p class="about-note" data-reveal>{p.credentialNote}</p>
       <p class="mt-6" data-reveal>
-        <a href="/achievements" class="link-grow-line font-semibold text-green">See certificates and awards <span aria-hidden="true">→</span></a>
+        <a href="#recognition" class="link-grow-line font-semibold text-green">See certificates and awards <span aria-hidden="true">→</span></a>
       </p>
     </section>
+
+    <!-- Recognition (formerly /achievements) -->
+    <section id="recognition" class="page-section container-content" aria-labelledby="recognition-title">
+      <p class="eyebrow">{ach.eyebrow}</p>
+      <RevealWords as="h2" id="recognition-title" text={ach.title} class="page-section__title about-sub__title" />
+      <p class="about-sub__intro" data-reveal>{ach.intro}</p>
+      <div class="about-sub__wall">
+        <AchievementLightbox
+          client:visible
+          items={achievements}
+          label={home.achievements.wallLabel}
+          placeholderLabel={home.achievements.placeholderLabel}
+          swipeOnPhones={false}
+          filters={ach.filters}
+          filterLabel={ach.filterLabel}
+          emptyLabel={ach.empty}
+        />
+      </div>
+    </section>
+
+    <!-- For students (formerly /students) -->
+    <StudentsBlock />
 
     <!-- Bios -->
     <section class="page-section container-content" aria-labelledby="bios-title">
@@ -137,6 +170,18 @@ const honours = await getCollection('honours');
 </Base>
 
 <style>
+  .about-sub__title {
+    margin-top: 0.75rem;
+  }
+  .about-sub__intro {
+    margin-top: 1.25rem;
+    max-width: var(--container-prose);
+    color: var(--color-stone);
+  }
+  .about-sub__wall {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
   .about-story {
     display: grid;
     gap: 2.5rem;
