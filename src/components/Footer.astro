@@ -297,7 +297,7 @@ const signOffText = `${first} ${second
 </style>
 
 <script>
-  import { gsap, registerScene, revealTrigger } from '../lib/tools';
+  import { gsap, registerScene, revealTrigger, isPhone } from '../lib/tools';
   import { onPageLoad } from '../lib/page';
 
   // The giant name rises into place once as the page reaches its end
@@ -305,7 +305,7 @@ const signOffText = `${first} ${second
   registerScene('footer-name', ({ reduce }) => {
     const name = document.querySelector<HTMLElement>('[data-footer-name]');
     if (!name || reduce) return;
-    gsap.from(name, { autoAlpha: 0, y: 24, duration: 0.9, ease: 'expo.out', scrollTrigger: revealTrigger(name) });
+    gsap.from(name, { autoAlpha: 0, y: isPhone() ? 12 : 24, duration: isPhone() ? 0.5 : 0.9, ease: 'expo.out', scrollTrigger: revealTrigger(name) });
   });
 
   // "Back to top": smooth with Lenis on desktop, native jump elsewhere; focus moves to main.

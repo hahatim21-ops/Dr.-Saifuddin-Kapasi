@@ -41,9 +41,8 @@ const { contact } = site;
     padding: 0.375rem;
     border: 1px solid var(--color-hairline);
     border-radius: 999px;
-    background: rgb(246 241 231 / 0.93);
-    -webkit-backdrop-filter: blur(12px) saturate(1.1);
-    backdrop-filter: blur(12px) saturate(1.1);
+    /* No backdrop blur: a fixed bar re-blurs whatever scrolls under it every frame. */
+    background: rgb(246 241 231 / 0.97);
     box-shadow: 0 10px 30px -12px rgb(28 31 30 / 0.28);
     opacity: 0;
     transform: translate3d(-50%, calc(100% + 1.5rem), 0);

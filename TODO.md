@@ -211,7 +211,16 @@ Brief: MOTION_V3_PROMPT.md — edit, don't add; calmer, faster to read, smoother
   (medians), short of 55 / 50; and this session's Lighthouse runs scored v3 lower (median 73 → 65, TBT 0.86 → 2.09s)
   although a traced throttled load shows v3's long tasks are smaller (largest 411 → 180ms). Re-measure on the
   deployed preview with PageSpeed Insights before concluding
-- [ ] Step 9 — phones: no pins, fade-ups only, dock / tagline bar overlap check
+- [x] Step 9 — phones (375–430): no pins, cursor, prism travel or velocity skew (checked at 375×667, 375×812,
+  390×844, 412×915, 430×932). Reveals are 12px / 0.5s fade-ups; only the h1 splits into lines (section h2s and the
+  About portrait's wipe become fade-ups). Hero, manifesto and page heights use `svh` instead of `dvh`, so nothing
+  resizes when the iOS address bar shows or hides; the phone dock lost its backdrop blur (recomputed every frame).
+  Dock: hidden over the hero, appears once the hero's bottom bar has scrolled up (no overlap at any size), steps
+  aside at the contact form; a simulated address-bar resize leaves scroll position and dock state unchanged
+- [ ] Deployed preview (motion-v3), Lighthouse mobile against the real deployment, 3 runs: v3 92 / LCP 2.2s / CLS 0 /
+  a11y 100 vs live v2 97 / LCP 1.7s. Close the ~0.5s LCP gap before v3 replaces the live site
+- [ ] Vercel preview protection is OFF (turned off so PageSpeed could reach previews); turn it back on if wanted
+  (`vercel project protection enable saifuddin-kapasi --sso`)
 - Measuring note: this machine is heavily loaded during v3 (old build's TBT 3–4s vs ~0.1s two days ago), so
   before → after numbers come from interleaved runs of both builds, not absolute scores
 

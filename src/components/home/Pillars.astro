@@ -262,7 +262,7 @@ const pillars = (await getCollection('pillars'))
 </style>
 
 <script>
-  import { gsap, registerScene, revealTrigger, groupStagger } from '../../lib/tools';
+  import { gsap, registerScene, revealTrigger, groupStagger, fadeUp } from '../../lib/tools';
   import { GS } from '../../lib/motion';
 
   registerScene('pillars', ({ reduce }) => {
@@ -273,6 +273,6 @@ const pillars = (await getCollection('pillars'))
     gsap
       .timeline({ scrollTrigger: revealTrigger(list) })
       .fromTo(rules, { scaleX: 0 }, { scaleX: 1, duration: GS.dur.heading, ease: GS.ease.strong, stagger: groupStagger(rules.length, 0.08) }, 0)
-      .from(rows, { opacity: 0, y: 16, duration: GS.dur.body, ease: GS.ease.reveal, stagger: groupStagger(rows.length, 0.08) }, 0.1);
+      .from(rows, { opacity: 0, ...fadeUp(), ease: GS.ease.reveal, stagger: groupStagger(rows.length, 0.08) }, 0.1);
   });
 </script>

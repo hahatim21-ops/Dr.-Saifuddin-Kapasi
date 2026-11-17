@@ -27,6 +27,8 @@ export let revealTrigger: typeof Engine.revealTrigger;
 export let groupStagger: typeof Engine.groupStagger;
 export let afterCurtain: typeof Engine.afterCurtain;
 export let whenNear: typeof Engine.whenNear;
+export let isPhone: typeof Engine.isPhone;
+export let fadeUp: typeof Engine.fadeUp;
 
 /** Called once by the engine when it loads. */
 export function provide(t: {
@@ -42,6 +44,8 @@ export function provide(t: {
   groupStagger: typeof Engine.groupStagger;
   afterCurtain: typeof Engine.afterCurtain;
   whenNear: typeof Engine.whenNear;
+  isPhone: typeof Engine.isPhone;
+  fadeUp: typeof Engine.fadeUp;
 }) {
-  ({ gsap, ScrollTrigger, SplitText, splitText, createOdometer, getLenis, scrollToTarget, loadFlip, revealTrigger, groupStagger, afterCurtain, whenNear } = t);
+  ({ gsap, ScrollTrigger, SplitText, splitText, createOdometer, getLenis, scrollToTarget, loadFlip, revealTrigger, groupStagger, afterCurtain, whenNear, isPhone, fadeUp } = t);
 }

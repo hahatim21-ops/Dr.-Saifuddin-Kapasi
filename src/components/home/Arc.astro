@@ -385,7 +385,7 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
 </style>
 
 <script>
-  import { gsap, ScrollTrigger, registerScene, createOdometer, revealTrigger } from '../../lib/tools';
+  import { gsap, ScrollTrigger, registerScene, createOdometer, revealTrigger, fadeUp } from '../../lib/tools';
   import { GS } from '../../lib/motion';
 
   registerScene('arc', ({ reduce }) => {
@@ -450,7 +450,7 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
         end: 'bottom 55%',
         onToggle: (self) => self.isActive && activate(entry),
       });
-      gsap.from(entry, { opacity: 0, y: 16, duration: GS.dur.body, scrollTrigger: revealTrigger(entry) });
+      gsap.from(entry, { opacity: 0, ...fadeUp(), scrollTrigger: revealTrigger(entry) });
     });
 
     // The brass line fills with reading progress.

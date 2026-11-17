@@ -87,9 +87,10 @@ export default function AchievementLightbox({
     const frames = ul.querySelectorAll('.aw__item');
     const tween = gsap.from(frames, {
       // Motion v3 (Tier 2): a plain fade-up; the whole group lands within ~1s.
-      y: 16,
+      // Phones: 12px / 0.5s (Motion v3 step 9).
+      y: window.matchMedia('(max-width: 767.98px)').matches ? 12 : 16,
       opacity: 0,
-      duration: GS.dur.body,
+      duration: window.matchMedia('(max-width: 767.98px)').matches ? 0.5 : GS.dur.body,
       ease: GS.ease.reveal,
       stagger: frames.length > 1 ? { amount: Math.min(0.4, GS.stagger.frames * (frames.length - 1)) } : 0,
       scrollTrigger: { trigger: ul, start: 'top 80%', once: true, fastScrollEnd: true, preventOverlaps: true },

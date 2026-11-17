@@ -281,6 +281,12 @@ export function revealTrigger(el: Element) {
   } satisfies ScrollTrigger.Vars;
 }
 
+/** Phones (375–767px): fade-ups only, line splits only on h1 (Motion v3 step 9). */
+export const isPhone = () => matchMedia('(max-width: 767.98px)').matches;
+
+/** Tier 2 fade-up values: 16px / 0.6s, or 12px / 0.5s on phones. */
+export const fadeUp = () => (isPhone() ? { y: 12, duration: 0.5 } : { y: 16, duration: GS.dur.body });
+
 /** A stagger whose whole group always finishes within `amount` seconds. */
 export const groupStagger = (count: number, each: number, amount = 0.4) =>
   count > 1 ? { amount: Math.min(amount, each * (count - 1)) } : 0;
@@ -383,7 +389,20 @@ registerScene('split', ({ reduce }) => {
       })
     );
   };
+  const phone = isPhone();
   document.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
+    // Phones: only the h1 splits into lines; other headings simply fade up.
+    if (phone && el.tagName !== 'H1') {
+      const tween = gsap.from(el, {
+        autoAlpha: 0,
+        ...fadeUp(),
+        ease: GS.ease.reveal,
+        paused: el.hasAttribute('data-split-now'),
+        scrollTrigger: el.hasAttribute('data-split-now') ? undefined : revealTrigger(el),
+      });
+      if (el.hasAttribute('data-split-now')) afterCurtain(() => tween.play());
+      return;
+    }
     if (el.hasAttribute('data-split-now')) return make(el);
     // Split lazily, well before the element reaches the screen: start-up stays
     // light, and the text is never seen unsplit.
@@ -405,7 +424,13 @@ registerScene('clip', ({ reduce, desktop }) => {
     left: 'inset(0% 100% 0% 0%)',
     right: 'inset(0% 0% 0% 100%)',
   };
+  const phone = isPhone();
   document.querySelectorAll<HTMLElement>('[data-clip]').forEach((wrap) => {
+    // Phones: a plain fade-up instead of the wipe.
+    if (phone) {
+      gsap.from(wrap, { autoAlpha: 0, ...fadeUp(), ease: GS.ease.reveal, scrollTrigger: revealTrigger(wrap) });
+      return;
+    }
     const from = insets[wrap.dataset.clip || 'up'] ?? insets.up;
     const img = wrap.querySelector('img, svg, picture');
     const tl = gsap.timeline({
@@ -593,4 +618,6 @@ provide({
   groupStagger,
   afterCurtain,
   whenNear,
+  isPhone,
+  fadeUp,
 });

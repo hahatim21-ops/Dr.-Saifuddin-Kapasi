@@ -162,7 +162,7 @@
   }
 
   body {
-    min-height: 100dvh;
+    min-height: 100svh; /* svh: stable while the phone's address bar shows/hides */
     background: transparent;
     font-size: var(--text-body);
     line-height: 1.6;
@@ -796,6 +796,13 @@ html.js [data-reveal] {
     transform 0.6s var(--ease-expo),
     filter 0.6s var(--ease-expo);
   transition-delay: calc(var(--delay, 0ms) + min(var(--i, 0) * var(--stagger), 400ms));
+}
+/* Phones (Motion v3 step 9): a shorter, quicker fade-up — 12px, 0.5s. */
+@media (max-width: 767.98px) {
+  html.js [data-reveal] {
+    transform: translate3d(0, var(--reveal-y, 12px), 0);
+    transition-duration: 0.5s;
+  }
 }
 html.js [data-reveal='blur'] {
   filter: blur(var(--blur-max));
