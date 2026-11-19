@@ -26,6 +26,9 @@
  *             in after the last word lights.
  *   Arc       Onda's method ring: the arc draws and a runner circles with
  *             reading progress; chapter stations swell 0.4 → 1.35 → 1.
+ *   Testimonials  Onda's "again" wheel (desktop): heading rises 45% → 0, the
+ *             wheel swings up into place, then turns with scroll (0.42
+ *             screens per card) in a CSS-sticky stage.
  *   Speaking  the green plate opens from inset(0 3.2% round 44px) to full
  *             width; after the pinned track, the cards tilt and fall out of
  *             the plate (scrub, power1.in). Desktop only.

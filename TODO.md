@@ -257,9 +257,17 @@ Brief: MOTION_V4_PROMPT.md — Onda studio template's motion (not its look), reb
   PageDown through home: 0 stuck presses. Still CSS sticky: no pin added. Year odometer kept.
   Onda's step "light-up" (text at 0.2 opacity until reached) left out: dim body text would fail contrast. The arc
   draws with stroke-dashoffset (a small SVG repaint), like the existing DrawSVG lines
-- [ ] STOP — waiting for review of Manifesto + Arc
-- [ ] Step 2 — Testimonials ← again (STOP) · Gallery ← studio · Insights ← journal · Contact ← contact (ask before
-  any variable font) · Footer prism
+- [x] Manifesto + Arc reviewed and approved
+- [x] Step 2 Testimonials ← Onda "again": on desktop (fine pointer, motion allowed) every quote is a green card on a
+  large wheel in a sticky stage (Onda's geometry: card ≤ 28vw, radius ≥ 0.95vw, 0.42 screens of scroll per card).
+  As the block arrives the heading rises 45% → 0 and the wheel swings up into place (Onda's 0 → 70vh; Onda drops it from above, but that crossed our centred title), then the
+  wheel turns so the cards pass right to left. Transforms only. All quotes are in the HTML as a plain list in
+  reading order (nothing to operate, nothing auto-rotating), so keyboard and screen-reader access is simpler than
+  the carousel: desktop tab stops 74 → 66 (the carousel's 8 buttons are not needed there). JS off on desktop: the
+  cards as a grid. Phones, tablets and reduced motion keep the Testimonials island unchanged (it never hydrates on
+  desktop, where it is hidden). No GSAP pin added (CSS sticky)
+- [ ] STOP — waiting for review of Testimonials
+- [ ] Step 2 — Gallery ← studio · Insights ← journal · Contact ← contact (ask before any variable font) · Footer prism
 
 ## Temporary build scaffolding (remove in later stages)
 
