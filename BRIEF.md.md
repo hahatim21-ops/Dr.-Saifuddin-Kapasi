@@ -240,6 +240,15 @@ Motion v3 (MOTION_V3_PROMPT.md) edits v2 rather than adding to it. One signature
 - **Tier 3 · UI feedback:** 0.15–0.2s with the "inflect" ease (hovers, taps, menus, cursor, magnetic buttons).
 - **Budgets:** at most 3 long pins on the home page (hero sheet, Manifesto, Speaking), each with `anticipatePin`; no pins on phones; the nav bar always stays in view; loader ≤1.2s and only on a first visit per device; idle loops pause off-screen or when the tab is hidden; Lenis lerp 0.12.
 
+### Motion v4: Onda's motion in our brand
+
+Motion v4 (MOTION_V4_PROMPT.md) takes the scroll effects of the Onda studio template — not its look — and rebuilds them with GSAP, ScrollTrigger and Lenis (no CSS scroll timelines), inside the v3 tiers and budgets.
+
+- **Hero (Onda's aperture):** intro copy top-left, the giant two-line name bottom-left ending in a brass triangle full stop, and on the right an aperture: hairline orbit ring with a brass moon, a brass glow and the line-art prism. Intro: the aperture swells in, the beam draws and the spectrum fans out. On desktop, scrolling shrinks the prism onto the full stop (ring and glow fade, beam and spectrum go out, the glass fills with brass, the intro lifts 70px); the travelling prism then lifts off from that full stop into the Manifesto. Phones, tablets, reduced motion and JS off: the prism stays put and the full stop is static. The name is never hidden before scripts run (it is the LCP element).
+- **Pillars (Onda's stacked cards):** four green cards, sticky from 768px, each 14px lower than the last; as a card slides over, the one below shrinks to 0.9 and darkens. Phones and reduced motion: a plain list.
+- **Speaking (Onda's selected work):** the pinned horizontal track now sits on a green plate that opens from a rounded inset to full width; after the track has run, the cards tilt and fall out of the plate as it scrolls away.
+- **Budgets:** at most 3 GSAP pins on home (currently Manifesto and Speaking); sticky stacks are checked like pins for "feels stuck".
+
 ### Tokens (CSS in `global.css`, GSAP in `src/lib/motion.ts` → `GS`)
 
 | Token | Value |

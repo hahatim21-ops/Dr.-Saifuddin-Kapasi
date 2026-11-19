@@ -102,6 +102,7 @@ const pillars = (await getCollection('pillars'))
     line-height: 1.02;
     font-weight: 600;
     text-wrap: balance;
+    color: var(--color-ivory); /* the global heading ink would win otherwise */
   }
   .svc__line {
     max-width: 28rem;
@@ -204,11 +205,17 @@ const pillars = (await getCollection('pillars'))
       position: sticky;
       top: calc(clamp(80px, 12svh, 108px) + var(--i) * 14px);
     }
+    /* A short tail after the last card, so it can land in its slot and the
+       full pile of four rests a moment before it all scrolls away together. */
+    .svc-deck::after {
+      content: '';
+      height: clamp(3rem, 12svh, 7rem);
+    }
   }
 </style>
 
 <script>
-  import { gsap, registerScene, isPhone } from '../../lib/tools';
+  import { gsap, registerScene, isPhone, getLenis } from '../../lib/tools';
 
   registerScene('pillars', ({ reduce }) => {
     const cards = [...document.querySelectorAll<HTMLElement>('[data-svc]')];
@@ -242,7 +249,23 @@ const pillars = (await getCollection('pillars'))
         .to(card, { scale: 0.9 }, 0)
         .to(shade, { opacity: 0.55 }, 0);
     });
+    // Keyboard: a link in a card that the next card already covers would take
+    // focus out of sight (Shift+Tab back up the pile). Scroll back to where
+    // that card sits uncovered.
+    const onFocus = (e: FocusEvent) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>('[data-svc]');
+      if (!card) return;
+      const y = naturalTop(cards.indexOf(card)) - stickyTop(card);
+      if (window.scrollY > y + 1) {
+        const lenis = getLenis();
+        if (lenis) lenis.scrollTo(y, { immediate: true, force: true });
+        else window.scrollTo(0, y);
+      }
+    };
+    deck.addEventListener('focusin', onFocus);
+
     return () => {
+      deck.removeEventListener('focusin', onFocus);
       tweens.forEach((t) => t.kill());
       gsap.set(cards, { clearProps: 'transform' });
     };

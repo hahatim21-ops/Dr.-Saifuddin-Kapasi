@@ -13,6 +13,20 @@
  *            stagger + its duration (stagger amount ≤ 0.4s). fastScrollEnd.
  *   Tier 3 · UI feedback: 0.15–0.2s, the "inflect" ease.
  * Characters split only on the hero name.
+ *
+ * Motion v4 — Onda's motion in our brand (GSAP + ScrollTrigger + Lenis only;
+ * no CSS scroll timelines). Tier 1 now also holds:
+ *   Hero      the prism aperture shrinks onto the brass full stop after
+ *             "Kapasi" (scrub, x/y power1.inOut, scale power3.in), and the
+ *             travelling prism lifts off from there. Desktop only.
+ *   Pillars   Onda's stacked cards: CSS sticky from 768px (no GSAP pin), the
+ *             card underneath scales 1 → 0.9 and darkens 0 → 0.55 (scrub: true).
+ *   Speaking  the green plate opens from inset(0 3.2% round 44px) to full
+ *             width; after the pinned track, the cards tilt and fall out of
+ *             the plate (scrub, power1.in). Desktop only.
+ * Budgets: ≤ 3 GSAP pins on home (now 2: Manifesto, Speaking — the hero no
+ * longer pins; it scrubs while scrolling away); sticky stacks
+ * count toward the "feels stuck" test; phones get fade-ups only.
  */
 export const GS = {
   ease: { ui: 'inflect', reveal: 'expo.out', strong: 'power4.out' },

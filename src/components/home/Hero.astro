@@ -16,6 +16,9 @@
  * - Live "Mumbai · 21:27 IST" clock and the credibility marquee, as before.
  * Everything is visible in the HTML; GSAP sets start states at runtime only.
  * The intro waits for the loader (loader:done) when it is playing.
+ * The name is the LCP element: it is never hidden before the engine runs. Its
+ * letters rise only when the loader or the page curtain covers the page first;
+ * only the words are split, so the full stop stays the element the shrink uses.
  */
 import site from '../../data/site.json';
 import Icon from '../Icon.astro';
@@ -88,7 +91,7 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
     </div>
 
     <div class="hero__foot container-content">
-      <h1 id="hero-title" class="hero__name" data-hero-name data-intro>{site.heroName}<span class="hero__period" data-hero-period aria-hidden="true"></span></h1>
+      <h1 id="hero-title" class="hero__name" data-hero-name aria-label={site.heroName}><span class="hero__words" data-hero-words>{site.heroName}</span><span class="hero__period" data-hero-period aria-hidden="true"></span></h1>
       <p class="hero__lead" data-hero-lead data-intro>
         {leadParts.map((part) => (part.startsWith('*') ? <em class="accent">{part.slice(1, -1)}</em> : part))}
       </p>
@@ -209,7 +212,7 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
 
   /* ---------- The aperture: prism, glow and orbit ring ---------- */
   .hero__stage {
-    --ap: min(72vw, 40svh);
+    --ap: min(60vw, 30svh); /* phones: leave room for the name above the fold */
     position: relative;
     width: var(--ap);
     height: var(--ap);
@@ -261,6 +264,7 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
     left: -17.5%;
     top: 18.5%;
     width: 150%;
+    max-width: none; /* the global svg cap would shrink it off-centre */
     height: auto;
     overflow: visible;
   }
@@ -311,6 +315,7 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
     position: relative;
     z-index: 2;
     max-width: 4.6em; /* always two lines: "Saifuddin / Kapasi" */
+    padding-bottom: 0.12em; /* room for the descender of "p" above the lead */
     font-family: var(--font-serif);
     font-weight: 700;
     font-size: clamp(3.5rem, 20vw, 9rem);
@@ -405,14 +410,17 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
   /* ---------- Desktop (Onda landscape): aperture on the right ---------- */
   @media (min-width: 1024px) {
     .hero__stage {
-      --ap: min(32vw, 48svh);
+      --ap: min(32vw, 48svh, 30rem);
       position: absolute;
       right: calc(max(var(--gutter), (100vw - 75rem) / 2) + 3vw);
       top: calc(50% - var(--ap) / 2 - 1.5rem);
       margin: 0;
     }
     .hero__name {
-      font-size: min(13vw, 22svh);
+      font-size: min(13vw, 22svh, 11.5rem); /* clears the ring up to 1920 */
+    }
+    .hero__cred {
+      padding-right: 8rem; /* the scroll cue sits at the right end */
     }
     .hero__cue {
       position: absolute;
@@ -503,7 +511,6 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
     if (reduce) return () => cleanups.forEach((f) => f());
 
     const q = <T extends Element = HTMLElement>(s: string) => hero.querySelector<T>(s)!;
-    const name = q('[data-hero-name]');
     const lead = q('[data-hero-lead]');
     const swell = q('[data-hero-swell]');
     const draws = hero.querySelectorAll<SVGPathElement>('[data-hero-draw], [data-hero-inner-beam], [data-hero-ray]');
@@ -514,13 +521,20 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
     const nav = document.querySelector('[data-intro-nav]');
 
     /* ---- Intro timeline (paused until the loader is done) ---- */
-    const nameSplit = SplitText.create(name, { type: 'lines,words,chars', mask: 'lines', aria: 'auto' });
+    // The name is the LCP element, so it is never hidden before the engine runs.
+    // Its letters rise only when something covers the page first (the loader on
+    // a first visit, the curtain on a page change); on a return visit it just stands.
+    const html = document.documentElement;
+    const covered = !!(html.dataset.loaderState || html.dataset.curtainState);
+    // Split only the words: the full stop must stay the same element, because the
+    // shrink below is bound to it (a revert would otherwise replace it).
+    const nameSplit = covered ? SplitText.create(q('[data-hero-words]'), { type: 'words,chars', mask: 'words', aria: 'none' }) : null;
     const tl = gsap.timeline({
       paused: true,
       defaults: { ease: GS.ease.reveal },
       onComplete: () => {
         // Hand the text back to the browser so later resizes reflow naturally.
-        nameSplit.revert();
+        nameSplit?.revert();
         gsap.set(draws, { clearProps: 'strokeDasharray,strokeDashoffset' });
         // The full stop may sit a pixel or two differently once the split is gone.
         ScrollTrigger.refresh();
@@ -528,8 +542,8 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
     });
     // Onda's "swell": the aperture grows in with a slight overshoot while the
     // name rises; then the beam draws in and the spectrum fans out.
-    tl.from(nameSplit.chars, { yPercent: 110, duration: 1.1, stagger: GS.stagger.chars }, 0.1)
-      .from(swell, { scale: 0.6, autoAlpha: 0, duration: 1.1, ease: 'back.out(1.3)' }, 0.15)
+    if (nameSplit) tl.from(nameSplit.chars, { yPercent: 110, duration: 1.1, stagger: GS.stagger.chars }, 0.1);
+    tl.from(swell, { scale: 0.6, autoAlpha: 0, duration: 1.1, ease: 'back.out(1.3)' }, 0.15)
       .fromTo(beamLines, { drawSVG: '0%' }, { drawSVG: '100%', duration: 0.6, ease: 'power2.inOut', stagger: 0.2 }, 0.55)
       .fromTo(rays, { drawSVG: '0%' }, { drawSVG: '100%', duration: 0.6, ease: 'power2.out', stagger: 0.06 }, 0.95)
       .from(top, { autoAlpha: 0, y: 12, duration: GS.dur.body, stagger: { amount: 0.2 } }, 0.35)

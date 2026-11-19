@@ -224,6 +224,28 @@ Brief: MOTION_V3_PROMPT.md — edit, don't add; calmer, faster to read, smoother
 - Measuring note: this machine is heavily loaded during v3 (old build's TBT 3–4s vs ~0.1s two days ago), so
   before → after numbers come from interleaved runs of both builds, not absolute scores
 
+## Motion v4 (branch `motion-v4`; restore point: commit "Motion v3 step 9: phones")
+
+Brief: MOTION_V4_PROMPT.md — Onda studio template's motion (not its look), rebuilt on GSAP + ScrollTrigger + Lenis.
+
+- [x] Step 0 — stale lock removed, line-ending noise cleared, branch `motion-v4`, draft committed, `npm ci` + build
+- [x] Step 1a Hero — fixed: the shrink never ran (SplitText's revert rebuilt the h1, so the shrink was bound to a
+  detached full stop; now only the words are split); the prism SVG was capped to 100% by the global `svg` rule, so
+  it sat off-centre and the glass landed ~20px off the full stop (now `max-width: none`; lands within 1px at
+  1024/1280/1440/1920); the name ran into the ring at 1920 (name ≤ 11.5rem, aperture ≤ 30rem); the "p" of Kapasi
+  touched the lead; the scroll cue sat on the marquee; phones: smaller aperture (min(60vw, 30svh)) so more of the
+  name shows on first load. The name is the LCP element and is no longer hidden before the engine runs: its letters
+  rise only under the loader or the page curtain. h1 `aria-label="Saifuddin Kapasi"`. Hand-off: the traveller is at
+  opacity 0 on the full stop when the shrink ends and fades in only as it lifts away
+- [x] Step 1b Pillars — fixed: card titles were ink on green (global heading colour); the 4th card never reached its
+  slot (the list ended at its edge) → a short tail after the pile; Shift+Tab up the pile could focus a link hidden
+  under the next card → focus scrolls back to where that card is uncovered. No stale references to the old fold/flood
+- [x] Step 1c Speaking — tested as drafted (plate clip, pin, counter, drag, keyboard, fall + reverse, clipped by the
+  stage); no changes needed
+- [ ] STOP — waiting for review of step 1 screenshots
+- [ ] Step 2 — Manifesto ← statement · Arc ← method (STOP) · Testimonials ← again (STOP) · Gallery ← studio ·
+  Insights ← journal · Contact ← contact (ask before any variable font) · Footer prism
+
 ## Temporary build scaffolding (remove in later stages)
 
 - [ ] Delete `src/pages/style-test.astro` before launch (noindex and out of the sitemap, but still public)
