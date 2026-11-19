@@ -11,6 +11,10 @@
  * Layout: ≥768px a staggered two-column grid; phones one scroll-snap row (the
  * column wrappers switch to display: contents, `order` keeps the sequence).
  * JS off / reduced motion: the tidy grid, nothing hidden.
+ * Motion v4 (Onda's "studio"), desktop: the photos are dealt onto the table.
+ * Each one rises into a stack in the middle of the track (scale 0.66, tilted),
+ * then deals out to its place as you scroll (scrubbed; Onda's ease-out). This
+ * replaces v3's one-shot clip wipe. Phones keep the fade-ups.
  */
 import { getCollection } from 'astro:content';
 import home from '../../data/home.json';
@@ -190,15 +194,14 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
   import { gsap, registerScene, revealTrigger, whenNear } from '../../lib/tools';
   import { GS } from '../../lib/motion';
 
-  // Deterministic "prints on a desk" offsets: rotation (°), x and y (px).
-  const SCATTER = [
-    [-7, -36, 60],
-    [6, 42, 90],
-    [-4, 28, 40],
-    [8, -30, 110],
-    [5, -44, 70],
-    [-6, 34, 50],
-  ];
+  /** Document top of an element from layout offsets (transforms ignored). */
+  const pageTop = (el: HTMLElement) => {
+    let y = 0;
+    for (let n: HTMLElement | null = el; n; n = n.offsetParent as HTMLElement | null) y += n.offsetTop;
+    return y;
+  };
+  // Onda's tilts for the stack (degrees), by photo.
+  const TILT = [-8, 6, -4, 9, -6, 7];
 
   registerScene('gallery', ({ reduce, desktop }) => {
     const track = document.querySelector<HTMLElement>('.gallery__track');
@@ -213,18 +216,41 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
       return;
     }
 
-    // Desktop (Motion v3: one-shot, not scrubbed): built when the gallery comes
-    // near. Each large photo wipes up (clip-path) out of a slight tilt and
-    // settles; its caption follows.
+    // Desktop (Motion v4, Onda's "studio"): built when the gallery comes near.
+    // The stack sits on the track's centre line, 58% down the screen. Each photo
+    // is dealt from it while its top travels from 92% to 50% of the screen.
+    const START = 0.92;
+    const END = 0.5;
+    const STACK_Y = 0.58;
     return whenNear(track, () => {
       photos.forEach((ph) => {
-        const [r] = SCATTER[Number(ph.dataset.photo) % SCATTER.length];
-        const img = ph.querySelector('img');
-        const cap = ph.querySelector('figcaption');
-        const tl = gsap.timeline({ scrollTrigger: revealTrigger(ph), defaults: { ease: GS.ease.reveal } });
-        tl.fromTo(ph, { clipPath: 'inset(100% 0% 0% 0%)', rotation: r * 0.4 }, { clipPath: 'inset(0% 0% 0% 0%)', rotation: 0, duration: GS.dur.heading, ease: GS.ease.strong }, 0);
-        if (img) tl.from(img, { scale: 1.12, duration: GS.dur.revealLong }, 0);
-        if (cap) tl.from(cap, { autoAlpha: 0, y: 12, duration: GS.dur.body }, 0.35);
+        const i = Number(ph.dataset.photo);
+        // Offsets from the photo's own place to the stack, at the moment the deal
+        // starts (layout offsets, so the photo's own transform never skews them;
+        // the photo and the track share the same offsetParent, .gallery__wrap).
+        const dx = () => track.offsetLeft + track.offsetWidth / 2 - (ph.offsetLeft + ph.offsetWidth / 2);
+        // Never lifted above the top of the photo area, so the stack never
+        // covers the section heading.
+        const dy = () => Math.max(window.innerHeight * (STACK_Y - START) - ph.offsetHeight / 2, track.offsetTop - ph.offsetTop);
+        gsap.fromTo(
+          ph,
+          { x: dx, y: dy, rotation: TILT[i % TILT.length], scale: 0.66 },
+          {
+            x: 0,
+            y: 0,
+            rotation: 0,
+            scale: 1,
+            ease: 'power3.out', // Onda: cubic-bezier(.333, 1, .667, 1)
+            // Numeric positions from layout offsets: as its own trigger the photo
+            // would be measured in its from-state (lifted to the stack).
+            scrollTrigger: {
+              start: () => pageTop(ph) - window.innerHeight * START,
+              end: () => pageTop(ph) - window.innerHeight * END,
+              scrub: GS.scrub,
+              invalidateOnRefresh: true,
+            },
+          }
+        );
       });
     });
   });
