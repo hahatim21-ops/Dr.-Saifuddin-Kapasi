@@ -248,6 +248,8 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
               end: () => pageTop(ph) - window.innerHeight * END,
               scrub: GS.scrub,
               invalidateOnRefresh: true,
+              // Its own layer only while it is being dealt (no re-raster per frame).
+              onToggle: (self) => gsap.set(ph, { willChange: self.isActive ? 'transform' : 'auto' }),
             },
           }
         );

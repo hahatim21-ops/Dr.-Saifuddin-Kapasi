@@ -461,7 +461,14 @@ const displayParts = t.display
     const enter = () => voice.getBoundingClientRect().top + window.scrollY - window.innerHeight;
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
-      scrollTrigger: { start: enter, end: () => enter() + window.innerHeight * 0.85, scrub: true, invalidateOnRefresh: true },
+      scrollTrigger: {
+        start: enter,
+        end: () => enter() + window.innerHeight * 0.85,
+        scrub: true,
+        invalidateOnRefresh: true,
+        // Its own layer only while it swells.
+        onToggle: (self) => gsap.set(voice, { willChange: self.isActive ? 'transform' : 'auto' }),
+      },
     });
     tl.fromTo(voice, { scale: 0.82, transformOrigin: '0% 100%' }, { scale: 1, duration: 1 }, 0)
       // The weight swells late: the 700 cut fades in over the 600 cut (which
@@ -480,7 +487,7 @@ const displayParts = t.display
     return () => {
       tl.kill();
       split.revert();
-      gsap.set([voice, dot], { clearProps: 'transform' });
+      gsap.set([voice, dot], { clearProps: 'transform,willChange' });
     };
   });
 

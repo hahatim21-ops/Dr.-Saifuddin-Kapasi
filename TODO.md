@@ -266,8 +266,32 @@ Brief: MOTION_V4_PROMPT.md — Onda studio template's motion (not its look), reb
   the carousel: desktop tab stops 74 → 66 (the carousel's 8 buttons are not needed there). JS off on desktop: the
   cards as a grid. Phones, tablets and reduced motion keep the Testimonials island unchanged (it never hydrates on
   desktop, where it is hidden). No GSAP pin added (CSS sticky)
-- [ ] STOP — waiting for review of Testimonials
-- [ ] Step 2 — Gallery ← studio · Insights ← journal · Contact ← contact (ask before any variable font) · Footer prism
+- [x] Testimonials reviewed and approved
+- [x] Step 2 Gallery ← Onda "studio": on desktop each photo rises into a stack on the track's centre line (scale 0.66,
+  Onda's tilts) and is dealt out to its place as you scroll (scrubbed, ease-out). Replaces v3's one-shot clip wipe.
+  Trigger positions come from layout offsets (as its own trigger a photo would be measured in its lifted from-state,
+  which started every deal ~550px early), and no photo is lifted above the photo area, so the stack never covers the
+  heading (checked at 1024/1440/1920). Phones: fade-ups as before
+- [x] Step 2 Insights ← Onda "journal": desktop only, the list sits beside a sticky frame. The articles have no photos
+  and none are invented, so the frame holds a typographic cover per article (its number, title and date on green);
+  each opens over the last with Onda's circle wipe (clip-path circle 0% → 75%) as its row reaches the middle of the
+  screen. aria-hidden; the list carries every word. Onda's dimmed stories (0.25 opacity) left out for contrast.
+  Phones, reduced motion and JS off: the list alone
+- [x] Step 2 Contact ← Onda "contact": desktop, the display line scales 0.82 → 1 over Onda's 0 → 85vh and gains
+  weight by crossfade (no variable font: Cormorant stays at 600/700) — a 700 copy of each word fades in over the 600
+  word, which then drops away, so the line never looks washed out. The full stop is the brass triangle, scaling in and
+  dropping into place (63.75 → 85vh). Also on /speaking (same component). Phones: fade-up; reduced / JS off: static
+- [x] Step 2 Footer: no change needed — the travelling prism already ends at the footer waypoint beside the sign-off
+  (desktop); phones have no prism travel
+- [x] Numbers and Books: unchanged, as the brief says
+- Measured (Testimonials commit → now, median of 3, busy machine): Lighthouse mobile 98 → 98, a11y 100, LCP 1.1–1.3s,
+  CLS 0.001; whole-page fps desktop 20 → 18, phone 27 → 24 (baseline itself down from ~55, so noise). Per-section
+  traces at 4× throttle over the same scroll: Gallery raster 35 → 232ms fixed to ~44ms (photos get a layer only while
+  dealt); Insights ~+5% main-thread (clip-path wipe paints); Contact ~+25–30% (word crossfade + scale; the line gets a
+  layer only while it swells). PageDown through home: 0 stuck presses; flicks pass through. QA: no overflow 375–1920,
+  reduced motion / JS off clean, keyboard 66 desktop / 69 phone stops with none off-screen, history OK, axe 0
+- [ ] Re-measure fps at 4× throttle on a quiet machine: during the Testimonials and final runs the machine was busy
+  (the unchanged baseline fell from ~55 to ~21fps), so those before → after fps pairs are not comparable
 
 ## Temporary build scaffolding (remove in later stages)
 

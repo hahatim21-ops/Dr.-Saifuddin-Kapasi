@@ -250,6 +250,10 @@ Motion v4 (MOTION_V4_PROMPT.md) takes the scroll effects of the Onda studio temp
 - **Manifesto (Onda's statement):** the quote's two clauses slide in from opposite sides as the green band arrives, then the words light up across the pin; the brass triangle full stop lands last.
 - **Arc (Onda's method):** beside the timeline, under the chapter, a ring draws itself as you read; a runner goes round it and meets each chapter's station as that chapter begins, and the station swells and fills brass. Desktop only.
 - **Testimonials (Onda's "again" wheel):** on desktop every quote is a green card on a large wheel; the heading rises and the wheel swings up into place, then scrolling turns it so the cards pass right to left. All quotes are plain text in reading order. Phones, tablets and reduced motion keep the one-quote-at-a-time carousel.
+- **Gallery (Onda's "studio"):** on desktop the photos are dealt onto the table — each rises into a stack in the middle and is dealt out to its place as you scroll.
+- **Insights (Onda's "journal"):** on desktop the list sits beside a sticky frame of typographic covers (number, title, date); each opens with a circle wipe as its row reaches the middle of the screen.
+- **Contact (Onda's "contact"):** on desktop the closing line grows into place and gains weight (a crossfade from 600 to 700 — no variable font), and its brass triangle full stop drops in last.
+- **Footer:** the travelling prism ends beside the sign-off, as before.
 - **Budgets:** at most 3 GSAP pins on home (currently Manifesto and Speaking); sticky stacks are checked like pins for "feels stuck".
 
 ### Tokens (CSS in `global.css`, GSAP in `src/lib/motion.ts` → `GS`)

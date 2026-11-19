@@ -29,6 +29,13 @@
  *   Testimonials  Onda's "again" wheel (desktop): heading rises 45% → 0, the
  *             wheel swings up into place, then turns with scroll (0.42
  *             screens per card) in a CSS-sticky stage.
+ *   Gallery   Onda's "studio" deal: photos rise into a stack (scale 0.66,
+ *             tilted) and are dealt out to their places (scrub, ease-out).
+ *   Insights  Onda's "journal": sticky frame of typographic covers, each
+ *             opened by a clip-path circle 0% → 75% as its row arrives.
+ *   Contact   Onda's "contact": the line scales 0.82 → 1 and gains weight by
+ *             a 600 → 700 crossfade (no variable font); the brass triangle
+ *             full stop drops in last.
  *   Speaking  the green plate opens from inset(0 3.2% round 44px) to full
  *             width; after the pinned track, the cards tilt and fall out of
  *             the plate (scrub, power1.in). Desktop only.
