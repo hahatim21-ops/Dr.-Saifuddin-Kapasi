@@ -1,14 +1,13 @@
 ---
 /**
- * Home §5 — Four pillars (Motion v2).
- * - Big outlined brass numerals (01)–(04); rows stagger in as their hairlines
- *   draw left → right (GSAP, once).
- * - ≥768px: each row is one link. On hover or keyboard focus a green layer
- *   floods in from the left (clip-path), carrying an ivory copy of the row, and
- *   the arrow travels 12px. Only clip-path and transform animate; the copy is
- *   aria-hidden.
- * - Phones: each row is a native <details> that expands on tap to show the line,
- *   the service and a link.
+ * Home §5 — Four pillars, as Onda's stacked service cards (Motion v4).
+ * - Each pillar is a large green card. From 768px the cards are sticky, each
+ *   one 14px lower than the last, so they pile up as you scroll. While the
+ *   next card slides over, the one underneath shrinks to 0.9 and darkens
+ *   (GSAP scrub; only transform and opacity animate).
+ * - Phones: a plain list of cards (Motion v3: no pins on phones).
+ * - Reduced motion: no sticky, no scaling. JS off: sticky cards, no scaling.
+ * Onda's cards have photos; these carry a giant outlined numeral instead.
  */
 import { getCollection } from 'astro:content';
 import home from '../../data/home.json';
@@ -17,74 +16,37 @@ import SectionHeader from '../SectionHeader.astro';
 
 const pillars = (await getCollection('pillars'))
   .sort((a, b) => a.data.order - b.data.order)
-  .map((p, i) => ({
-    ...p.data,
-    num: String(i + 1).padStart(2, '0'),
-    // Keep hyphenated words (Customer-Centric) on one line.
-    titleParts: p.data.title.split(' ').map((w) => ({ w, nowrap: w.includes('-') })),
-  }));
+  .map((p, i) => ({ ...p.data, num: String(i + 1).padStart(2, '0') }));
 ---
 
 <section id="pillars" class="pillars" aria-labelledby="pillars-title">
   <div class="container-content">
     <SectionHeader eyebrow={home.pillars.eyebrow} id="pillars-title" title={home.pillars.title} intro={home.pillars.intro} />
 
-    <ol class="pillars__list" role="list" data-pillars>
+    <ol class="svc-deck" role="list" data-svc-deck>
       {
-        pillars.map((p) => (
-          <li class="pillar" data-pillar>
-            <span class="pillar__rule" data-pillar-rule aria-hidden="true" />
-
-            {/* ≥768px: one link per row, with the flood layer */}
-            <a href={p.href} class="pillar__row">
-              <span class="pillar__cols">
-                <span class="pillar__num" aria-hidden="true">{p.num}</span>
-                <h3 class="pillar__title">{p.titleParts.map((t, ti) => (<>{ti > 0 && ' '}{t.nowrap ? <span class="nowrap">{t.w}</span> : t.w}</>))}</h3>
-                <span class="pillar__body">
-                  <span class="pillar__line">{p.line}</span>
-                  <span class="pillar__service">
-                    <span class="sr-only">Service: </span>
-                    {p.service}
-                  </span>
-                </span>
-                <Icon name="arrow-right" size={26} class="pillar__arrow" />
-              </span>
-              <span class="pillar__flood" aria-hidden="true">
-                <span class="pillar__cols">
-                  <span class="pillar__num">{p.num}</span>
-                  <span class="pillar__title">{p.titleParts.map((t, ti) => (<>{ti > 0 && ' '}{t.nowrap ? <span class="nowrap">{t.w}</span> : t.w}</>))}</span>
-                  <span class="pillar__body">
-                    <span class="pillar__line">{p.line}</span>
-                    <span class="pillar__service">{p.service}</span>
-                  </span>
-                  <Icon name="arrow-right" size={26} class="pillar__arrow" />
-                </span>
-              </span>
-            </a>
-
-            {/* Phones: tap to expand */}
-            <details class="pillar__fold">
-              <summary class="pillar__summary">
-                <span class="pillar__num" aria-hidden="true">{p.num}</span>
-                <span class="pillar__title">{p.titleParts.map((t, ti) => (<>{ti > 0 && ' '}{t.nowrap ? <span class="nowrap">{t.w}</span> : t.w}</>))}</span>
-                <span class="pillar__toggle" aria-hidden="true">
-                  <Icon name="plus" size={20} />
-                </span>
-              </summary>
-              <div class="pillar__fold-body">
-                <p class="pillar__line">{p.line}</p>
-                <p class="pillar__service">{p.service}</p>
-                <a href={p.href} class="pillar__more">
-                  Learn more <span aria-hidden="true">→</span>
-                </a>
-              </div>
-            </details>
+        pillars.map((p, i) => (
+          <li class="svc" style={`--i:${i}`} data-svc>
+            <div class="svc__text">
+              <p class="svc__num" aria-hidden="true">{p.num}</p>
+              <h3 class="svc__title">{p.title}</h3>
+              <p class="svc__line">{p.line}</p>
+              <p class="svc__tags">
+                <span class="sr-only">Service: </span>
+                <span class="svc__tag">{p.service}</span>
+              </p>
+              <a href={p.href} class="svc__more">
+                Learn more <Icon name="arrow-right" size={18} />
+              </a>
+            </div>
+            <div class="svc__media" aria-hidden="true">
+              <span class="svc__big">{p.num}</span>
+              <span class="svc__tri"></span>
+            </div>
+            <span class="svc__shade" data-svc-shade aria-hidden="true"></span>
           </li>
         ))
       }
-      <li class="pillar pillar--end" aria-hidden="true">
-        <span class="pillar__rule" data-pillar-rule />
-      </li>
     </ol>
   </div>
 </section>
@@ -93,186 +55,196 @@ const pillars = (await getCollection('pillars'))
   .pillars {
     padding-block: var(--section-space);
   }
-  .pillars__list {
-    margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+  .svc-deck {
+    display: grid;
+    gap: 1.25rem;
+    margin: clamp(2.5rem, 7vh, 5rem) 0 0;
     padding: 0;
     list-style: none;
   }
-  .pillar {
+  .svc {
     position: relative;
+    display: grid;
+    gap: 1.5rem;
+    padding: clamp(1.25rem, 2.4vw, 2.25rem);
+    overflow: hidden;
+    border-radius: 20px;
+    background-color: var(--color-green);
+    color: var(--color-ivory);
+    box-shadow: 0 -10px 30px -18px rgb(28 31 30 / 0.45);
+    transform-origin: 50% 0;
   }
-  .pillar__rule {
+  /* Grain on the card, like the green bands. */
+  .svc::after {
+    content: '';
     position: absolute;
-    inset: 0 0 auto 0;
-    z-index: 2;
-    height: 1px;
-    background: var(--color-hairline);
-    transform-origin: left center;
+    inset: 0;
+    background-image: var(--grain);
+    opacity: 0.55;
+    pointer-events: none;
   }
-  .pillar--end {
-    height: 1px;
+  .svc__text {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .svc__num {
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    color: var(--color-brass-light);
+    font-variant-numeric: tabular-nums;
+  }
+  .svc__title {
+    font-size: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+    line-height: 1.02;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .svc__line {
+    max-width: 28rem;
+    font-size: var(--text-lead);
+    line-height: var(--text-lead--line-height);
+    color: rgb(246 241 231 / 0.82);
+  }
+  .svc__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.5rem;
+  }
+  .svc__tag {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--color-hairline-on-green);
+    border-radius: 999px;
+    font-size: var(--text-small);
+    color: var(--color-brass-light);
+  }
+  .svc__more {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--color-ivory);
+    text-decoration: none;
+  }
+  .svc__more :global(svg) {
+    transition: transform var(--dur-tap) var(--ease-ui);
+  }
+  .svc__more:hover :global(svg),
+  .svc__more:focus-visible :global(svg) {
+    transform: translateX(6px);
+  }
+  .svc__more:focus-visible {
+    outline-color: var(--color-brass-light);
   }
 
-  /* Outlined brass numerals. */
-  .pillar__num {
+  /* The "photo" panel: a giant outlined numeral with a brass prism corner. */
+  .svc__media {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 12px;
+    aspect-ratio: 16 / 9;
+    background: var(--color-green-deep);
+    border: 1px solid var(--color-hairline-on-green);
+  }
+  .svc__big {
     font-family: var(--font-serif);
     font-weight: 600;
-    font-size: clamp(2.75rem, 1.8rem + 3vw, 5rem);
-    line-height: 0.9;
+    font-size: clamp(7rem, 4rem + 14vw, 20rem);
+    line-height: 0.8;
     color: transparent;
     -webkit-text-stroke: 1px var(--color-brass);
     font-variant-numeric: lining-nums tabular-nums;
   }
-  .pillar__title {
-    font-family: var(--font-serif);
-    font-weight: 600;
-    font-size: var(--text-h3);
-    line-height: 1.12;
+  .svc__tri {
+    position: absolute;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    background: var(--color-brass);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
   }
-  .pillar__title .nowrap {
-    white-space: nowrap;
-  }
-  .pillar__line {
-    max-width: 46ch;
-  }
-  .pillar__service {
-    font-size: var(--text-small);
-    font-weight: 600;
-    color: var(--color-green);
-  }
-
-  /* ================= ≥768px: link rows with flood ================= */
-  .pillar__row {
-    position: relative;
-    display: none;
-    color: var(--color-ink);
-    text-decoration: none;
-  }
-  .pillar__fold {
-    display: block;
-  }
-  @media (min-width: 768px) {
-    .pillar__row {
-      display: block;
-    }
-    .pillar__fold {
-      display: none;
-    }
-  }
-  .pillar__cols {
-    display: grid;
-    grid-template-columns: 7rem minmax(0, 1fr) minmax(0, 1.15fr) 3rem;
-    align-items: center;
-    column-gap: 1.5rem;
-    padding: 2rem 1.25rem;
-  }
-  .pillar__body {
-    display: grid;
-    gap: 0.4rem;
-  }
-  .pillar__cols :global(.pillar__arrow) {
-    justify-self: end;
-    color: var(--color-brass);
-  }
-  .pillar__flood {
+  /* Darkens the card underneath while the next one slides over it. */
+  .svc__shade {
     position: absolute;
     inset: 0;
-    background-color: var(--color-green);
-    background-image: var(--grain);
-    color: var(--color-ivory);
-    clip-path: inset(0% 100% 0% 0%);
-    transition: clip-path 0.6s var(--ease-ui);
+    z-index: 2;
+    background: var(--color-ink);
+    opacity: 0;
     pointer-events: none;
   }
-  .pillar__flood .pillar__num {
-    -webkit-text-stroke-color: var(--color-brass-light);
-  }
-  .pillar__flood .pillar__service {
-    color: var(--color-brass-light);
-  }
-  .pillar__flood :global(.pillar__arrow) {
-    color: var(--color-brass-light);
-    transition: transform 0.6s var(--ease-ui);
-  }
-  .pillar__row:focus-visible {
-    outline-offset: 4px;
-  }
-  .pillar__row:focus-visible .pillar__flood {
-    clip-path: inset(0% 0% 0% 0%);
-  }
-  .pillar__row:focus-visible .pillar__flood :global(.pillar__arrow) {
-    transform: translateX(12px);
-  }
-  @media (hover: hover) {
-    .pillar__row:hover .pillar__flood {
-      clip-path: inset(0% 0% 0% 0%);
+
+  @media (min-width: 900px) {
+    .svc {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      gap: clamp(1.5rem, 3vw, 3rem);
+      height: min(62svh, 560px);
+      min-height: 400px;
     }
-    .pillar__row:hover .pillar__flood :global(.pillar__arrow) {
-      transform: translateX(12px);
+    .svc__media {
+      aspect-ratio: auto;
+      height: 100%;
     }
   }
 
-  /* ================= Phones: tap to expand ================= */
-  .pillar__summary {
-    display: grid;
-    grid-template-columns: 4.25rem minmax(0, 1fr) 2.75rem;
-    align-items: center;
-    gap: 0.75rem;
-    min-height: 2.75rem;
-    padding-block: 1.25rem;
-    cursor: pointer;
-    list-style: none;
-  }
-  .pillar__summary::-webkit-details-marker {
-    display: none;
-  }
-  .pillar__toggle {
-    display: grid;
-    place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border: 1px solid var(--color-hairline);
-    border-radius: 999px;
-    color: var(--color-green);
-    transition:
-      transform var(--dur-tap) var(--ease),
-      background-color var(--dur-tap) var(--ease);
-  }
-  .pillar__fold[open] .pillar__toggle {
-    transform: rotate(45deg);
-    background: var(--color-green);
-    color: var(--color-ivory);
-  }
-  .pillar__fold-body {
-    display: grid;
-    gap: 0.6rem;
-    padding: 0 0 1.5rem 5rem;
-  }
-  .pillar__fold[open] .pillar__fold-body {
-    animation: fade-up var(--dur-reveal) var(--ease) both;
-  }
-  .pillar__more {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    min-height: 2.75rem;
-    font-weight: 600;
-    color: var(--color-green);
+  /* Onda's pile: sticky from 768px, each card 14px lower than the last. */
+  @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+    .svc {
+      position: sticky;
+      top: calc(clamp(80px, 12svh, 108px) + var(--i) * 14px);
+    }
   }
 </style>
 
 <script>
-  import { gsap, registerScene, revealTrigger, groupStagger, fadeUp } from '../../lib/tools';
-  import { GS } from '../../lib/motion';
+  import { gsap, registerScene, isPhone } from '../../lib/tools';
 
   registerScene('pillars', ({ reduce }) => {
-    const list = document.querySelector<HTMLElement>('[data-pillars]');
-    if (!list || reduce) return;
-    const rules = list.querySelectorAll('[data-pillar-rule]');
-    const rows = list.querySelectorAll('[data-pillar]');
-    gsap
-      .timeline({ scrollTrigger: revealTrigger(list) })
-      .fromTo(rules, { scaleX: 0 }, { scaleX: 1, duration: GS.dur.heading, ease: GS.ease.strong, stagger: groupStagger(rules.length, 0.08) }, 0)
-      .from(rows, { opacity: 0, ...fadeUp(), ease: GS.ease.reveal, stagger: groupStagger(rows.length, 0.08) }, 0.1);
+    const cards = [...document.querySelectorAll<HTMLElement>('[data-svc]')];
+    if (reduce || isPhone() || cards.length < 2) return;
+
+    // Sticky cards can't be measured where they sit, so work from their
+    // natural (un-stuck) positions: the deck's top plus the cards above.
+    const deck = document.querySelector<HTMLElement>('[data-svc-deck]')!;
+    const naturalTop = (k: number) => {
+      const gap = parseFloat(getComputedStyle(deck).rowGap) || 0;
+      let y = deck.getBoundingClientRect().top + window.scrollY;
+      for (let j = 0; j < k; j++) y += cards[j].offsetHeight + gap;
+      return y;
+    };
+    const stickyTop = (el: HTMLElement) => parseFloat(getComputedStyle(el).top) || 0;
+
+    // As card i+1 rises to its sticky slot, card i shrinks to 0.9 and darkens.
+    const tweens = cards.slice(0, -1).map((card, i) => {
+      const next = cards[i + 1];
+      const shade = card.querySelector<HTMLElement>('[data-svc-shade]')!;
+      return gsap
+        .timeline({
+          defaults: { ease: 'none' },
+          scrollTrigger: {
+            start: () => naturalTop(i + 1) - window.innerHeight,
+            end: () => naturalTop(i + 1) - stickyTop(next),
+            scrub: true,
+            invalidateOnRefresh: true,
+          },
+        })
+        .to(card, { scale: 0.9 }, 0)
+        .to(shade, { opacity: 0.55 }, 0);
+    });
+    return () => {
+      tweens.forEach((t) => t.kill());
+      gsap.set(cards, { clearProps: 'transform' });
+    };
   });
 </script>

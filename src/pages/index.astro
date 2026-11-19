@@ -1,6 +1,5 @@
 ---
 // Home page — one scroll, twelve sections in the brief's order.
-import { getImage } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Hero from '../components/home/Hero.astro';
 import Loader from '../components/Loader.astro';
@@ -14,27 +13,11 @@ import Gallery from '../components/home/Gallery.astro';
 import Testimonials from '../components/home/Testimonials.astro';
 import Insights from '../components/home/Insights.astro';
 import ContactSection from '../components/ContactSection.astro';
-import { heroPortrait } from '../lib/images';
 import { personSchema, websiteSchema } from '../lib/schema';
 
-// Preload the hero portrait (AVIF srcset) so it starts downloading with the HTML.
-const heroPreload = await getImage({
-  src: heroPortrait.src,
-  widths: heroPortrait.widths,
-  format: 'avif',
-});
 ---
 
 <Base navIntro jsonLd={[websiteSchema(), personSchema()]}>
-  <link
-    slot="head"
-    rel="preload"
-    as="image"
-    type="image/avif"
-    imagesrcset={heroPreload.srcSet.attribute}
-    imagesizes={heroPortrait.sizes}
-    fetchpriority="high"
-  />
   <Loader />
   <main id="main">
     <Hero />

@@ -1,36 +1,39 @@
 ---
 /**
- * Home §1 — Hero (Motion v2).
- * - The giant name is the h1; its letters rise out of masks (SplitText chars).
- * - The existing sentence continues under it as the lead ("…is an architect of
- *   enduring institutions."), "enduring" in green italic.
- * - Eyebrow rotates Educator · Author · Advisor · Speaker (2.5s, mask slide,
- *   pauses off-screen), twice through, then rests on "Educator" (WCAG 2.2.2:
- *   no motion longer than ~20s without a stop); screen readers get the list once.
- * - Portrait: clip-path wipe, then settles; warm duotone grade in CSS.
- * - Live "Mumbai · 21:27 IST" clock, a "Scroll" cue, and the credibility names
- *   as a slow marquee (stops on hover/focus; a plain list with JS off or
- *   reduced motion).
- * - Desktop: the hero pins and the next section ([data-sheet]) slides over it
- *   like a sheet of paper while the hero scales to 0.94 and dims. Phones: no
- *   pin; the sheet overlaps with a negative margin and a shadow.
+ * Home §1 — Hero (Onda layout, Motion v4).
+ * Built on the Onda studio template's hero: intro copy top-left, the giant
+ * name bottom-left, and a large "aperture" on the right. Onda's aperture is a
+ * purple ball that shrinks into the full stop of "Hello."; here it is the
+ * prism, which shrinks into a brass triangle that is the full stop after
+ * "Kapasi".
+ * - Desktop (scrubbed): the orbit ring fades, the beam and spectrum go out,
+ *   the glass fills with brass, and the prism travels and shrinks onto the
+ *   full stop while the intro lifts away. The travelling prism (lib/prism.ts)
+ *   then lifts off from that full stop ([data-hero-dock]) into the Manifesto.
+ * - Phones, tablets, reduced motion and JS off: the prism stays in place and
+ *   the full stop is a static brass triangle.
+ * - Eyebrow rotates Educator · Author · Advisor · Speaker twice, then rests.
+ * - Live "Mumbai · 21:27 IST" clock and the credibility marquee, as before.
  * Everything is visible in the HTML; GSAP sets start states at runtime only.
  * The intro waits for the loader (loader:done) when it is playing.
  */
 import site from '../../data/site.json';
-import { heroPortrait } from '../../lib/images';
-import BlurImage from '../BlurImage.astro';
 import Icon from '../Icon.astro';
-import InflectionLine from '../InflectionLine.astro';
 
 const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
+
+// Prism geometry, shared with Prism.astro / PrismTraveller.astro.
+const rays = [1, 2, 3, 4, 5, 6, 7];
+const exit = { x: 206, y: 92 };
+const endYs = [44, 60, 76, 92, 108, 124, 140];
+const glass = 'M180 28 L 236 140 L 124 140 Z';
 ---
 
 <section data-hero data-section="Introduction" class="hero" aria-labelledby="hero-title">
   <div class="hero__inner" data-hero-inner>
     <div class="hero__top container-content">
       <p class="hero__eyebrow" data-intro>
-        <InflectionLine variant="glyph" />
+        <span class="hero__tri" aria-hidden="true"></span>
         <span class="sr-only">{site.heroRolesSr}</span>
         <span class="hero__roles" aria-hidden="true" data-roles>
           {site.heroRoles.map((r, i) => <span class:list={['hero__role', { 'is-active': i === 0 }]}>{r}</span>)}
@@ -43,55 +46,57 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
       </p>
     </div>
 
-    <div class="hero__grid container-content">
-      <h1 id="hero-title" class="hero__name" data-hero-name data-intro>{site.heroName}</h1>
-      <!-- Travelling prism, first waypoint: small, beside the name, faint beam -->
-      <span class="hero__stop" data-prism-stop="hero" data-prism-scale="0.42" data-prism-beam="0.22" data-prism-anchor="right" data-prism-dx="-40" aria-hidden="true"></span>
-
-      <div class="hero__portrait">
-        <!-- Never hidden before the engine runs: the portrait is the LCP image. -->
-        <div class="hero__frame" data-hero-frame>
-          <BlurImage
-            src={heroPortrait.src}
-            alt={heroPortrait.alt}
-            sizes={heroPortrait.sizes}
-            widths={heroPortrait.widths}
-            position={heroPortrait.position}
-            priority
-            class="hero__img"
-          />
-          {heroPortrait.placeholder && <span class="placeholder-tag hero__ph">Placeholder portrait</span>}
+    <div class="hero__intro container-content" data-hero-intro>
+      <dl class="hero__status" data-intro data-hero-later>
+        <div>
+          <dt>Currently:</dt>
+          <dd>{site.currently}</dd>
         </div>
-      </div>
-
-      <div class="hero__text">
-        <p class="hero__lead" data-hero-lead data-intro>
-          {leadParts.map((part) => (part.startsWith('*') ? <em class="accent">{part.slice(1, -1)}</em> : part))}
-        </p>
-
-        <dl class="hero__status" data-intro data-hero-later>
-          <div>
-            <dt>Currently:</dt>
-            <dd>{site.currently}</dd>
-          </div>
-          <div>
-            <dt>Previously:</dt>
-            <dd>{site.previously}</dd>
-          </div>
-        </dl>
-
-        <div class="hero__line" data-hero-line>
-          <InflectionLine variant="hero" draw={false} />
+        <div>
+          <dt>Previously:</dt>
+          <dd>{site.previously}</dd>
         </div>
-
-        <div class="hero__actions" data-intro data-hero-later>
-          <a href={site.nav.cta.href} class="btn btn-primary" data-magnetic>
-            {site.nav.cta.label} <Icon name="arrow-right" size={18} class="btn-arrow" />
-          </a>
-          <a href="#books" class="btn btn-secondary">Explore the books</a>
-        </div>
+      </dl>
+      <div class="hero__actions" data-intro data-hero-later>
+        <a href={site.nav.cta.href} class="btn btn-primary" data-magnetic>
+          {site.nav.cta.label} <Icon name="arrow-right" size={18} class="btn-arrow" />
+        </a>
+        <a href="#books" class="btn btn-secondary">Explore the books</a>
       </div>
     </div>
+
+    <!-- The aperture: Onda's purple ball, re-cast as the prism (decorative). -->
+    <div class="hero__stage" data-hero-stage aria-hidden="true">
+      <div class="hero__swell" data-hero-swell data-intro>
+        <span class="hero__glow" data-hero-glow></span>
+        <span class="hero__orbit" data-hero-orbit><span class="hero__moon"></span></span>
+        <svg class="hero__prism" viewBox="0 0 400 180" fill="none" focusable="false">
+          <g data-hero-beam>
+            <path d="M0 112 L 150 98" class="hero__beam-halo"></path>
+            <path d="M0 112 L 150 98" class="hero__beam" data-hero-draw></path>
+          </g>
+          <path d={glass} class="hero__glass"></path>
+          <path d={`M150 98 L ${exit.x} ${exit.y}`} class="hero__inner-beam" data-hero-inner-beam></path>
+          <g data-hero-spectrum>
+            {rays.map((n, i) => (
+              <path d={`M${exit.x} ${exit.y} L 400 ${endYs[i]}`} stroke={`var(--color-spectrum-${n})`} class="hero__ray" data-hero-ray></path>
+            ))}
+          </g>
+          <path d={glass} class="hero__fill" data-hero-fill></path>
+        </svg>
+      </div>
+    </div>
+
+    <div class="hero__foot container-content">
+      <h1 id="hero-title" class="hero__name" data-hero-name data-intro>{site.heroName}<span class="hero__period" data-hero-period aria-hidden="true"></span></h1>
+      <p class="hero__lead" data-hero-lead data-intro>
+        {leadParts.map((part) => (part.startsWith('*') ? <em class="accent">{part.slice(1, -1)}</em> : part))}
+      </p>
+    </div>
+
+    <!-- Travelling-prism waypoint, moved onto the full stop at runtime (desktop):
+         the prism docks here, hidden, and lifts off into the Manifesto. -->
+    <span class="hero__dock" data-hero-dock data-prism-stop="hero" data-prism-opacity="0" data-prism-beam="0" data-prism-scale="0.35" data-prism-vy="0.15" aria-hidden="true"></span>
 
     <div class="hero__bottom" data-intro data-hero-later>
       <div class="hero__cred container-content">
@@ -114,14 +119,15 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
   .hero {
     position: relative;
     z-index: 0; /* the sheet after it (DOM order) paints above */
-    min-height: 100svh;
+    min-height: max(100svh, 560px);
+    overflow-x: clip; /* the spectrum fans past the right edge */
   }
   .hero__inner {
+    position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 100svh;
+    min-height: max(100svh, 560px);
     padding-top: calc(4.75rem + env(safe-area-inset-top));
-    transform-origin: 50% 30%;
   }
   @media (min-width: 1024px) {
     .hero__inner {
@@ -148,6 +154,12 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
     color: var(--color-stone);
     font-variant-numeric: tabular-nums;
   }
+  .hero__tri {
+    width: 0.7em;
+    height: 0.7em;
+    background: var(--color-brass);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
   .hero__roles {
     display: inline-grid;
     overflow: hidden;
@@ -162,76 +174,15 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
     opacity: 1;
   }
 
-  /* ---------- Name + portrait + text ---------- */
-  .hero__grid {
-    position: relative;
+  /* ---------- Intro (Onda: top-left) ---------- */
+  .hero__intro {
     display: grid;
-    gap: 1.5rem;
-    margin-top: 1.25rem;
-    flex: 1;
-    align-content: center;
-  }
-  .hero__name {
-    position: relative;
-    z-index: 2;
-    font-family: var(--font-serif);
-    font-weight: 700;
-    font-size: clamp(4rem, 1.4rem + 10.6vw, 12rem);
-    line-height: 0.88;
-    letter-spacing: -0.025em;
-    color: var(--color-ink);
-    text-wrap: balance;
-  }
-  .hero__portrait {
-    order: -1; /* phones: portrait above the name */
-  }
-  .hero__stop {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 1px;
-    height: 1px;
-  }
-  .hero__frame {
-    position: relative;
-    overflow: hidden;
-    border-radius: 8px;
-    height: clamp(11rem, 30svh, 20rem);
-  }
-  .hero__frame :global(.hero__img) {
-    height: 100%;
-  }
-  /* Warm duotone grade (CSS only): mono → warm, then a brass/green wash. */
-  .hero__frame :global(.blur-img__img) {
-    filter: grayscale(1) sepia(0.42) saturate(1.15) contrast(1.04) brightness(1.02);
-  }
-  .hero__frame::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(160deg, rgb(212 180 131 / 0.35), rgb(31 61 51 / 0.38));
-    mix-blend-mode: soft-light;
-    pointer-events: none;
-  }
-  .hero__ph {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    z-index: 1;
-    background: var(--color-ivory);
-  }
-
-  .hero__lead {
-    font-family: var(--font-serif);
-    font-weight: 600;
-    font-size: clamp(1.75rem, 1.3rem + 1.9vw, 3rem);
-    line-height: 1.1;
-    max-width: 22ch;
-    text-wrap: balance;
+    justify-items: start;
+    gap: 1.25rem;
+    margin-top: clamp(1.5rem, 5svh, 3.5rem);
   }
   .hero__status {
-    margin-top: 1.25rem;
-    max-width: 36rem;
+    max-width: 30rem;
     display: grid;
     gap: 0.3rem;
   }
@@ -244,12 +195,7 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
     margin: 0 0 0 0.3em;
     color: var(--color-stone);
   }
-  .hero__line {
-    margin-top: 1.25rem;
-    max-width: 22rem;
-  }
   .hero__actions {
-    margin-top: 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -261,10 +207,148 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
     }
   }
 
+  /* ---------- The aperture: prism, glow and orbit ring ---------- */
+  .hero__stage {
+    --ap: min(72vw, 40svh);
+    position: relative;
+    width: var(--ap);
+    height: var(--ap);
+    margin: clamp(1.5rem, 4svh, 3rem) auto 0;
+    pointer-events: none;
+  }
+  .hero__swell {
+    position: absolute;
+    inset: 0;
+  }
+  .hero__glow {
+    position: absolute;
+    inset: 8%;
+    border-radius: 50%;
+    /* Pre-blurred glow (no filters): brass light behind the glass. */
+    background: radial-gradient(closest-side, rgb(212 180 131 / 0.42), rgb(212 180 131 / 0.16) 55%, transparent 80%);
+  }
+  .hero__orbit {
+    position: absolute;
+    inset: 4%;
+    border-radius: 50%;
+    border: 1px solid var(--color-hairline);
+  }
+  .hero__moon {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 4.5%;
+    height: 4.5%;
+    margin: -2.25% 0 0 -2.25%;
+    border-radius: 50%;
+    background: var(--color-brass);
+  }
+  /* Orbit turns only while the hero is on screen and motion is allowed (JS adds .is-live). */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero.is-live .hero__orbit {
+      animation: hero-orbit 13s linear infinite;
+    }
+  }
+  @keyframes hero-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  /* The SVG is 1.5× the aperture, placed so the glass (a 42% square) sits dead
+     centre: the beam enters from outside the ring, the spectrum leaves it. */
+  .hero__prism {
+    position: absolute;
+    left: -17.5%;
+    top: 18.5%;
+    width: 150%;
+    height: auto;
+    overflow: visible;
+  }
+  .hero__glass {
+    stroke: var(--color-ink);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    fill: rgb(246 241 231 / 0.6);
+    vector-effect: non-scaling-stroke;
+  }
+  .hero__fill {
+    fill: var(--color-brass);
+    stroke: var(--color-brass);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    opacity: 0;
+  }
+  .hero__beam {
+    stroke: var(--color-ink);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .hero__beam-halo {
+    stroke: rgb(212 180 131 / 0.35);
+    stroke-width: 7;
+    stroke-linecap: round;
+  }
+  .hero__inner-beam {
+    stroke: var(--color-brass);
+    stroke-width: 1.25;
+    opacity: 0.7;
+    vector-effect: non-scaling-stroke;
+  }
+  .hero__ray {
+    stroke-width: 2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* ---------- Name (Onda: bottom-left, giant) + its brass full stop ---------- */
+  .hero__foot {
+    margin-top: auto;
+    padding-top: clamp(1.5rem, 4svh, 3rem);
+  }
+  .hero__name {
+    position: relative;
+    z-index: 2;
+    max-width: 4.6em; /* always two lines: "Saifuddin / Kapasi" */
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: clamp(3.5rem, 20vw, 9rem);
+    line-height: 0.86;
+    letter-spacing: -0.03em;
+    color: var(--color-ink);
+  }
+  .hero__period {
+    display: inline-block;
+    width: 0.2em;
+    height: 0.2em;
+    margin-left: 0.06em;
+    background: var(--color-brass);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    vertical-align: baseline;
+  }
+  .hero__lead {
+    margin-top: clamp(0.75rem, 2svh, 1.25rem);
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
+    line-height: 1.15;
+    max-width: 26ch;
+    text-wrap: balance;
+  }
+  .hero__dock {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+
   /* ---------- Bottom: credibility marquee + scroll cue ---------- */
   .hero__bottom {
     position: relative;
-    margin-top: 2rem;
+    margin-top: clamp(1.25rem, 3svh, 2rem);
     padding-bottom: 1.5rem;
     border-top: 1px solid var(--color-hairline);
   }
@@ -293,7 +377,6 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
     content: '·';
     margin-inline: 0.75rem;
   }
-  /* Runtime marquee (added by JS when motion is allowed). */
   .hero__marquee.is-marquee .hero__track {
     flex-wrap: nowrap;
     width: max-content;
@@ -304,23 +387,6 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
   }
   .hero__cue {
     display: none;
-  }
-  @media (min-width: 1024px) {
-    .hero__cue {
-      position: absolute;
-      right: max(var(--gutter), calc((100vw - 75rem) / 2));
-      bottom: 1.75rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.75rem;
-      min-height: 2.75rem;
-      font-size: var(--text-eyebrow);
-      font-weight: 600;
-      letter-spacing: var(--tracking-eyebrow);
-      text-transform: uppercase;
-      color: var(--color-stone);
-      text-decoration: none;
-    }
   }
   .hero__cue-line {
     position: relative;
@@ -336,36 +402,32 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
     transform-origin: top;
   }
 
-  /* ---------- Tablet & desktop layout ---------- */
-  @media (min-width: 768px) {
-    .hero__grid {
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      grid-template-rows: auto auto;
-      column-gap: 1.5rem;
-      row-gap: 0;
-      align-items: end;
+  /* ---------- Desktop (Onda landscape): aperture on the right ---------- */
+  @media (min-width: 1024px) {
+    .hero__stage {
+      --ap: min(32vw, 48svh);
+      position: absolute;
+      right: calc(max(var(--gutter), (100vw - 75rem) / 2) + 3vw);
+      top: calc(50% - var(--ap) / 2 - 1.5rem);
+      margin: 0;
     }
     .hero__name {
-      grid-column: 1 / -1;
-      grid-row: 1;
-      align-self: start;
+      font-size: min(13vw, 22svh);
     }
-    .hero__portrait {
-      order: 0;
-      grid-column: 8 / 13;
-      grid-row: 1 / 3;
-      align-self: start;
-      margin-top: clamp(3rem, 8vw, 9rem); /* the name overlaps the portrait's top */
-    }
-    .hero__frame {
-      height: min(calc(100svh - 22rem), 34rem);
-      min-height: 18rem;
-    }
-    .hero__text {
-      grid-column: 1 / 8;
-      grid-row: 2;
-      padding-top: 1.75rem;
-      padding-bottom: 0.5rem;
+    .hero__cue {
+      position: absolute;
+      right: max(var(--gutter), calc((100vw - 75rem) / 2));
+      bottom: 1.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-height: 2.75rem;
+      font-size: var(--text-eyebrow);
+      font-weight: 600;
+      letter-spacing: var(--tracking-eyebrow);
+      text-transform: uppercase;
+      color: var(--color-stone);
+      text-decoration: none;
     }
   }
 </style>
@@ -414,6 +476,24 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
     };
   }
 
+  /** Layout position of el inside ancestor (offsets ignore transforms). */
+  function offsetIn(el: HTMLElement, ancestor: HTMLElement) {
+    let x = 0;
+    let y = 0;
+    let n: HTMLElement | null = el;
+    while (n && n !== ancestor) {
+      x += n.offsetLeft;
+      y += n.offsetTop;
+      n = n.offsetParent as HTMLElement | null;
+    }
+    return { x, y };
+  }
+
+  /** The glass is a centred square, 42% of the aperture (see .hero__prism). */
+  const GLASS = 0.42;
+  /** Glass width of the travelling prism at scale 1 (360px × 112/400). */
+  const FLY_GLASS = 360 * (112 / 400);
+
   registerScene('hero', ({ reduce, desktop }) => {
     const hero = document.querySelector<HTMLElement>('[data-hero]');
     if (!hero) return;
@@ -425,12 +505,10 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
     const q = <T extends Element = HTMLElement>(s: string) => hero.querySelector<T>(s)!;
     const name = q('[data-hero-name]');
     const lead = q('[data-hero-lead]');
-    const underLoader = !!document.documentElement.dataset.loaderState;
-    const frame = q('[data-hero-frame]');
-    const img = frame.querySelector('img');
-    const linePath = q<SVGPathElement>('[data-hero-line] path');
-    // DrawSVG measures real length; the static component's pathLength=1 would skew it.
-    linePath.removeAttribute('pathLength');
+    const swell = q('[data-hero-swell]');
+    const draws = hero.querySelectorAll<SVGPathElement>('[data-hero-draw], [data-hero-inner-beam], [data-hero-ray]');
+    const rays = hero.querySelectorAll<SVGPathElement>('[data-hero-ray]');
+    const beamLines = hero.querySelectorAll<SVGPathElement>('[data-hero-draw], [data-hero-inner-beam]');
     const later = hero.querySelectorAll('[data-hero-later]');
     const top = hero.querySelectorAll('.hero__top [data-intro]');
     const nav = document.querySelector('[data-intro-nav]');
@@ -443,22 +521,20 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
       onComplete: () => {
         // Hand the text back to the browser so later resizes reflow naturally.
         nameSplit.revert();
+        gsap.set(draws, { clearProps: 'strokeDasharray,strokeDashoffset' });
+        // The full stop may sit a pixel or two differently once the split is gone.
+        ScrollTrigger.refresh();
       },
     });
-    // Portrait: under the first-visit loader (which covers the page) it wipes
-    // in; on every other visit it has already painted and simply stays put —
-    // it is never hidden, so the LCP image is never delayed.
-    if (underLoader)
-      tl.fromTo(frame, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.3, ease: GS.ease.strong }, 0.3).from(
-        img,
-        { scale: 1.15, duration: 1.7 },
-        0.3
-      );
+    // Onda's "swell": the aperture grows in with a slight overshoot while the
+    // name rises; then the beam draws in and the spectrum fans out.
     tl.from(nameSplit.chars, { yPercent: 110, duration: 1.1, stagger: GS.stagger.chars }, 0.1)
+      .from(swell, { scale: 0.6, autoAlpha: 0, duration: 1.1, ease: 'back.out(1.3)' }, 0.15)
+      .fromTo(beamLines, { drawSVG: '0%' }, { drawSVG: '100%', duration: 0.6, ease: 'power2.inOut', stagger: 0.2 }, 0.55)
+      .fromTo(rays, { drawSVG: '0%' }, { drawSVG: '100%', duration: 0.6, ease: 'power2.out', stagger: 0.06 }, 0.95)
       .from(top, { autoAlpha: 0, y: 12, duration: GS.dur.body, stagger: { amount: 0.2 } }, 0.35)
       .from(lead, { autoAlpha: 0, y: 16, duration: GS.dur.body }, 0.45)
-      .from(later, { autoAlpha: 0, y: 16, duration: GS.dur.body, stagger: { amount: 0.3 } }, 0.6)
-      .fromTo(linePath, { drawSVG: '0%' }, { drawSVG: '100%', duration: 1.2, ease: 'power2.inOut' }, 0.8);
+      .from(later, { autoAlpha: 0, y: 16, duration: GS.dur.body, stagger: { amount: 0.3 } }, 0.6);
     if (nav) tl.from(nav, { autoAlpha: 0, y: -8, duration: 0.8 }, 1.0);
 
     // Never under the loader or the page-transition curtain (Motion v3).
@@ -472,7 +548,16 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
       cleanups.push(() => document.removeEventListener('loader:done', play));
     } else play();
 
-    /* ---- Rotating eyebrow: two cycles, then it rests on the first role (pauses off-screen) ---- */
+    /* ---- Idle loops run only while the hero is on screen ---- */
+    ScrollTrigger.create({
+      trigger: hero,
+      start: 'top bottom',
+      end: 'bottom top',
+      onToggle: (s) => hero.classList.toggle('is-live', s.isActive),
+    });
+    cleanups.push(() => hero.classList.remove('is-live'));
+
+    /* ---- Rotating eyebrow: two cycles, then it rests on the first role ---- */
     const roles = [...hero.querySelectorAll<HTMLElement>('.hero__role')];
     if (roles.length > 1) {
       let i = 0;
@@ -494,7 +579,6 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
     const track = marquee?.querySelector<HTMLElement>('[data-marquee-track]');
     if (marquee && track) {
       const originals = [...track.children];
-      // A second copy makes the loop seamless; it is hidden from screen readers.
       originals.forEach((li) => {
         const c = li.cloneNode(true) as HTMLElement;
         c.setAttribute('aria-hidden', 'true');
@@ -527,16 +611,62 @@ const leadParts = site.heroLead.split(/(\*[^*]+\*)/).filter(Boolean);
       ScrollTrigger.create({ trigger: hero, start: 'top bottom', end: 'bottom top', onToggle: (st) => (st.isActive ? beat.resume() : beat.pause()) });
     }
 
-    /* ---- Desktop: pin + sheet slides over; hero scales to 0.94 and dims ---- */
+    /* ---- Desktop: the prism shrinks into the full stop (Onda's aperture) ---- */
     if (desktop) {
-      const inner = q('[data-hero-inner]');
-      // One trigger owns both the pin and the scale/dim, so they stay in step
-      // (a second trigger on a pinned element measures it after pinning).
-      gsap
-        .timeline({
-          scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', pin: true, pinSpacing: false, anticipatePin: 1, scrub: true },
-        })
-        .to(inner, { scale: 0.94, opacity: 0.35, ease: 'none' });
+      const stage = q('[data-hero-stage]');
+      const period = q('[data-hero-period]');
+      const dock = q('[data-hero-dock]');
+      const intro = q('[data-hero-intro]');
+
+      // Where the full stop is, relative to the aperture's centre, and how
+      // small the glass must get to match it. Read fresh each time: the name
+      // is split and reverted by the intro.
+      const geo = () => {
+        const p = hero.querySelector<HTMLElement>('[data-hero-period]')!;
+        const s = offsetIn(stage, hero);
+        const f = offsetIn(p, hero);
+        const ap = stage.offsetWidth;
+        const ps = p.offsetWidth;
+        return { x: f.x + ps / 2 - (s.x + ap / 2), y: f.y + ps / 2 - (s.y + ap / 2), scale: ps / (ap * GLASS) };
+      };
+      // The travelling prism's first waypoint sits on the full stop; it docks
+      // there (hidden) at the very scroll where this timeline ends, then lifts off.
+      const placeDock = () => {
+        const p = hero.querySelector<HTMLElement>('[data-hero-period]')!;
+        const f = offsetIn(p, hero);
+        const ps = p.offsetWidth;
+        Object.assign(dock.style, { left: `${f.x}px`, top: `${f.y}px`, width: `${ps}px`, height: `${ps}px` });
+        dock.dataset.prismScale = (ps / FLY_GLASS).toFixed(3);
+      };
+      placeDock();
+      ScrollTrigger.addEventListener('refreshInit', placeDock);
+
+      gsap.set(period, { autoAlpha: 0 }); // the shrunken prism becomes the full stop
+      const shrink = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: {
+          trigger: hero,
+          start: 'top top',
+          endTrigger: period,
+          end: 'center 15%', // = the dock's data-prism-vy
+          scrub: GS.scrub,
+          invalidateOnRefresh: true,
+        },
+      });
+      shrink
+        .to(stage, { x: () => geo().x, y: () => geo().y, duration: 1, ease: 'power1.inOut' }, 0)
+        .to(stage, { scale: () => geo().scale, duration: 1, ease: 'power3.in' }, 0)
+        .to(q('[data-hero-orbit]'), { autoAlpha: 0, duration: 0.3 }, 0)
+        .to(q('[data-hero-glow]'), { autoAlpha: 0, duration: 0.5 }, 0)
+        .to(intro, { y: -70, duration: 1, ease: 'power1.inOut' }, 0)
+        .to([q('[data-hero-beam]'), q('[data-hero-inner-beam]'), q('[data-hero-spectrum]')], { autoAlpha: 0, duration: 0.55 }, 0.1)
+        .to(q('[data-hero-fill]'), { opacity: 1, duration: 0.6, ease: 'power1.in' }, 0.3);
+
+      cleanups.push(() => {
+        ScrollTrigger.removeEventListener('refreshInit', placeDock);
+        gsap.set(period, { clearProps: 'all' });
+        dock.removeAttribute('style');
+      });
     }
 
     return () => cleanups.forEach((f) => f());

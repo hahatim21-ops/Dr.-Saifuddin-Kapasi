@@ -9,6 +9,11 @@
  * - Phones/tablets (and JS off, reduced motion): a native scroll-snap swipe row
  *   (the page itself never scrolls sideways), plus the counter.
  * Then a "Past audiences" line and the invitation button.
+ *
+ * Motion v4 (from Onda's "Selected work"): the stage sits on a green plate.
+ * On desktop the plate grows from a rounded inset to full width as the
+ * section arrives, and once the track has run, the cards tilt and fall out of
+ * the plate as it scrolls away. Phones/tablets: a static green plate.
  */
 import { getCollection } from 'astro:content';
 import home from '../../data/home.json';
@@ -37,6 +42,7 @@ const total = String(programmes.length).padStart(2, '0');
 
 <section id="speaking" class="speaking" aria-labelledby="speaking-title">
   <div class="speaking__stage" data-prog-stage>
+    <div class="speaking__plate" data-prog-plate aria-hidden="true"></div>
     <div class="container-content speaking__head">
       <SectionHeader eyebrow={t.eyebrow} id="speaking-title" title={t.title} intro={t.intro} />
     </div>
@@ -97,8 +103,40 @@ const total = String(programmes.length).padStart(2, '0');
   .speaking {
     padding-block: var(--section-space);
   }
+  /* Onda's plate: the stage is a green band with ivory cards on it. */
   .speaking__stage {
-    background: var(--color-ivory);
+    position: relative;
+    overflow: clip; /* the cards fall out of the plate, not over the page */
+    padding-block: clamp(3.5rem, 9vh, 6.5rem);
+    color: var(--color-ivory);
+  }
+  .speaking__plate {
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-green);
+    background-image: var(--grain);
+  }
+  .speaking__stage > :not(.speaking__plate) {
+    position: relative;
+  }
+  .speaking__stage :global(.eyebrow) {
+    color: var(--color-brass-light);
+  }
+  .speaking__stage :global(.section-header__title) {
+    color: var(--color-ivory);
+  }
+  .speaking__stage :global(.section-header__title .accent) {
+    color: var(--color-brass-light);
+  }
+  .speaking__stage :global(.section-header__intro),
+  .speaking__stage .prog-hint {
+    color: rgb(246 241 231 / 0.82);
+  }
+  .speaking__stage :global(:focus-visible) {
+    outline-color: var(--color-brass-light);
+  }
+  .prog-card {
+    color: var(--color-ink);
   }
 
   /* ---------- Track (native swipe row; pinned + translated on desktop) ---------- */
@@ -239,7 +277,7 @@ const total = String(programmes.length).padStart(2, '0');
   .prog-meter__count {
     font-size: var(--text-small);
     font-weight: 600;
-    color: var(--color-stone);
+    color: var(--color-brass-light);
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.06em;
   }
@@ -248,12 +286,12 @@ const total = String(programmes.length).padStart(2, '0');
     flex: 1;
     max-width: 20rem;
     height: 1px;
-    background: var(--color-hairline);
+    background: var(--color-hairline-on-green);
   }
   .prog-meter__fill {
     position: absolute;
     inset: 0;
-    background: var(--color-brass);
+    background: var(--color-brass-light);
     transform: scaleX(0.2);
     transform-origin: left center;
   }
@@ -353,6 +391,41 @@ const total = String(programmes.length).padStart(2, '0');
       },
     });
     const st = tween.scrollTrigger!;
+
+    /* Onda: the plate grows from a rounded inset to full width as it arrives. */
+    const plate = stage.querySelector<HTMLElement>('[data-prog-plate]');
+    if (plate)
+      gsap.fromTo(
+        plate,
+        { clipPath: 'inset(0% 3.2% 0% 3.2% round 44px)' },
+        {
+          clipPath: 'inset(0% 0% 0% 0% round 0px)',
+          ease: 'power1.out',
+          scrollTrigger: { trigger: stage, start: 'top bottom', end: 'top 15%', scrub: true },
+        }
+      );
+
+    /* Onda: once the track has run, the cards sweep left, tilt and fall out of
+       the plate while it scrolls away (no extra pin). The last card falls least. */
+    gsap
+      .timeline({
+        defaults: { ease: 'power1.in' },
+        scrollTrigger: {
+          start: () => st.end,
+          end: () => st.end + window.innerHeight * 0.7,
+          scrub: GS.scrub,
+          invalidateOnRefresh: true,
+        },
+      })
+      .to(
+        cards,
+        {
+          x: (i: number) => -window.innerWidth * (0.2 + 0.03 * (n - 1 - i)),
+          y: (i: number) => window.innerHeight * (0.3 + 0.1 * (n - 1 - i)),
+          rotation: (i: number) => -(8 + 7 * (n - 1 - i)),
+        },
+        0
+      );
     const scrollToX = (x: number, immediate = false) => {
       const d = distance();
       const y = st.start + (d ? gsap.utils.clamp(0, d, x) / d : 0) * (st.end - st.start);
@@ -421,6 +494,7 @@ const total = String(programmes.length).padStart(2, '0');
       track.removeEventListener('click', click, true);
       track.removeEventListener('dragstart', noDrag);
       gsap.set(cards, { clearProps: 'transform' });
+      if (plate) gsap.set(plate, { clearProps: 'clipPath' });
     };
     }, { pins: true });
   });
