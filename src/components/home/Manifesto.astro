@@ -9,12 +9,24 @@
  * Only opacity animates: a dim, aria-hidden brass copy of the text sits under
  * the real (ivory) text, whose words fade from 0 to 1. With JS off or reduced
  * motion the real text is simply fully visible.
+ *
+ * Motion v4 (Onda's "statement"): the quote is set as its two clauses. As the
+ * band arrives (desktop), clause 1 slides in from (-6%, 85%) and clause 2 from
+ * (9%, 85%), 8.4vh later; both land before the pin starts, so they never fight
+ * the word light-up. The full stop is the hero's brass triangle; it scales in
+ * once the last word has lit. Phones: no slides, the triangle scales in at the
+ * end of the light-up.
  */
 import home from '../../data/home.json';
 import Eyebrow from '../Eyebrow.astro';
 import InflectionEdge from '../InflectionEdge.astro';
 
 const m = home.manifesto;
+// The two clauses ("…by chance," / "they are … designed"); the closing full
+// stop is drawn as the brass triangle instead of a glyph.
+const quote = m.quote.replace(/\.\s*$/, '');
+const cut = quote.indexOf(', ');
+const clauses = cut > 0 ? [quote.slice(0, cut + 1), quote.slice(cut + 2)] : [quote];
 ---
 
 <div class="mani-sheet" data-sheet>
@@ -30,8 +42,22 @@ const m = home.manifesto;
         <h2 id="mani-title" class="sr-only">{m.eyebrow}</h2>
         <Eyebrow as="p">{m.eyebrow}</Eyebrow>
         <blockquote class="mani__quote">
-          <p class="mani__ghost" aria-hidden="true">{m.quote}</p>
-          <p class="mani__text" data-mani-text>{m.quote}</p>
+          <p class="mani__ghost" aria-hidden="true">
+            {clauses.map((c, i) => (
+              <span class="mani__line" data-mani-line={i}>
+                {c}
+                {i === clauses.length - 1 && <span class="mani__dot is-ghost" />}
+              </span>
+            ))}
+          </p>
+          <p class="mani__text" data-mani-text>
+            {clauses.map((c, i) => (
+              <span class="mani__line" data-mani-line={i}>
+                {c}
+                {i === clauses.length - 1 && <span class="mani__dot" data-mani-dot aria-hidden="true" />}
+              </span>
+            ))}
+          </p>
           <footer class="mani__by">— {m.attribution}</footer>
         </blockquote>
         <p class="mani__signoff">{m.signOff}</p>
@@ -99,6 +125,22 @@ const m = home.manifesto;
     position: relative;
     color: var(--color-ivory);
   }
+  .mani__line {
+    display: block;
+  }
+  /* The hero's brass triangle full stop. */
+  .mani__dot {
+    display: inline-block;
+    width: 0.2em;
+    height: 0.2em;
+    margin-left: 0.06em;
+    background: var(--color-brass-light);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    transform-origin: 50% 80%;
+  }
+  .mani__dot.is-ghost {
+    visibility: hidden; /* keeps the dim copy wrapping exactly like the text */
+  }
   /* The dim layer the ivory words light up over (only seen once JS hides them). */
   .mani__ghost {
     position: absolute;
@@ -125,6 +167,7 @@ const m = home.manifesto;
 
 <script>
   import { gsap, splitText, registerScene } from '../../lib/tools';
+  import type { ScrollTrigger } from 'gsap/ScrollTrigger';
 
   registerScene('manifesto', ({ reduce, desktop }) => {
     const section = document.querySelector<HTMLElement>('#manifesto');
@@ -133,34 +176,58 @@ const m = home.manifesto;
     const pin = section.querySelector<HTMLElement>('[data-mani-pin]')!;
 
     // Words (not lines), so wrapping changes don't matter; aria keeps the sentence whole.
+    const dot = section.querySelector<HTMLElement>('[data-mani-dot]');
     const split = splitText(text, { type: 'words' });
     gsap.set(split.words, { opacity: 0 });
+    if (dot) gsap.set(dot, { scale: 0 });
+
+    // The words light up one after another; the brass full stop lands last.
+    const lightUp = (scrollTrigger: ScrollTrigger.Vars) => {
+      const tl = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger });
+      tl.to(split.words, { opacity: 1, stagger: 0.1 }, 0);
+      if (dot) tl.to(dot, { scale: 1, duration: 0.35, ease: 'back.out(2)' });
+      return tl;
+    };
 
     if (desktop) {
+      // Onda's statement: the two clauses slide in from opposite sides while
+      // the band arrives (Onda: cover 0 → 56vh, the second 8.4vh later).
+      const enter = () => section.getBoundingClientRect().top + window.scrollY - window.innerHeight;
+      const lines = [0, 1].map((i) => section.querySelectorAll<HTMLElement>(`[data-mani-line="${i}"]`));
+      const from = [{ xPercent: -6, yPercent: 85 }, { xPercent: 9, yPercent: 85 }];
+      lines.forEach((pair, i) => {
+        if (!pair.length) return;
+        gsap.fromTo(pair, from[i], {
+          xPercent: 0,
+          yPercent: 0,
+          ease: 'power2.out', // Onda: cubic-bezier(.333, 1, .667, 1)
+          scrollTrigger: {
+            trigger: section,
+            // In scroll px: the band's top enters at the bottom of the screen = 0.
+            start: () => enter() + window.innerHeight * 0.084 * i,
+            end: () => enter() + window.innerHeight * (0.56 + 0.084 * i),
+            scrub: true,
+            invalidateOnRefresh: true,
+          },
+        });
+      });
       // Pinned ~100vh: the words light up across the pin.
-      gsap.to(split.words, {
-        opacity: 1,
-        ease: 'none',
-        stagger: 0.1,
-        scrollTrigger: {
-          trigger: pin,
-          start: 'top top',
-          end: () => '+=' + window.innerHeight, // Motion v3: ~100vh (was 150)
-          pin: true,
-          anticipatePin: 1,
-          scrub: 0.8,
-          invalidateOnRefresh: true,
-        },
+      lightUp({
+        trigger: pin,
+        start: 'top top',
+        end: () => '+=' + window.innerHeight, // Motion v3: ~100vh (was 150)
+        pin: true,
+        anticipatePin: 1,
+        scrub: 0.8,
+        invalidateOnRefresh: true,
       });
     } else {
-      // Phones/tablets: no pin; light up as the paragraph passes through.
-      gsap.to(split.words, {
-        opacity: 1,
-        ease: 'none',
-        stagger: 0.1,
-        scrollTrigger: { trigger: text, start: 'top 85%', end: 'bottom 40%', scrub: 0.8 },
-      });
+      // Phones/tablets: no pin, no slides; light up as the paragraph passes through.
+      lightUp({ trigger: text, start: 'top 85%', end: 'bottom 40%', scrub: 0.8 });
     }
-    return () => split.revert();
+    return () => {
+      split.revert();
+      if (dot) gsap.set(dot, { clearProps: 'transform' });
+    };
   });
 </script>
