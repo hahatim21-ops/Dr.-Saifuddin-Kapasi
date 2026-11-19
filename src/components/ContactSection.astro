@@ -12,11 +12,16 @@
  * Motion v2 (home): a giant display line, "Let's build something enduring.",
  * rises in word by word above the section header; the submit button is
  * magnetic on desktop.
+ * Motion v4 (Onda's "contact"), desktop with motion: as the line scrolls in it
+ * scales 0.82 → 1 and gains weight. Cormorant is loaded only at 600 and 700
+ * (no variable font), so the weight change is a crossfade: a 700 copy of each
+ * word, centred over its 600 word, fades in late in the range. The full stop
+ * is the brass triangle (as in the hero and Manifesto); it scales in and drops
+ * into place at the end. Phones: the fade-up only.
  */
 import home from '../data/home.json';
 import site from '../data/site.json';
 import Icon from './Icon.astro';
-import RevealWords from './RevealWords.astro';
 import SectionHeader from './SectionHeader.astro';
 
 interface Props {
@@ -36,6 +41,12 @@ const accessKey = import.meta.env.PUBLIC_WEB3FORMS_KEY ?? '';
 const tel = `tel:${c.phone.replace(/[^\d+]/g, '')}`;
 // Keep heading order: h1 → h2 on /contact, h2 → h3 inside the home page.
 const DirectTag = asPageTitle ? 'h2' : 'h3';
+// The display line without its closing full stop (drawn as the brass triangle).
+const displayParts = t.display
+  .replace(/\.\s*$/, '')
+  .split(/(\*[^*]+\*)/)
+  .filter(Boolean)
+  .map((p) => (p.startsWith('*') && p.endsWith('*') ? { text: p.slice(1, -1), accent: true } : { text: p, accent: false }));
 ---
 
 <section id="contact" class:list={['contact', { 'contact--page': asPageTitle }]} aria-labelledby="contact-title" data-dock-stop>
@@ -48,7 +59,10 @@ const DirectTag = asPageTitle ? 'h2' : 'h3';
         </header>
       ) : (
         <>
-          <RevealWords as="p" text={t.display} class="contact__display" />
+          <p class="reveal-split contact__display" data-reveal data-contact-voice>
+            {displayParts.map((p) => (p.accent ? <em class="accent">{p.text}</em> : p.text))}
+            <span class="contact__dot" data-contact-dot aria-hidden="true" />
+          </p>
           <SectionHeader eyebrow={t.eyebrow} id="contact-title" title={t.title} intro={t.intro} />
         </>
       )
@@ -176,6 +190,28 @@ const DirectTag = asPageTitle ? 'h2' : 'h3';
     letter-spacing: -0.02em;
     max-width: 14ch;
     text-wrap: balance;
+  }
+
+  .contact__dot {
+    display: inline-block;
+    width: 0.2em;
+    height: 0.2em;
+    margin-left: 0.06em;
+    background: var(--color-brass);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  /* The weight crossfade (built by the scene): a 700 copy over each word. */
+  .contact :global(.cv__w) {
+    position: relative;
+  }
+  .contact :global(.cv__b) {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    font-weight: 700;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    opacity: 0;
   }
 
   .contact {
@@ -395,6 +431,58 @@ const DirectTag = asPageTitle ? 'h2' : 'h3';
 </style>
 
 <script>
+  import { gsap, splitText, registerScene } from '../lib/tools';
+
+  registerScene('contact-voice', ({ desktop, reduce }) => {
+    const voice = document.querySelector<HTMLElement>('[data-contact-voice]');
+    if (!voice || reduce || !desktop) return;
+    const dot = voice.querySelector<HTMLElement>('[data-contact-dot]');
+
+    // Words, each with a centred 700-weight copy over it.
+    const split = splitText(voice, { type: 'words' });
+    const regular: HTMLElement[] = [];
+    const bold: HTMLElement[] = [];
+    split.words.forEach((w) => {
+      const word = w as HTMLElement;
+      const text = word.textContent ?? '';
+      word.classList.add('cv__w');
+      const r = document.createElement('span');
+      r.textContent = text;
+      const b = document.createElement('span');
+      b.className = 'cv__b';
+      b.setAttribute('aria-hidden', 'true');
+      b.textContent = text;
+      word.replaceChildren(r, b);
+      regular.push(r);
+      bold.push(b);
+    });
+
+    // Onda: cover 0 → 85vh, the full stop over the last quarter (63.75 → 85vh).
+    const enter = () => voice.getBoundingClientRect().top + window.scrollY - window.innerHeight;
+    const tl = gsap.timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: { start: enter, end: () => enter() + window.innerHeight * 0.85, scrub: true, invalidateOnRefresh: true },
+    });
+    tl.fromTo(voice, { scale: 0.82, transformOrigin: '0% 100%' }, { scale: 1, duration: 1 }, 0)
+      // The weight swells late: the 700 cut fades in over the 600 cut (which
+      // stays solid, so the line never looks washed out), then the 600 cut
+      // drops away underneath.
+      .to(bold, { opacity: 1, duration: 0.25 }, 0.55)
+      .set(regular, { opacity: 0 }, 0.8);
+    if (dot)
+      tl.fromTo(dot, { scale: 0, yPercent: -400 }, { scale: 1, duration: 0.25, ease: 'power1.in' }, 0.75).fromTo(
+        dot,
+        { yPercent: -400 },
+        { yPercent: 0, duration: 0.25, ease: 'power2.in' },
+        0.75
+      );
+
+    return () => {
+      tl.kill();
+      split.revert();
+      gsap.set([voice, dot], { clearProps: 'transform' });
+    };
+  });
 
   import { onPageLoad } from '../lib/page';
   function setup() {
