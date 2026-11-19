@@ -2,6 +2,14 @@
 /**
  * Home §11 — Insights: a numbered index of the three latest articles
  * (InsightsList).
+ *
+ * Motion v4 (Onda's "journal"), desktop with motion allowed: the list sits
+ * beside a sticky frame. The articles have no photos (and none are invented),
+ * so the frame holds a typographic cover per article — its number, title and
+ * date on green. As each row reaches the middle of the screen, its cover opens
+ * over the last with Onda's circle wipe (clip-path circle 0% → 75%, scrubbed).
+ * The frame is decorative (aria-hidden); the list carries every word. Phones,
+ * reduced motion and JS off: the list alone, as before.
  */
 import { getCollection } from 'astro:content';
 import home from '../../data/home.json';
@@ -12,6 +20,7 @@ const t = home.insights;
 const latest = (await getCollection('insights'))
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
   .slice(0, 3);
+const fmt = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 ---
 
 <section id="insights" class="insights" aria-labelledby="insights-title">
@@ -23,7 +32,23 @@ const latest = (await getCollection('insights'))
       </a>
     </div>
 
-    <InsightsList articles={latest} />
+    <div class="ins__body" data-ins>
+      <div class="ins__frame" aria-hidden="true" data-ins-frame>
+        {
+          latest.map((a, i) => (
+            <div class="ins__cover" data-ins-cover>
+              <span class="ins__cover-num">{String(i + 1).padStart(2, '0')}</span>
+              <span class="ins__cover-title">{a.data.title}</span>
+              <span class="ins__cover-date">{fmt.format(a.data.date)}</span>
+              <span class="ins__cover-tri" />
+            </div>
+          ))
+        }
+      </div>
+      <div class="ins__list">
+        <InsightsList articles={latest} />
+      </div>
+    </div>
   </div>
 </section>
 
@@ -52,4 +77,126 @@ const latest = (await getCollection('insights'))
     color: var(--color-green);
   }
 
+
+  /* ---------- Onda's journal frame (desktop, scene running) ---------- */
+  .ins__frame {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .ins__body.is-live {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      column-gap: clamp(2.5rem, 6vw, 6rem);
+      align-items: start;
+      margin-top: clamp(2.5rem, 5vw, 4rem);
+    }
+    .ins__body.is-live .ins__frame {
+      position: sticky;
+      top: 20svh;
+      display: block;
+      height: 60svh;
+      overflow: hidden;
+      border-radius: 20px;
+    }
+    /* Rows get Onda's breathing room, and the phone-style two-line layout
+       suits the narrower column. */
+    .ins__body.is-live :global(.idx) {
+      margin-top: 0;
+    }
+    .ins__body.is-live :global(.idx__link) {
+      grid-template-columns: auto 1fr auto;
+      grid-template-areas:
+        'num  meta  arrow'
+        'main main  main';
+      align-items: center;
+      row-gap: 1rem;
+      padding-block: clamp(3rem, 11svh, 6.5rem);
+    }
+    .ins__body.is-live :global(.idx__meta) {
+      justify-content: flex-start;
+      text-align: left;
+    }
+  }
+  .ins__cover {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: clamp(1.75rem, 3vw, 2.75rem);
+    background-color: var(--color-green);
+    background-image: var(--grain);
+    color: var(--color-ivory);
+  }
+  .ins__cover:nth-child(2) {
+    background-color: var(--color-green-deep);
+  }
+  .ins__cover-num {
+    position: absolute;
+    top: clamp(1rem, 2vw, 1.75rem);
+    left: clamp(1.5rem, 3vw, 2.5rem);
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(7rem, 12vw, 13rem);
+    line-height: 0.85;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--color-brass);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .ins__cover-title {
+    max-width: 18ch;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: clamp(1.75rem, 1rem + 1.6vw, 2.75rem);
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  .ins__cover-date {
+    font-size: var(--text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-brass-light);
+  }
+  .ins__cover-tri {
+    position: absolute;
+    right: clamp(1.25rem, 2.5vw, 2rem);
+    bottom: clamp(1.25rem, 2.5vw, 2rem);
+    width: 1.1rem;
+    height: 1.1rem;
+    background: var(--color-brass);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
 </style>
+
+<script>
+  import { gsap, registerScene } from '../../lib/tools';
+
+  registerScene('insights-journal', ({ desktop, reduce }) => {
+    const body = document.querySelector<HTMLElement>('[data-ins]');
+    if (!body || reduce || !desktop || !matchMedia('(min-width: 1024px)').matches) return;
+    const covers = [...body.querySelectorAll<HTMLElement>('[data-ins-cover]')];
+    const rows = [...body.querySelectorAll<HTMLElement>('.idx__row:not(.idx__row--end)')];
+    if (covers.length < 2) return;
+    body.classList.add('is-live');
+
+    // Onda: cover i opens while row i's top moves from 84% to 50% of the screen.
+    const tweens = covers.slice(1).map((cover, k) =>
+      gsap.fromTo(
+        cover,
+        { clipPath: 'circle(0% at 50% 50%)' },
+        {
+          clipPath: 'circle(75% at 50% 50%)',
+          ease: 'sine.inOut', // Onda: cubic-bezier(.45, 0, .55, 1)
+          scrollTrigger: { trigger: rows[k + 1], start: 'top 84%', end: 'top 50%', scrub: true },
+        }
+      )
+    );
+    return () => {
+      tweens.forEach((t) => t.kill());
+      gsap.set(covers, { clearProps: 'clipPath' });
+      body.classList.remove('is-live');
+    };
+  });
+</script>
