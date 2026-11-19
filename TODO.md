@@ -242,9 +242,24 @@ Brief: MOTION_V4_PROMPT.md — Onda studio template's motion (not its look), reb
   under the next card → focus scrolls back to where that card is uncovered. No stale references to the old fold/flood
 - [x] Step 1c Speaking — tested as drafted (plate clip, pin, counter, drag, keyboard, fall + reverse, clipped by the
   stage); no changes needed
-- [ ] STOP — waiting for review of step 1 screenshots
-- [ ] Step 2 — Manifesto ← statement · Arc ← method (STOP) · Testimonials ← again (STOP) · Gallery ← studio ·
-  Insights ← journal · Contact ← contact (ask before any variable font) · Footer prism
+- [x] Step 1 reviewed and approved
+- [x] Step 2 Manifesto ← Onda "statement": the quote is set as its two clauses; on desktop they slide in from
+  (-6%, 85%) and (9%, 85%) as the band arrives (Onda's 0 → 56vh, the second 8.4vh later) and land before the pin,
+  so the word light-up is untouched. The closing full stop is the hero's brass triangle, scaling in after the last
+  word lights. Phones: no slides; the triangle lands at the end of the light-up. Reduced motion / JS off: static
+- [x] Step 2 Arc ← Onda "method": a ring under the chapter summary (desktop stage, ≥1024px) draws itself with
+  reading progress (same range as the brass rail) while a runner goes round; each chapter has a station placed
+  where that chapter starts along the timeline, so the runner meets it exactly as the chapter heading reaches the
+  centre line, and the station swells 0.4 → 1.35 → 1 and fills brass. The stage's chapter title now switches on the
+  heading too (it used to wait for the chapter's first entry), and going down the year rolls to that chapter's
+  first year with it (both directions checked on desktop and the phone chip). Measured (median of 3, step 1 → now):
+  desktop 55 → 55fps, phone 59 → 59fps at 4× throttle; Lighthouse mobile 98 → 98, a11y 100, LCP ~1.1s, CLS ≤ 0.002;
+  PageDown through home: 0 stuck presses. Still CSS sticky: no pin added. Year odometer kept.
+  Onda's step "light-up" (text at 0.2 opacity until reached) left out: dim body text would fail contrast. The arc
+  draws with stroke-dashoffset (a small SVG repaint), like the existing DrawSVG lines
+- [ ] STOP — waiting for review of Manifesto + Arc
+- [ ] Step 2 — Testimonials ← again (STOP) · Gallery ← studio · Insights ← journal · Contact ← contact (ask before
+  any variable font) · Footer prism
 
 ## Temporary build scaffolding (remove in later stages)
 

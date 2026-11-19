@@ -11,6 +11,13 @@
  *   draw in and a brass underline sweep.
  * The stage and chip are decorative duplicates (aria-hidden), shown only once
  * the scene runs; with JS off or reduced motion the list carries everything.
+ *
+ * Motion v4 (Onda's "method" ring): under the chapter summary, a ring draws
+ * itself as you read the timeline (same range as the brass rail), a runner
+ * circles it, and each chapter has a station on the ring at the point where
+ * that chapter starts. A station swells (0.4 → 1.35 → 1) and fills brass as its
+ * chapter reaches the centre line. Desktop stage only (≥1024px); the sticky
+ * column is CSS sticky, so this adds no pin.
  */
 import { getCollection } from 'astro:content';
 import SectionHeader from '../SectionHeader.astro';
@@ -33,6 +40,12 @@ const chapters = chapterEntries.map((c, i) => ({
     .map((t) => t.data),
 }));
 const first = chapters[0];
+// Fallback station angles (evenly spaced); the scene moves each station to
+// where its chapter actually starts along the timeline.
+const stationAt = (i: number) => {
+  const a = (i / chapters.length) * Math.PI * 2;
+  return `--x:${Math.sin(a).toFixed(4)};--y:${(-Math.cos(a)).toFixed(4)}`;
+};
 const firstYear = String(first.entries[0]?.startYear ?? '');
 ---
 
@@ -62,6 +75,18 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
             <span class="arc__chapter-mask"><span class="arc__chapter-title" data-arc-title>{first.title}</span></span>
           </p>
           <p class="arc__summary" data-arc-summary>{first.summary}</p>
+          <div class="arc__ring" data-arc-ring>
+            <svg class="arc__ring-svg" viewBox="0 0 200 200" focusable="false">
+              <circle class="arc__ring-track" cx="100" cy="100" r="85"></circle>
+              <circle class="arc__ring-arc" cx="100" cy="100" r="85" data-arc-ring-arc></circle>
+            </svg>
+            {chapters.map((_, i) => (
+              <span class="arc__station" style={stationAt(i)} data-arc-station>
+                <span class="arc__station-fill" />
+              </span>
+            ))}
+            <span class="arc__arm" data-arc-arm><span class="arc__runner"></span></span>
+          </div>
         </div>
       </div>
 
@@ -377,6 +402,65 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
       max-width: 38ch;
       color: var(--color-stone);
     }
+    /* Onda's method ring (decorative). r = 85/200 = 42.5% of the box. */
+    .arc__ring {
+      position: relative;
+      width: clamp(9rem, 24svh, 15rem);
+      aspect-ratio: 1;
+      margin-top: clamp(1.5rem, 4svh, 2.5rem);
+    }
+    .arc__ring-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      overflow: visible;
+      transform: rotate(-90deg); /* the arc starts at 12 o'clock */
+    }
+    .arc__ring-track {
+      fill: none;
+      stroke: var(--color-hairline);
+      stroke-width: 1.5;
+    }
+    .arc__ring-arc {
+      fill: none;
+      stroke: var(--color-brass);
+      stroke-width: 4;
+      stroke-linecap: round;
+    }
+    .arc__station {
+      position: absolute;
+      left: calc(50% + 42.5% * var(--x));
+      top: calc(50% + 42.5% * var(--y));
+      width: 9%;
+      height: 9%;
+      margin: -4.5% 0 0 -4.5%;
+      border: 1px solid var(--color-brass);
+      border-radius: 50%;
+      background: var(--color-ivory);
+    }
+    .arc__station-fill {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: var(--color-brass);
+    }
+    .arc__arm {
+      position: absolute;
+      inset: 7.5%;
+    }
+    .arc__runner {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 15%;
+      height: 15%;
+      margin: -7.5% 0 0 -7.5%;
+      border: 2px solid var(--color-brass);
+      border-radius: 50%;
+      background: var(--color-ivory);
+    }
     /* The stage shows the chapter summary; the list keeps title + years. */
     .arc__grid.is-live .arc__ch-summary {
       display: none;
@@ -427,18 +511,19 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
     // Motion v3: the year snaps to each entry (a short, decisive roll) and
     // that entry's dot fills, instead of a long drift between years.
     let currentEntry: HTMLElement | null = null;
+    const setYear = (y: string) => {
+      if (!y || y === currentYear) return;
+      currentYear = y;
+      year.set(y, { duration: 0.45, stagger: 0.025 });
+      chip.set(y, { duration: 0.35, stagger: 0.02 });
+    };
     const activate = (entry: HTMLElement) => {
       if (currentEntry !== entry) {
         currentEntry?.classList.remove('is-current');
         entry.classList.add('is-current');
         currentEntry = entry;
       }
-      const y = entry.dataset.year ?? '';
-      if (y !== currentYear) {
-        currentYear = y;
-        year.set(y, { duration: 0.45, stagger: 0.025 });
-        chip.set(y, { duration: 0.35, stagger: 0.02 });
-      }
+      setYear(entry.dataset.year ?? '');
       setChapter(entry.closest<HTMLElement>('[data-arc-chapter]')!);
     };
 
@@ -453,6 +538,20 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
       gsap.from(entry, { opacity: 0, ...fadeUp(), scrollTrigger: revealTrigger(entry) });
     });
 
+    // Motion v4: the chapter also switches when its heading crosses the line,
+    // in step with the ring's station (not only at its first entry).
+    grid.querySelectorAll<HTMLElement>('[data-arc-chapter]').forEach((block) =>
+      ScrollTrigger.create({
+        trigger: block,
+        start: 'top 55%',
+        end: 'bottom 55%',
+        onToggle: (self) => self.isActive && setChapter(block),
+        // Going down, the year rolls to the chapter's first year with it
+        // (going up, the entries above drive it as before).
+        onEnter: () => setYear(block.querySelector<HTMLElement>('[data-arc-entry]')?.dataset.year ?? ''),
+      })
+    );
+
     // The brass line fills with reading progress.
     const fill = grid.querySelector('[data-arc-fill]');
     if (fill)
@@ -461,6 +560,61 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
         { scaleY: 0 },
         { scaleY: 1, ease: 'none', scrollTrigger: { trigger: grid.querySelector('[data-arc-track]'), start: 'top 55%', end: 'bottom 55%', scrub: GS.scrub } }
       );
+
+    // Onda's method ring (desktop stage only).
+    const ring = grid.querySelector<HTMLElement>('[data-arc-ring]');
+    const track = grid.querySelector<HTMLElement>('[data-arc-track]');
+    const ringCleanups: Array<() => void> = [];
+    if (ring && track && matchMedia('(min-width: 1024px)').matches) {
+      const blocks = [...grid.querySelectorAll<HTMLElement>('[data-arc-chapter]')];
+      const stations = [...ring.querySelectorAll<HTMLElement>('[data-arc-station]')];
+      // Where chapter i starts along the track, 0–1 (= the ring's progress
+      // when that chapter's top crosses the 55% line).
+      const at = (i: number) => {
+        const t = track.getBoundingClientRect();
+        return gsap.utils.clamp(0, 1, (blocks[i].getBoundingClientRect().top - t.top) / t.height);
+      };
+      const placeStations = () =>
+        stations.forEach((st, i) => {
+          if (!blocks[i]) return;
+          const a = at(i) * Math.PI * 2;
+          st.style.setProperty('--x', Math.sin(a).toFixed(4));
+          st.style.setProperty('--y', (-Math.cos(a)).toFixed(4));
+        });
+      placeStations();
+      ScrollTrigger.addEventListener('refreshInit', placeStations);
+      ringCleanups.push(() => ScrollTrigger.removeEventListener('refreshInit', placeStations));
+
+      // The arc draws and the runner goes round with reading progress.
+      gsap
+        .timeline({
+          defaults: { ease: 'none' },
+          scrollTrigger: { trigger: track, start: 'top 55%', end: 'bottom 55%', scrub: GS.scrub },
+        })
+        .fromTo(ring.querySelector('[data-arc-ring-arc]'), { drawSVG: '0%' }, { drawSVG: '100%' }, 0)
+        .fromTo(ring.querySelector('[data-arc-arm]'), { rotation: 0 }, { rotation: 360 }, 0);
+
+      // Each station swells as its chapter arrives (Onda: 0.4 → 1.35 over 5%
+      // of the range, then settles to 1 over 8%).
+      stations.forEach((st, i) => {
+        if (!blocks[i]) return;
+        const fillEl = st.querySelector('.arc__station-fill');
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: blocks[i],
+              start: 'top 55%',
+              end: () => '+=' + track.offsetHeight * 0.14,
+              scrub: GS.scrub,
+              invalidateOnRefresh: true,
+            },
+          })
+          .fromTo(st, { scale: 0.4 }, { scale: 1.35, duration: 5, ease: 'power2.out' }, 0)
+          .fromTo(fillEl, { opacity: 0 }, { opacity: 1, duration: 3, ease: 'none' }, 0)
+          .to(st, { scale: 1, duration: 8, ease: 'power1.inOut' }, 6);
+      });
+      ringCleanups.push(() => stations.forEach((st) => (st.style.removeProperty('--x'), st.style.removeProperty('--y'))));
+    }
 
     // Callout: ruled lines draw in, then the underline sweeps.
     grid.querySelectorAll<HTMLElement>('[data-arc-callout]').forEach((box) => {
@@ -473,6 +627,7 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
     });
 
     return () => {
+      ringCleanups.forEach((f) => f());
       currentEntry?.classList.remove('is-current');
       grid.classList.remove('is-live');
       year.restore();

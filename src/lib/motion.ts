@@ -21,6 +21,11 @@
  *             travelling prism lifts off from there. Desktop only.
  *   Pillars   Onda's stacked cards: CSS sticky from 768px (no GSAP pin), the
  *             card underneath scales 1 → 0.9 and darkens 0 → 0.55 (scrub: true).
+ *   Manifesto Onda's statement: the two clauses slide in from (-6%, 85%) and
+ *             (9%, 85%) before the pin; the brass triangle full stop scales
+ *             in after the last word lights.
+ *   Arc       Onda's method ring: the arc draws and a runner circles with
+ *             reading progress; chapter stations swell 0.4 → 1.35 → 1.
  *   Speaking  the green plate opens from inset(0 3.2% round 44px) to full
  *             width; after the pinned track, the cards tilt and fall out of
  *             the plate (scrub, power1.in). Desktop only.
