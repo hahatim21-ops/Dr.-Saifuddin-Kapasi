@@ -13,9 +13,9 @@ quote:
 excerpt: "PLACEHOLDER — a short excerpt (60–90 words) from Beyond Ideas for the green band. To be chosen by the author."
 buyLinks:
   - label: Amazon
-    url: "#"
-cover: ../../assets/placeholders/cover-beyond-ideas.jpg
-coverAlt: "Placeholder cover of Beyond Ideas — Lead to Impact by Dr. Saifuddin Kapasi, showing a prism splitting light into a spectrum"
+    url: "https://www.amazon.in/dp/9375421643"
+cover: ../../assets/books/cover-beyond-ideas.jpg
+coverAlt: "Cover of Beyond Ideas – Lead to Impact by Dr. Saifuddin Kapasi: a glass prism splitting a beam of light into a spectrum"
 order: 1
 placeholder: true
 ---

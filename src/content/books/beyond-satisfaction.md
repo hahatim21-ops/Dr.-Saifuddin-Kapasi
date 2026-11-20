@@ -14,11 +14,11 @@ quote:
   placeholder: true
 buyLinks:
   - label: Amazon
-    url: "#"
+    url: "https://www.amazon.in/dp/9373100173"
   - label: Booktopia
     url: "https://www.booktopia.com.au/beyond-satisfaction-dr-saifuddin-kapasi/book/9789373107042.html"
-cover: ../../assets/placeholders/cover-beyond-satisfaction.jpg
-coverAlt: "Placeholder cover of Beyond Satisfaction by Dr. Saifuddin Kapasi"
+cover: ../../assets/books/cover-beyond-satisfaction.jpg
+coverAlt: "Cover of Beyond Satisfaction: A Journey to Customer Centric Excellence by Dr. Saifuddin Kapasi, with a brass compass"
 order: 2
 placeholder: true
 ---
