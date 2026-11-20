@@ -4,11 +4,9 @@
    ========================================================================== */
 
 /* Fonts — self-hosted via Fontsource, Latin subset only, only the weights we use. */
-@import '@fontsource/cormorant-garamond/latin-600.css';
-@import '@fontsource/cormorant-garamond/latin-700.css';
-@import '@fontsource/cormorant-garamond/latin-600-italic.css';
-@import '@fontsource/source-sans-3/latin-400.css';
-@import '@fontsource/source-sans-3/latin-600.css';
+/* Design v5: Onda's type — Gabarito (headings) and Onest (text), variable. */
+@import '@fontsource-variable/gabarito/wght.css';
+@import '@fontsource-variable/onest/wght.css';
 
 @import 'tailwindcss';
 
@@ -18,17 +16,19 @@
    -------------------------------------------------------------------------- */
 @theme static {
   --color-*: initial;
-  --color-ivory: #f6f1e7;
-  --color-ivory-deep: #efe8da; /* a half-step darker paper for cards/placeholders */
-  --color-ink: #1c1f1e;
-  --color-green: #1f3d33; /* institution green */
-  --color-green-deep: #18312a; /* hover / pressed state of green */
-  --color-stone: #6b665c; /* secondary text, 5.1:1 on ivory */
-  --color-brass: #b08d57; /* rules, icons, large numerals ONLY — never text */
-  --color-brass-light: #d4b483; /* small text on green, 6.0:1 */
-  --color-hairline: rgb(28 31 30 / 0.12);
+  /* Design v5: Onda's palette. The token names are kept (ivory = page,
+     green = dark bands, brass = accent) so components did not need renaming. */
+  --color-ivory: #ffffff; /* page */
+  --color-ivory-deep: #efeef4; /* light panels / placeholders */
+  --color-ink: #0d0c11; /* text */
+  --color-green: #0d0c11; /* dark bands and dark cards */
+  --color-green-deep: #1f1d26; /* raised dark panel / pressed state */
+  --color-stone: #5d5a67; /* secondary text, 6.7:1 on white */
+  --color-brass: #6c3cff; /* accent: purple, 5.6:1 on white */
+  --color-brass-light: #a68cff; /* accent on dark, 7.3:1 */
+  --color-hairline: rgb(13 12 17 / 0.12);
   --color-error: #a3402c; /* form errors only — 5.3:1 on ivory */
-  --color-hairline-on-green: rgb(246 241 231 / 0.16);
+  --color-hairline-on-green: rgb(255 255 255 / 0.16);
   --color-white: #fff;
   --color-transparent: transparent;
   --color-current: currentColor;
@@ -42,8 +42,9 @@
   --color-spectrum-6: #5b6bb5;
   --color-spectrum-7: #8a5fa8;
 
-  --font-serif: 'Cormorant Garamond', 'Cormorant Garamond Fallback', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Source Sans 3', 'Source Sans 3 Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* "serif" now names the display face (Gabarito); kept for the existing classes. */
+  --font-serif: 'Gabarito Variable', 'Gabarito Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Onest Variable', 'Onest Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   /* Fluid type. Serif sizes never go below 28px (Cormorant thins out when small). */
   --text-body: 1.125rem; /* 18px minimum */
@@ -69,9 +70,9 @@
 
   --radius-card: 8px;
 
-  --shadow-book: 0 1px 2px rgb(28 31 30 / 0.08), 0 12px 24px -8px rgb(28 31 30 / 0.18), 0 32px 64px -24px rgb(28 31 30 / 0.22);
-  --shadow-frame: 0 1px 2px rgb(28 31 30 / 0.06), 0 10px 24px -12px rgb(28 31 30 / 0.2);
-  --shadow-frame-lift: 0 2px 4px rgb(28 31 30 / 0.06), 0 18px 32px -14px rgb(28 31 30 / 0.26);
+  --shadow-book: 0 1px 2px rgb(13 12 17 / 0.08), 0 12px 24px -8px rgb(13 12 17 / 0.18), 0 32px 64px -24px rgb(13 12 17 / 0.22);
+  --shadow-frame: 0 1px 2px rgb(13 12 17 / 0.06), 0 10px 24px -12px rgb(13 12 17 / 0.2);
+  --shadow-frame-lift: 0 2px 4px rgb(13 12 17 / 0.06), 0 18px 32px -14px rgb(13 12 17 / 0.26);
 
   /* Breakpoints = Tailwind defaults (640/768/1024/1280/1536), restated for clarity. */
   --breakpoint-sm: 40rem;
@@ -115,7 +116,7 @@
   --dur-curtain: 0.8s; /* page transition ≤ 800ms */
   --stagger-chars: 0.025s;
   --stagger-lines: 0.08s;
-  --scrub: 0.8; /* 0.6–1 */
+  --scrub: 0.3; /* 0.6–1 */
   --magnetic: 8px;
   --skew-max: 3deg;
 
@@ -123,25 +124,25 @@
   --section-space: clamp(5rem, 3.5rem + 6vw, 9rem);
 
   /* Paper grain: tiny SVG noise tile, alpha baked in (≈3% ink on ivory). */
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .11 0 0 0 0 .12 0 0 0 0 .118 0 0 0 1.2 -.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.09'/%3E%3C/svg%3E");
+  --grain: none; /* Design v5: flat colour, like Onda (no paper grain) */
 
   color-scheme: light;
 }
 
 /* Metric-matched fallbacks so the swap to web fonts barely shifts layout (CLS). */
 @font-face {
-  font-family: 'Cormorant Garamond Fallback';
-  src: local('Georgia'), local('Times New Roman');
-  size-adjust: 88%;
-  ascent-override: 104%;
-  descent-override: 32%;
+  font-family: 'Gabarito Fallback';
+  src: local('Arial'), local('Helvetica');
+  size-adjust: 96%;
+  ascent-override: 98%;
+  descent-override: 26%;
 }
 @font-face {
-  font-family: 'Source Sans 3 Fallback';
+  font-family: 'Onest Fallback';
   src: local('Arial'), local('Helvetica');
-  size-adjust: 94%;
-  ascent-override: 104%;
-  descent-override: 29%;
+  size-adjust: 102%;
+  ascent-override: 96%;
+  descent-override: 25%;
 }
 
 /* --------------------------------------------------------------------------
@@ -204,10 +205,11 @@
     text-wrap: pretty;
   }
 
+  /* Onda's accent: the purple word, upright (Gabarito has no italic). */
   em.accent,
   .accent {
-    font-style: italic;
-    color: var(--color-green);
+    font-style: normal;
+    color: var(--color-brass);
   }
 
   a {
@@ -307,14 +309,14 @@
     flex: none;
   }
   .btn-primary {
-    background: var(--color-green);
+    background: var(--color-brass);
     color: var(--color-ivory);
   }
   .btn-primary:hover {
-    background: var(--color-green-deep);
+    background: #5a2ee6;
   }
   .btn-secondary {
-    border: 1px solid rgb(28 31 30 / 0.28);
+    border: 1px solid rgb(13 12 17 / 0.28);
     color: var(--color-ink);
   }
   .btn-secondary:hover {
@@ -391,7 +393,7 @@
     width: 18px;
     border-radius: 0 4px 4px 0;
     background: repeating-linear-gradient(to right, #fbf8f1 0 1px, #e6decd 1px 2.5px);
-    box-shadow: 0 10px 24px -12px rgb(28 31 30 / 0.35);
+    box-shadow: 0 10px 24px -12px rgb(13 12 17 / 0.35);
   }
   .book3d__spine {
     position: absolute;
@@ -450,7 +452,7 @@
     display: block;
     width: 100%;
     padding: 0;
-    border: 1px solid rgb(28 31 30 / 0.16);
+    border: 1px solid rgb(13 12 17 / 0.16);
     border-radius: 4px;
     background: #fff;
     box-shadow: var(--shadow-frame);
@@ -521,7 +523,7 @@
     gap: 0.5rem;
     min-height: 2.75rem;
     padding: 0.5rem 1.1rem;
-    border: 1px solid rgb(28 31 30 / 0.24);
+    border: 1px solid rgb(13 12 17 / 0.24);
     border-radius: 999px;
     font-weight: 600;
     font-size: 1rem;
@@ -574,7 +576,7 @@
     }
   }
   .lb::backdrop {
-    background: rgb(28 31 30 / 0.72);
+    background: rgb(13 12 17 / 0.72);
     opacity: 0;
     transition:
       opacity var(--dur-fade) var(--ease),
@@ -748,8 +750,9 @@
   }
 
   /* Placeholder marker — every unconfirmed fact/asset wears this. See TODO.md. */
+  /* Design v5: review chips are hidden on the site (TODO.md lists what to confirm). */
   .placeholder-tag {
-    display: inline-block;
+    display: none !important;
     padding: 0.1rem 0.45rem;
     border: 1px dashed var(--color-stone);
     border-radius: 4px;
@@ -955,7 +958,7 @@ html.motion-pending:not([data-loader-state]) [data-hero-line] {
   border-radius: 24px 24px 0 0;
   background-color: var(--color-ivory);
   background-image: var(--grain);
-  box-shadow: 0 -18px 40px -24px rgb(28 31 30 / 0.35);
+  box-shadow: 0 -18px 40px -24px rgb(13 12 17 / 0.35);
 }
 
 /* Green bands: clip their decorations (giant words, grain) to the band, and
@@ -973,7 +976,7 @@ html.motion-pending:not([data-loader-state]) [data-hero-line] {
   color: var(--color-ink);
 }
 .on-green .btn-secondary {
-  border-color: rgb(246 241 231 / 0.42);
+  border-color: rgb(255 255 255 / 0.42);
   color: var(--color-ivory);
 }
 .on-green .btn-secondary:hover {
@@ -1056,7 +1059,7 @@ html.has-cursor [contenteditable='true'] {
   width: 6px;
   height: 6px;
   background: var(--color-ink);
-  box-shadow: 0 0 0 1px rgb(246 241 231 / 0.9); /* stays visible on green bands */
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.9); /* stays visible on green bands */
 }
 .cursor-ring {
   display: grid;
@@ -1071,18 +1074,19 @@ html.has-cursor [contenteditable='true'] {
     border-color 0.35s var(--ease-ui);
 }
 .cursor-ring.is-link {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
 }
+/* Design v5: a smaller label bubble (was 88px). */
 .cursor-ring.is-label {
-  width: 88px;
-  height: 88px;
-  background: var(--color-green);
-  border-color: var(--color-green);
+  width: 56px;
+  height: 56px;
+  background: var(--color-brass);
+  border-color: var(--color-brass);
 }
 .cursor-ring__label {
   font-family: var(--font-sans);
-  font-size: 0.8125rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1107,7 +1111,7 @@ html.has-cursor [contenteditable='true'] {
   background-color: var(--color-green);
   background-image: var(--grain);
   color: var(--color-ivory);
-  box-shadow: 0 18px 40px -18px rgb(28 31 30 / 0.45);
+  box-shadow: 0 18px 40px -18px rgb(13 12 17 / 0.45);
   pointer-events: none;
   visibility: hidden;
 }
@@ -1126,7 +1130,7 @@ html.has-cursor [contenteditable='true'] {
 .idx-preview__line {
   font-size: 0.9375rem;
   line-height: 1.45;
-  color: rgb(246 241 231 / 0.82);
+  color: rgb(255 255 255 / 0.82);
 }
 
 /* Labels over green surfaces (e.g. the pillar flood). */

@@ -79,7 +79,7 @@ const clauses = cut > 0 ? [quote.slice(0, cut + 1), quote.slice(cut + 2)] : [quo
     z-index: auto;
   }
   .mani-sheet :global(.mani-edge) {
-    filter: drop-shadow(0 -14px 22px rgb(28 31 30 / 0.18));
+    filter: drop-shadow(0 -14px 22px rgb(13 12 17 / 0.18));
   }
   .mani {
     position: relative;
@@ -218,12 +218,12 @@ const clauses = cut > 0 ? [quote.slice(0, cut + 1), quote.slice(cut + 2)] : [quo
         end: () => '+=' + window.innerHeight, // Motion v3: ~100vh (was 150)
         pin: true,
         anticipatePin: 1,
-        scrub: 0.8,
+        scrub: 0.3,
         invalidateOnRefresh: true,
       });
     } else {
       // Phones/tablets: no pin, no slides; light up as the paragraph passes through.
-      lightUp({ trigger: text, start: 'top 85%', end: 'bottom 40%', scrub: 0.8 });
+      lightUp({ trigger: text, start: 'top 85%', end: 'bottom 40%', scrub: 0.3 });
     }
     return () => {
       split.revert();

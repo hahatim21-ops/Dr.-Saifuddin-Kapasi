@@ -401,7 +401,7 @@ const frameworks = (await getCollection('frameworks')).sort((a, b) => a.data.ord
           end: () => '+=' + window.innerHeight * 0.4 * n, // Motion v3: shorter (was 0.55 per stage)
           pin: true,
           anticipatePin: 1,
-          scrub: 0.8,
+          scrub: 0.3,
           invalidateOnRefresh: true,
           onUpdate: (self) => light(Math.min(n - 1, Math.floor(self.progress * n * 0.999))),
         },

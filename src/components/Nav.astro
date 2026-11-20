@@ -3,8 +3,8 @@
  * Site navigation (BRIEF §5b "Navigation behaviour", §7 responsive table).
  * - Top of page: transparent. After 80px: ivory, backdrop blur, hairline.
  * - The bar stays fixed at the top while scrolling (Motion v3: it never hides).
- * - Desktop (≥1024px): About · Speaking | name | Books · Insights + the brass
- *   "Invite to speak" button.
+ * - Desktop (≥1024px), design v5: the name on the left, About · Speaking ·
+ *   Books · Insights on the right, nothing in the centre; a shorter bar.
  * - Tablet (768–1023px): name + 3 links + menu button.
  * - Phone (<768px): name + menu button; full-screen menu (native <dialog>:
  *   focus is trapped, Esc closes, focus returns to the button).
@@ -26,7 +26,8 @@ const isCurrent = (href: string) => {
   const base = href.split('?')[0];
   return base === '/' ? path === '/' : path === base || path.startsWith(base + '/');
 };
-const { left, right, tablet, menu, cta } = site.nav;
+const { left, right, tablet, menu } = site.nav;
+const desktopLinks = [...left, ...right];
 const { contact } = site;
 ---
 
@@ -40,27 +41,12 @@ const { contact } = site;
     class="site-header__inner container-content"
     {...intro ? { 'data-intro-nav': '' } : {}}
   >
-    <ul class="nav-links nav-links--left" role="list">
-      {
-        left.map((l) => (
-          <li>
-            <a href={l.href} class="nav-link link-grow-line" aria-current={isCurrent(l.href) ? 'page' : undefined}>
-              {l.label}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-
-    <div class="wordmark-wrap">
-      <a href="/" class="wordmark" aria-label={`${site.name}, home`}>{site.shortName}</a>
-      <span class="nav-section" data-nav-section aria-hidden="true"><span data-nav-count></span><span class="nav-section__sep">·</span><span class="nav-section__name" data-nav-name></span></span>
-    </div>
+    <a href="/" class="wordmark" aria-label={`${site.name}, home`}>{site.shortName}</a>
 
     <div class="nav-end">
-      <ul class="nav-links nav-links--right" role="list">
+      <ul class="nav-links nav-links--desktop" role="list">
         {
-          right.map((l) => (
+          desktopLinks.map((l) => (
             <li>
               <a href={l.href} class="nav-link link-grow-line" aria-current={isCurrent(l.href) ? 'page' : undefined}>
                 {l.label}
@@ -80,9 +66,6 @@ const { contact } = site;
           ))
         }
       </ul>
-      <a href={cta.href} class="btn btn-primary nav-cta" data-magnetic>
-        <span class="xl:hidden">{cta.short}</span><span class="hidden xl:inline">{cta.label}</span>
-      </a>
       <button
         type="button"
         class="menu-btn"
@@ -123,9 +106,6 @@ const { contact } = site;
     </nav>
     <div class="site-menu__foot" style={`--i:${menu.length}`}>
       <InflectionLine variant="divider" draw={false} />
-      <a href={cta.href} class="btn btn-primary w-full sm:w-auto">
-        {cta.label} <Icon name="arrow-right" class="btn-arrow" />
-      </a>
       <ul class="site-menu__contact" role="list">
         <li>
           <a href={`https://wa.me/${contact.whatsapp}`} class="contact-chip" rel="noopener" target="_blank">
@@ -157,7 +137,7 @@ const { contact } = site;
 
   /* ---------- Header shell ---------- */
   .site-header {
-    --header-h: 4.5rem;
+    --header-h: 4rem;
     position: fixed;
     inset: 0 0 auto 0;
     z-index: 50;
@@ -165,7 +145,7 @@ const { contact } = site;
   }
   @media (min-width: 1024px) {
     .site-header {
-      --header-h: 5.5rem;
+      --header-h: 4.25rem; /* design v5: a slimmer bar (was 5.5rem) */
     }
   }
   /* The ivory/blur/hairline layer fades in after 80px — opacity only. */
@@ -174,7 +154,7 @@ const { contact } = site;
     inset: 0;
     /* Motion v3: no backdrop blur. The bar stays on screen for the whole
        scroll, and a blur behind it is recomputed on every frame. */
-    background: rgb(246 241 231 / 0.97);
+    background: rgb(255 255 255 / 0.97);
     border-bottom: 1px solid var(--color-hairline);
     opacity: 0;
     transition: opacity 500ms var(--ease);
@@ -191,19 +171,13 @@ const { contact } = site;
     gap: 1.5rem;
     height: var(--header-h);
   }
-  @media (min-width: 1024px) {
-    .site-header__inner {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-    }
-  }
 
   .wordmark {
     font-family: var(--font-serif);
     font-weight: 600;
-    font-size: 1.75rem; /* 28px — the serif's minimum size */
+    font-size: 1.375rem;
     line-height: 1;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
     color: var(--color-ink);
     text-decoration: none;
     white-space: nowrap;
@@ -211,44 +185,8 @@ const { contact } = site;
   }
   @media (min-width: 1024px) {
     .wordmark {
-      font-size: 1.875rem;
+      font-size: 1.5rem;
     }
-  }
-  .wordmark-wrap {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  @media (min-width: 1024px) {
-    .wordmark-wrap {
-      justify-self: center;
-    }
-  }
-
-  /* Desktop: current section + counter under the name ("03 / 12 · The Arc"). */
-  .nav-section {
-    position: absolute;
-    top: calc(100% - 0.35rem);
-    display: none;
-    gap: 0.4rem;
-    white-space: nowrap;
-    overflow: hidden;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-stone);
-    font-variant-numeric: tabular-nums;
-  }
-  .nav-section.is-on {
-    display: inline-flex;
-  }
-  .nav-section__sep {
-    color: var(--color-brass);
-  }
-  .nav-section__name {
-    display: inline-block;
   }
 
   /* Brass scroll-progress hairline along the header's bottom edge. */
@@ -283,8 +221,7 @@ const { contact } = site;
     padding: 0;
   }
   @media (min-width: 1024px) {
-    .nav-links--left,
-    .nav-links--right {
+    .nav-links--desktop {
       display: flex;
     }
   }
@@ -297,8 +234,8 @@ const { contact } = site;
     display: inline-flex;
     align-items: center;
     min-height: 2.75rem;
-    font-weight: 600;
-    font-size: 1.0625rem;
+    font-weight: 500;
+    font-size: 1rem;
     color: var(--color-ink);
     transition: color var(--dur-tap) var(--ease);
   }
@@ -318,23 +255,6 @@ const { contact } = site;
     align-items: center;
     justify-content: flex-end;
     gap: clamp(1.25rem, 2vw, 2rem);
-  }
-  /* The brass call to action (ink on brass, 5.5:1). */
-  .nav-cta {
-    display: none;
-    min-height: 2.75rem;
-    padding: 0.6rem 1.15rem;
-    font-size: 1rem;
-    background: var(--color-brass);
-    color: var(--color-ink);
-  }
-  .nav-cta:hover {
-    background: var(--color-brass-light);
-  }
-  @media (min-width: 1024px) {
-    .nav-cta {
-      display: inline-flex;
-    }
   }
 
   .menu-btn {
@@ -530,25 +450,18 @@ const { contact } = site;
     const sections = [...document.querySelectorAll<HTMLElement>('main > section, main [data-section]')]
       .map((el) => ({ el, name: el.dataset.section || el.querySelector('.eyebrow')?.textContent?.trim() || '' }))
       .filter((s) => s.name);
-    const indicator = header.querySelector<HTMLElement>('[data-nav-section]');
-    if (!indicator || sections.length < 3) return;
-    const count = indicator.querySelector<HTMLElement>('[data-nav-count]')!;
-    const label = indicator.querySelector<HTMLElement>('[data-nav-name]')!;
-    const links = [...header.querySelectorAll<HTMLAnchorElement>('.nav-links--left a, .nav-links--right a')];
-    const total = String(sections.length).padStart(2, '0');
+    if (sections.length < 3) return;
+    // Design v5: no section counter in the bar; the matching link still lights.
+    const links = [...header.querySelectorAll<HTMLAnchorElement>('.nav-links--desktop a')];
     let current = -1;
 
     const show = (i: number) => {
       if (i === current) return;
       current = i;
-      count.textContent = `${String(i + 1).padStart(2, '0')} / ${total}`;
-      label.textContent = sections[i].name;
-      gsap.fromTo(label, { yPercent: 100, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.5, ease: 'power3.out', overwrite: true });
       const href = SECTION_LINKS[sections[i].el.id];
       links.forEach((a) => a.classList.toggle('is-active', !!href && a.getAttribute('href') === href));
     };
 
-    indicator.classList.add('is-on');
     const triggers = sections.map((s, i) =>
       ScrollTrigger.create({
         trigger: s.el,
@@ -563,7 +476,6 @@ const { contact } = site;
     show(Math.max(0, active));
 
     return () => {
-      indicator.classList.remove('is-on');
       links.forEach((a) => a.classList.remove('is-active'));
     };
   });

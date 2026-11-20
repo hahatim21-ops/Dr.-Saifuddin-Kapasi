@@ -93,7 +93,7 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
     font-size: clamp(5rem, 17vw, 19rem);
     line-height: 0.85;
     white-space: nowrap;
-    color: rgb(176 141 87 / 0.1);
+    color: rgb(108 60 255 / 0.1);
     pointer-events: none;
     user-select: none;
   }
@@ -126,7 +126,7 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
     display: contents;
   }
   .photo {
-    flex: 0 0 80%;
+    flex: 0 0 64%;
     margin: 0;
     scroll-snap-align: start;
   }
@@ -164,7 +164,7 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
     .gallery__track {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      max-width: 62rem; /* keeps tall photos from running the section long */
+      max-width: 46rem; /* design v5: smaller photos (was 62rem) */
       margin-inline: 0; /* shares the left edge with the section heading */
       gap: clamp(1.5rem, 3vw, 3rem);
       margin-top: clamp(3rem, 2rem + 3vw, 4.5rem);
@@ -178,7 +178,7 @@ const SIZES = '(min-width: 1024px) 480px, (min-width: 768px) 46vw, 80vw';
       gap: clamp(2.5rem, 4vw, 4rem);
     }
     .gallery__col--b {
-      margin-top: clamp(4rem, 9vw, 9rem);
+      margin-top: clamp(3rem, 6vw, 6rem);
     }
     .photo {
       flex: none;

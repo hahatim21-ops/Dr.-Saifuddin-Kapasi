@@ -48,7 +48,7 @@ export const GS = {
   dur: { ui: 0.18, heading: 0.9, body: 0.6, reveal: 1.0, revealLong: 1.2, chars: 0.9, count: 1.2, curtain: 0.8, loaderMax: 1.2 },
   stagger: { chars: 0.025, words: 0.04, lines: 0.08, frames: 0.08 },
   /** Scrub smoothing in seconds (0.6–1). */
-  scrub: 0.8,
+  scrub: 0.3,
   /** Magnetic pull, px. */
   magnetic: 8,
   /** Velocity skew cap, degrees. */

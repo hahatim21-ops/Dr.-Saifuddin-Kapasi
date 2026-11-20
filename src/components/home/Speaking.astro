@@ -58,17 +58,6 @@ const total = String(programmes.length).padStart(2, '0');
               </p>
               <h3 class="prog-card__title">{p.title}</h3>
               <p class="prog-card__lede">{p.summary}</p>
-              <dl class="prog-card__facts">
-                {p.facts.map((f) => (
-                  <div>
-                    <dt>{f.label}</dt>
-                    <dd>
-                      {f.value}
-                      {f.placeholder && <span class="placeholder-tag ml-1">To confirm</span>}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
               <a href={p.href} class="prog-card__enquire link-grow-line">
                 {t.enquire} <span aria-hidden="true">→</span>
               </a>
@@ -85,14 +74,7 @@ const total = String(programmes.length).padStart(2, '0');
 
   <div class="container-content">
     <div class="speaking__foot" data-reveal>
-      <p class="speaking__past">
-        <span class="speaking__past-label">{t.pastAudiencesLabel}:</span>
-        {t.pastAudiences.map((a) => <span class="speaking__aud">{a}</span>)}
-      </p>
       <div class="speaking__actions">
-        <a href={site.nav.cta.href} class="btn btn-primary" data-magnetic>
-          {t.cta} <Icon name="arrow-right" size={18} class="btn-arrow" />
-        </a>
         <a href={t.allHref} class="btn btn-secondary">{t.allLink}</a>
       </div>
     </div>
@@ -107,7 +89,7 @@ const total = String(programmes.length).padStart(2, '0');
   .speaking__stage {
     position: relative;
     overflow: clip; /* the cards fall out of the plate, not over the page */
-    padding-block: clamp(3.5rem, 9vh, 6.5rem);
+    padding-block: clamp(2.5rem, 6vh, 4.5rem);
     color: var(--color-ivory);
   }
   .speaking__plate {
@@ -130,7 +112,7 @@ const total = String(programmes.length).padStart(2, '0');
   }
   .speaking__stage :global(.section-header__intro),
   .speaking__stage .prog-hint {
-    color: rgb(246 241 231 / 0.82);
+    color: rgb(255 255 255 / 0.82);
   }
   .speaking__stage :global(:focus-visible) {
     outline-color: var(--color-brass-light);
@@ -204,27 +186,23 @@ const total = String(programmes.length).padStart(2, '0');
   }
   @media (min-width: 1024px) {
     .prog-card {
-      flex-basis: clamp(24rem, 34vw, 32rem);
-      padding: clamp(1.75rem, 2.2vw, 2.5rem);
+      flex-basis: clamp(18rem, 24vw, 22rem); /* design v5: smaller cards */
+      min-height: 17rem;
+      padding: clamp(1.25rem, 1.6vw, 1.75rem);
     }
   }
   .prog-card__num {
     font-family: var(--font-serif);
     font-weight: 600;
-    font-size: clamp(2.75rem, 1.8rem + 3vw, 4.5rem);
-    line-height: 0.9;
+    font-size: clamp(2rem, 1.6rem + 1.4vw, 3rem);
+    line-height: 1;
     color: transparent;
     -webkit-text-stroke: 1px var(--color-brass);
     font-variant-numeric: lining-nums tabular-nums;
   }
   .prog-card__title {
-    font-size: 1.75rem; /* 28px — serif minimum */
-    line-height: 1.12;
-  }
-  @media (min-width: 1024px) {
-    .prog-card__title {
-      font-size: var(--text-h3);
-    }
+    font-size: 1.375rem;
+    line-height: 1.15;
   }
   .prog-card__lede {
     color: var(--color-stone);
@@ -367,6 +345,7 @@ const total = String(programmes.length).padStart(2, '0');
     // Motion v3: built only when the track comes near (it is heavy and adds a pin).
     return whenNear(stage, () => {
     wrap.classList.add('is-pinned');
+    const navH = () => document.querySelector<HTMLElement>('[data-site-header]')?.offsetHeight ?? 0;
     const distance = () => Math.max(0, track.scrollWidth - wrap.clientWidth);
     const skewTo = gsap.quickTo(cards, 'skewX', { duration: 0.5, ease: 'power3' });
     const settle = gsap.delayedCall(0.14, () => skewTo(0)).pause();
@@ -376,7 +355,9 @@ const total = String(programmes.length).padStart(2, '0');
       ease: 'none',
       scrollTrigger: {
         trigger: stage,
-        start: () => (stage.offsetHeight > window.innerHeight ? 'bottom bottom' : 'center center'),
+        // Design v5: pin with the stage's top just under the nav bar (it used to
+        // pin by its bottom edge when tall, which hid the top under the bar).
+        start: () => (stage.offsetHeight > window.innerHeight - navH() ? 'bottom bottom' : `top ${navH()}px`),
         end: () => '+=' + distance(),
         pin: true,
         anticipatePin: 1,
@@ -401,7 +382,7 @@ const total = String(programmes.length).padStart(2, '0');
         {
           clipPath: 'inset(0% 0% 0% 0% round 0px)',
           ease: 'power1.out',
-          scrollTrigger: { trigger: stage, start: 'top bottom', end: 'top 15%', scrub: true },
+          scrollTrigger: { trigger: stage, start: 'top bottom', end: () => `top ${navH()}px`, scrub: true, invalidateOnRefresh: true },
         }
       );
 

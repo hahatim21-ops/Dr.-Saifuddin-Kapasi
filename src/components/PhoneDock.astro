@@ -9,7 +9,6 @@
 import site from '../data/site.json';
 import Icon from './Icon.astro';
 
-const { cta } = site.nav;
 const { contact } = site;
 ---
 
@@ -22,9 +21,6 @@ const { contact } = site;
     aria-label="Message on WhatsApp"
   >
     <Icon name="whatsapp" size={22} />
-  </a>
-  <a href={cta.href} class="btn btn-primary dock__cta">
-    {cta.short} <Icon name="arrow-right" size={18} class="btn-arrow" />
   </a>
 </div>
 
@@ -42,8 +38,8 @@ const { contact } = site;
     border: 1px solid var(--color-hairline);
     border-radius: 999px;
     /* No backdrop blur: a fixed bar re-blurs whatever scrolls under it every frame. */
-    background: rgb(246 241 231 / 0.97);
-    box-shadow: 0 10px 30px -12px rgb(28 31 30 / 0.28);
+    background: rgb(255 255 255 / 0.97);
+    box-shadow: 0 10px 30px -12px rgb(13 12 17 / 0.28);
     opacity: 0;
     transform: translate3d(-50%, calc(100% + 1.5rem), 0);
     transition:

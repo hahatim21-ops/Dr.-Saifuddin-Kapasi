@@ -104,7 +104,7 @@ function setupLenis() {
     // floaty, and it follows a trackpad's stream of small deltas continuously.
     // Anchor links land below the fixed nav.
     const navH = document.querySelector<HTMLElement>('[data-site-header]')?.offsetHeight ?? 88;
-    lenis = new Lenis({ autoRaf: false, lerp: 0.12, smoothWheel: true, anchors: { offset: -(navH + 16) } });
+    lenis = new Lenis({ autoRaf: false, lerp: 0.16, smoothWheel: true, anchors: { offset: -(navH + 16) } });
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(lenisTick);
     gsap.ticker.lagSmoothing(0);
@@ -274,7 +274,7 @@ const HEADING = /^H[1-6]$/;
 export function revealTrigger(el: Element) {
   return {
     trigger: el,
-    start: () => Math.min(ScrollTrigger.maxScroll(window) - 1, el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.8),
+    start: () => Math.min(ScrollTrigger.maxScroll(window) - 1, el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.9),
     once: true,
     fastScrollEnd: true,
     preventOverlaps: true,

@@ -261,7 +261,8 @@ const displayParts = t.display
   }
   .contact__quick {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* Two across when they fit, stacked when the column is narrow. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
     gap: 0.75rem;
     margin-top: 1.25rem;
   }
@@ -338,7 +339,7 @@ const displayParts = t.display
     align-items: center;
     min-height: 2.75rem;
     padding: 0.5rem 1.1rem;
-    border: 1px solid rgb(28 31 30 / 0.24);
+    border: 1px solid rgb(13 12 17 / 0.24);
     border-radius: 999px;
     font-weight: 600;
     font-size: 1rem;
@@ -374,16 +375,16 @@ const displayParts = t.display
     width: 100%;
     min-height: 3rem;
     padding: 0.7rem 0.9rem;
-    border: 1px solid rgb(28 31 30 / 0.28);
+    border: 1px solid rgb(13 12 17 / 0.28);
     border-radius: 8px;
-    background: #fffdf8;
+    background: #ffffff;
     color: var(--color-ink);
     font: inherit;
     font-size: 1.125rem; /* 18px — also stops iOS zooming on focus */
     transition: border-color var(--dur-tap) var(--ease);
   }
   .cf__input:hover {
-    border-color: rgb(28 31 30 / 0.45);
+    border-color: rgb(13 12 17 / 0.45);
   }
   .cf__input:focus-visible {
     outline: 2px solid var(--color-green);

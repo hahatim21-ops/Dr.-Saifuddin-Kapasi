@@ -2,7 +2,7 @@
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 // Preload the heading font (the hero/LCP text is set in it).
-import cormorant600 from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-600-normal.woff2?url';
+import displayFont from '@fontsource-variable/gabarito/files/gabarito-latin-wght-normal.woff2?url';
 import site from '../data/site.json';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
@@ -50,7 +50,7 @@ const ogIsDefault = ogImage === '/og.jpg';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#F6F1E7" />
+    <meta name="theme-color" content="#FFFFFF" />
     <!-- Hide-before-reveal only applies when JS runs; set before first paint. -->
     <script is:inline>
       (function (d) {
@@ -63,14 +63,14 @@ const ogIsDefault = ogImage === '/og.jpg';
         }
       })(document.documentElement);
     </script>
-    <style is:inline>html{background:#F6F1E7}</style>
+    <style is:inline>html{background:#FFFFFF}</style>
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
 
-    <link rel="preload" href={cormorant600} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={displayFont} as="font" type="font/woff2" crossorigin />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 
     <meta name="author" content={site.name} />
@@ -176,7 +176,7 @@ const ogIsDefault = ogImage === '/og.jpg';
           // finished moving before it reaches reading height. The root also
           // reaches one screen above the viewport, so an element that jumps
           // from below to above between two frames still crosses it.
-          { rootMargin: '100% 0px -20% 0px', threshold: 0 }
+          { rootMargin: '100% 0px -8% 0px', threshold: 0 }
         );
         targets.forEach((el) => {
           // [data-reveal-now] plays on load, on the next frame so the start state

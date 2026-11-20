@@ -50,20 +50,7 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
     </div>
 
     <div class="hero__intro container-content" data-hero-intro>
-      <dl class="hero__status" data-intro data-hero-later>
-        <div>
-          <dt>Currently:</dt>
-          <dd>{site.currently}</dd>
-        </div>
-        <div>
-          <dt>Previously:</dt>
-          <dd>{site.previously}</dd>
-        </div>
-      </dl>
       <div class="hero__actions" data-intro data-hero-later>
-        <a href={site.nav.cta.href} class="btn btn-primary" data-magnetic>
-          {site.nav.cta.label} <Icon name="arrow-right" size={18} class="btn-arrow" />
-        </a>
         <a href="#books" class="btn btn-secondary">Explore the books</a>
       </div>
     </div>
@@ -228,7 +215,7 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
     inset: 8%;
     border-radius: 50%;
     /* Pre-blurred glow (no filters): brass light behind the glass. */
-    background: radial-gradient(closest-side, rgb(212 180 131 / 0.42), rgb(212 180 131 / 0.16) 55%, transparent 80%);
+    background: radial-gradient(closest-side, rgb(166 140 255 / 0.42), rgb(166 140 255 / 0.16) 55%, transparent 80%);
   }
   .hero__orbit {
     position: absolute;
@@ -272,7 +259,7 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
     stroke: var(--color-ink);
     stroke-width: 1.5;
     stroke-linejoin: round;
-    fill: rgb(246 241 231 / 0.6);
+    fill: rgb(255 255 255 / 0.6);
     vector-effect: non-scaling-stroke;
   }
   .hero__fill {
@@ -290,7 +277,7 @@ const glass = 'M180 28 L 236 140 L 124 140 Z';
     vector-effect: non-scaling-stroke;
   }
   .hero__beam-halo {
-    stroke: rgb(212 180 131 / 0.35);
+    stroke: rgb(166 140 255 / 0.35);
     stroke-width: 7;
     stroke-linecap: round;
   }

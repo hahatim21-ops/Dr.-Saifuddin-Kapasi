@@ -7,8 +7,8 @@
  *   slide; the brass line beside the entries fills as you read. The travelling
  *   prism docks beside the year and turns slowly.
  * - Phones: one column with a small sticky year chip at the top of the timeline.
- * - The "Back where he learned" callout gets ruled exercise-book lines that
- *   draw in and a brass underline sweep.
+ * - Design v5: smaller entry text; the green "Back where he learned" callout
+ *   box was removed (its fact stays in the timeline data).
  * The stage and chip are decorative duplicates (aria-hidden), shown only once
  * the scene runs; with JS off or reduced motion the list carries everything.
  *
@@ -130,21 +130,6 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
                   </li>
                 ))}
               </ol>
-              {c.callout && (
-                <aside class="on-green arc__callout" data-arc-callout>
-                  <svg class="arc__ruled" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-                    {[40, 80, 120, 160].map((y) => (
-                      <path d={`M0 ${y} H600`} class="arc__rule" />
-                    ))}
-                    <path d="M56 0 V200" class="arc__rule arc__rule--margin" />
-                  </svg>
-                  <p class="eyebrow arc__callout-title">
-                    {c.callout.title}
-                    <span class="arc__underline" data-arc-underline aria-hidden="true" />
-                  </p>
-                  <p class="arc__callout-text">{c.callout.text}</p>
-                </aside>
-              )}
             </section>
           ))
         }
@@ -198,11 +183,14 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
   .arc__ch-title {
     margin-top: 0.25rem;
   }
+  .arc__ch-title {
+    font-size: 1.375rem; /* design v5: smaller details */
+  }
   .arc__ch-years {
     margin-top: 0.2rem;
     font-family: var(--font-serif);
     font-weight: 600;
-    font-size: var(--text-h3);
+    font-size: 1.125rem;
     color: var(--color-green); /* text: brass is for rules and large numerals only */
     font-variant-numeric: lining-nums tabular-nums;
   }
@@ -213,8 +201,8 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
   }
   .arc__entries {
     display: grid;
-    gap: 2.25rem;
-    margin: 2.25rem 0 0;
+    gap: 1.5rem;
+    margin: 1.5rem 0 0;
     padding: 0;
     list-style: none;
   }
@@ -243,7 +231,7 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: var(--text-small);
+    font-size: 0.875rem;
     color: var(--color-stone);
     font-variant-numeric: tabular-nums;
   }
@@ -256,13 +244,17 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
     color: var(--color-green);
   }
   .arc__role {
-    margin-top: 0.25rem;
-    font-size: 1.25rem;
+    margin-top: 0.15rem;
+    font-size: 1.0625rem;
     line-height: 1.3;
   }
+  .arc__org {
+    font-size: 0.9375rem;
+  }
   .arc__note {
-    margin-top: 0.5rem;
+    margin-top: 0.35rem;
     max-width: 60ch;
+    font-size: 0.9375rem;
     color: var(--color-stone);
   }
 
@@ -285,12 +277,12 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
   }
   .arc__rule {
     fill: none;
-    stroke: rgb(212 180 131 / 0.22);
+    stroke: rgb(166 140 255 / 0.22);
     stroke-width: 1;
     vector-effect: non-scaling-stroke;
   }
   .arc__rule--margin {
-    stroke: rgb(212 180 131 / 0.45);
+    stroke: rgb(166 140 255 / 0.45);
   }
   .arc__callout-title {
     position: relative;
@@ -328,7 +320,7 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
     padding: 0.35rem 0.9rem;
     border: 1px solid var(--color-hairline);
     border-radius: 999px;
-    background: rgb(246 241 231 / 0.94);
+    background: rgb(255 255 255 / 0.94);
     font-size: var(--text-small);
     font-weight: 600;
   }
@@ -369,7 +361,7 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
     .arc__year {
       font-family: var(--font-serif);
       font-weight: 600;
-      font-size: clamp(6rem, 3rem + 7vw, 11rem);
+      font-size: clamp(4.5rem, 2.5rem + 5vw, 8rem);
       line-height: 0.9;
       letter-spacing: -0.02em;
       color: var(--color-brass);
@@ -394,7 +386,7 @@ const firstYear = String(first.entries[0]?.startYear ?? '');
       display: inline-block;
       font-family: var(--font-serif);
       font-weight: 600;
-      font-size: var(--text-h2);
+      font-size: 2rem;
       line-height: 1.05;
     }
     .arc__summary {
